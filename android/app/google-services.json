@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "171300244666",
+    "project_id": "siuroma-kids-dev",
+    "storage_bucket": "siuroma-kids-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171300244666:android:e69aa80d4aa8d78e5ec683",
+        "android_client_info": {
+          "package_name": "com.example.my_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171300244666-tr28bvadoggjnur8iik85eanrbjdtjsm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbeL76apn6sgGTkuC5srLSLa251Faj0DQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171300244666-tr28bvadoggjnur8iik85eanrbjdtjsm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171300244666:android:e5600fc0480070f65ec683",
+        "android_client_info": {
+          "package_name": "kid_math_add_sub.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171300244666-tr28bvadoggjnur8iik85eanrbjdtjsm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbeL76apn6sgGTkuC5srLSLa251Faj0DQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171300244666-tr28bvadoggjnur8iik85eanrbjdtjsm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

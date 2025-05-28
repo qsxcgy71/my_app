@@ -46,6 +46,7 @@ dependencies:
   cached_network_image: ^3.4.0
   firebase_app_check: ^0.2.2+7
   device_info_plus: ^10.1.2
+  country_code_picker: ^3.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'hello_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,13 +25,28 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _navigateToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HelloScreen()),
+    );
+  }
+
   Future<void> _signInWithEmail() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showError('请输入邮箱和密码');
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      if (mounted) {
+        _navigateToHome();
+      }
     } on FirebaseAuthException catch (e) {
       _showError(e.message);
     }
@@ -48,6 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
         idToken: googleAuth.idToken,
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
+      if (mounted) {
+        _navigateToHome();
+      }
     } on FirebaseAuthException catch (e) {
       _showError(e.message);
     }
@@ -55,11 +74,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _verifyPhone() async {
+    if (_phoneController.text.isEmpty) {
+      _showError('请输入手机号码');
+      return;
+    }
+
     setState(() => _isLoading = true);
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: _phoneController.text.trim(),
       verificationCompleted: (PhoneAuthCredential credential) async {
         await FirebaseAuth.instance.signInWithCredential(credential);
+        if (mounted) {
+          _navigateToHome();
+        }
       },
       verificationFailed: (FirebaseAuthException e) {
         _showError(e.message);
@@ -78,7 +105,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithSmsCode() async {
-    if (_verificationId == null) return;
+    if (_verificationId == null || _smsCodeController.text.isEmpty) {
+      _showError('请输入验证码');
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final credential = PhoneAuthProvider.credential(
@@ -86,6 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
         smsCode: _smsCodeController.text.trim(),
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
+      if (mounted) {
+        _navigateToHome();
+      }
     } on FirebaseAuthException catch (e) {
       _showError(e.message);
     }
@@ -120,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -140,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _phoneController,
                     decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
@@ -149,6 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _smsCodeController,
                     decoration: const InputDecoration(labelText: 'SMS Code'),
+                    keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 8),
                   FilledButton(

@@ -2,12 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'login_screen.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    
+    // Initialize Firebase App Check in debug mode
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug,
+      // Use debug provider for development
+      appleProvider: AppleProvider.debug,
+    );
+    
+    print('Firebase App Check initialized successfully');
+  } catch (e) {
+    print('Error initializing Firebase: $e');
+  }
+
   runApp(const MyApp());
 }
 

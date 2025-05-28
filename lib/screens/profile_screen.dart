@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 
 import '../models/profile_model.dart';
@@ -20,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _storage = FirebaseStorage.instance;
   final _auth = FirebaseAuth.instance;
   final _imagePicker = ImagePicker();
+  bool _isImagePickerActive = false;
 
   UserProfile? _userProfile;
   bool _isLoading = true;
@@ -291,10 +293,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final userId = _auth.currentUser?.uid;
       if (userId == null) return null;
+      
+      print('Uploading image for child: $childId');
       final ref = _storage.ref().child('child_photos/$userId/$childId.jpg');
       await ref.putFile(imageFile);
-      return await ref.getDownloadURL();
+      final url = await ref.getDownloadURL();
+      print('Image uploaded successfully. URL: $url');
+      return url;
     } catch (e) {
+      print('Error uploading image: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error uploading image: $e')),
       );
@@ -303,19 +310,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage(ChildInfo child) async {
+    if (_isImagePickerActive) {
+      print('Image picker is already active');
+      return;
+    }
+    
     try {
+      _isImagePickerActive = true;
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
       );
-      if (image == null) return;
+      
+      if (image == null) {
+        print('No image selected');
+        return;
+      }
+      
+      print('Image picked: ${image.path}');
       final imageFile = File(image.path);
       final photoUrl = await _uploadImage(imageFile, child.id);
+      
       if (photoUrl != null) {
+        print('Updating child profile with new photo URL');
         final userId = _auth.currentUser?.uid;
         if (userId == null) return;
+        
         final updatedChildren = List<ChildInfo>.from(_userProfile?.children ?? []);
         final index = updatedChildren.indexWhere((c) => c.id == child.id);
         if (index != -1) {
@@ -325,16 +347,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             birthDate: child.birthDate,
             photoUrl: photoUrl,
           );
+          
           await _firestore.collection('profiles').doc(userId).update({
             'children': updatedChildren.map((c) => c.toMap()).toList(),
           });
+          
+          print('Profile updated successfully');
           _loadUserProfile();
         }
       }
     } catch (e) {
+      print('Error picking/uploading image: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
+        SnackBar(content: Text('Error updating profile: $e')),
       );
+    } finally {
+      _isImagePickerActive = false;
     }
   }
 
@@ -344,101 +372,143 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile', style: AppTextStyles.titleLarge),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _showEditProfileDialog(_userProfile),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_userProfile == null)
-              Center(
-                child: ElevatedButton(
-                  onPressed: _showEditProfileDialog,
-                  child: Text('Create Profile', style: AppTextStyles.button),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_userProfile == null)
+            Center(
+              child: ElevatedButton(
+                onPressed: _showEditProfileDialog,
+                child: Text('Create Profile', style: AppTextStyles.button),
+              ),
+            )
+          else ...[
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
+                    Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
+                  ],
                 ),
-              )
-            else ...[
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                trailing: IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => _showEditProfileDialog(_userProfile),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Children',
+                  style: AppTextStyles.titleLarge.copyWith(fontSize: 20),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _showAddChildDialog,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ..._userProfile!.children.map((child) => Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: Column(
                     children: [
-                      Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
-                      Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Children',
-                    style: AppTextStyles.titleLarge.copyWith(fontSize: 20),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _showAddChildDialog,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ..._userProfile!.children.map((child) => Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: GestureDetector(
-                            onTap: () => _pickImage(child),
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundImage: child.photoUrl != null
-                                  ? NetworkImage(child.photoUrl!)
-                                  : const AssetImage('assets/photos/default_avatar.png') as ImageProvider,
-                              child: child.photoUrl == null
-                                  ? const Icon(Icons.add_a_photo)
-                                  : null,
-                            ),
-                          ),
-                          title: Text(child.name, style: AppTextStyles.bodyLarge),
-                          subtitle: child.birthDate != null
-                              ? Text(
-                                  'Birth Date: ${child.birthDate.toString().split(' ')[0]}',
-                                  style: AppTextStyles.bodyMedium,
-                                )
-                              : null,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showAddChildDialog(child),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () => _deleteChild(child.id),
-                              ),
-                            ],
+                      ListTile(
+                        leading: GestureDetector(
+                          onTap: () => _pickImage(child),
+                          child: CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.grey[200],
+                            child: child.photoUrl != null
+                                ? ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: child.photoUrl!,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      cacheManager: null,
+                                      maxHeightDiskCache: 1024,
+                                      maxWidthDiskCache: 1024,
+                                      memCacheHeight: 1024,
+                                      memCacheWidth: 1024,
+                                      errorListener: (error) {
+                                        print('CachedNetworkImage error: $error');
+                                      },
+                                      useOldImageOnUrlChange: true,
+                                      placeholder: (context, url) => const Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) {
+                                        print('Error loading image: $url, Error: $error');
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            const Icon(Icons.error),
+                                            Positioned(
+                                              bottom: 0,
+                                              child: IconButton(
+                                                iconSize: 16,
+                                                icon: const Icon(Icons.refresh),
+                                                onPressed: () {
+                                                  CachedNetworkImage.evictFromCache(url);
+                                                  setState(() {});
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.add_a_photo),
                           ),
                         ),
-                      ],
-                    ),
-                  )),
-            ],
+                        title: Text(child.name, style: AppTextStyles.bodyLarge),
+                        subtitle: child.birthDate != null
+                            ? Text(
+                                'Birth Date: ${child.birthDate.toString().split(' ')[0]}',
+                                style: AppTextStyles.bodyMedium,
+                              )
+                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _showAddChildDialog(child),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _deleteChild(child.id),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
           ],
-        ),
+        ],
       ),
     );
   }

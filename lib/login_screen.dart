@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'hello_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/forget_password_screen.dart';
+import 'screens/register_screen.dart';
+import 'styles/app_text_styles.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,14 +24,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String? message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message ?? '登录失败')),
+      SnackBar(
+        content: Text(
+          message ?? '登录失败',
+          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+        ),
+      ),
     );
   }
 
   void _navigateToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HelloScreen()),
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 
@@ -137,14 +145,26 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Welcome back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(
+                  'Welcome back',
+                  style: AppTextStyles.titleLarge,
+                ),
                 const SizedBox(height: 8),
-                const Text('Sign in to your account to continue'),
+                Text(
+                  'Sign in to your account to continue',
+                  style: AppTextStyles.bodyMedium,
+                ),
                 const SizedBox(height: 24),
                 SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment(value: 0, label: Text('Email')),
-                    ButtonSegment(value: 1, label: Text('Phone')),
+                  segments: [
+                    ButtonSegment(
+                      value: 0,
+                      label: Text('Email', style: AppTextStyles.button),
+                    ),
+                    ButtonSegment(
+                      value: 1,
+                      label: Text('Phone', style: AppTextStyles.button),
+                    ),
                   ],
                   selected: {_tabIndex},
                   onSelectionChanged: (s) => setState(() => _tabIndex = s.first),
@@ -153,44 +173,76 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (_tabIndex == 0) ...[
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: AppTextStyles.bodyMedium,
+                      prefixIcon: const Icon(Icons.email),
+                    ),
+                    style: AppTextStyles.bodyMedium,
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: AppTextStyles.bodyMedium,
+                      prefixIcon: const Icon(Icons.lock),
+                    ),
+                    style: AppTextStyles.bodyMedium,
                     obscureText: true,
                   ),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: _isLoading ? null : _signInWithEmail,
-                    child: const Text('Login'),
+                    child: Text('Login', style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () {}, // 忘记密码逻辑
-                    child: const Text('Forgot password?'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgetPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Forgot password?',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                   ),
                 ] else ...[
                   TextField(
                     controller: _phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      labelStyle: AppTextStyles.bodyMedium,
+                      prefixIcon: const Icon(Icons.phone),
+                    ),
+                    style: AppTextStyles.bodyMedium,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _verifyPhone,
-                    child: const Text('Send Code'),
+                    child: Text('Send Code', style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                   TextField(
                     controller: _smsCodeController,
-                    decoration: const InputDecoration(labelText: 'SMS Code'),
+                    decoration: InputDecoration(
+                      labelText: 'SMS Code',
+                      labelStyle: AppTextStyles.bodyMedium,
+                      prefixIcon: const Icon(Icons.sms),
+                    ),
+                    style: AppTextStyles.bodyMedium,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _signInWithSmsCode,
-                    child: const Text('Verify & Login'),
+                    child: Text('Verify & Login', style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -198,7 +250,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.g_mobiledata),
-                  label: const Text('Continue with Google'),
+                  label: Text(
+                    'Continue with Google',
+                    style: AppTextStyles.button.copyWith(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                   onPressed: _isLoading ? null : _signInWithGoogle,
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 48),
@@ -208,10 +265,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    Text(
+                      "Don't have an account?",
+                      style: AppTextStyles.bodyMedium,
+                    ),
                     TextButton(
-                      onPressed: () {}, // 跳转到注册页面
-                      child: const Text('Sign up'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Sign up',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),

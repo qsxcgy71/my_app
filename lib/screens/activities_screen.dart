@@ -19,6 +19,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, List<Activity>> _activities = {};
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -40,21 +41,19 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
       final snapshot = await _firestore
           .collection('activities')
           .where('userId', isEqualTo: userId)
+          .where('date', isGreaterThanOrEqualTo: startDate.toIso8601String())
+          .where('date', isLessThanOrEqualTo: endDate.toIso8601String())
+          .orderBy('date', descending: true)
           .get();
 
       print('Found ${snapshot.docs.length} activities in total');
 
       final activities = <DateTime, List<Activity>>{};
       for (final doc in snapshot.docs) {
-        //print('Processing document: ${doc.id}');
-        //print('Document data: ${doc.data()}');
-        
         final data = doc.data();
         final dateStr = data['date'] as String;
         final activityDate = DateTime.parse(dateStr);
-        //print('Activity date: $activityDate');
 
-        // 只保留当月的活动
         if (activityDate.year == _focusedDay.year && 
             activityDate.month == _focusedDay.month) {
           final activity = Activity.fromMap({
@@ -68,12 +67,13 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             activity.date.day,
           );
           
-          activities[date] = [...(activities[date] ?? []), activity];
+          if (activities[date] == null) {
+            activities[date] = [];
+          }
+          activities[date]!.add(activity);
           print('Added activity for date: $date');
         }
       }
-
-      //print('Final activities map: $activities');
 
       if (mounted) {
         setState(() {
@@ -138,7 +138,11 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   'userId': userId,
                   'title': titleController.text.trim(),
                   'description': descriptionController.text.trim(),
-                  'date': date!.toIso8601String(),
+                  'date': DateTime(
+                    date?.year ?? DateTime.now().year,
+                    date?.month ?? DateTime.now().month,
+                    date?.day ?? DateTime.now().day,
+                  ).toIso8601String(),
                   'createdAt': DateTime.now().toIso8601String(),
                 });
                 
@@ -316,7 +320,11 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                 await _firestore.collection('activities').doc(activity.id).update({
                   'title': titleController.text.trim(),
                   'description': descriptionController.text.trim(),
-                  'date': selectedDate.toIso8601String(),
+                  'date': DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                  ).toIso8601String(),
                 });
                 
                 print('Activity updated successfully');
@@ -354,15 +362,18 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
           )] ??
             [];
 
-    //print('Selected day: $_selectedDay');
-    //print('Activities for selected day: $selectedDayActivities');
-
     return Column(
       children: [
         TableCalendar(
           firstDay: DateTime.utc(2020, 1, 1),
           lastDay: DateTime.utc(2030, 12, 31),
           focusedDay: _focusedDay,
+          calendarFormat: _calendarFormat,
+          onFormatChanged: (format) {
+            setState(() {
+              _calendarFormat = format;
+            });
+          },
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
           onDaySelected: (selectedDay, focusedDay) {
             print('Day selected: $selectedDay');
@@ -383,7 +394,6 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
               day.day,
             )] ??
                 [];
-            //print('Events for $day: ${events.length}');
             return events;
           },
           calendarStyle: CalendarStyle(
@@ -393,6 +403,11 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
               shape: BoxShape.circle,
             ),
           ),
+          availableCalendarFormats: const {
+            CalendarFormat.month: 'Month',
+            CalendarFormat.twoWeeks: '2 Weeks',
+            CalendarFormat.week: 'Week'
+          },
         ),
         const Divider(height: 1),
         Expanded(
@@ -428,20 +443,56 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                         itemCount: selectedDayActivities.length,
                         itemBuilder: (context, index) {
                           final activity = selectedDayActivities[index];
-                          return ListTile(
-                            title: Text(
-                              activity.title,
-                              style: AppTextStyles.bodyLarge,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
                             ),
-                            subtitle: activity.description?.isNotEmpty == true
-                                ? Text(
-                                    activity.description!,
-                                    style: AppTextStyles.bodyMedium,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                : null,
-                            onTap: () => _showActivityDetails(activity),
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                                ),
+                              ),
+                              child: InkWell(
+                                onTap: () => _showActivityDetails(activity),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              activity.title,
+                                              style: AppTextStyles.bodyLarge.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (activity.description?.isNotEmpty == true) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          activity.description!,
+                                          style: AppTextStyles.bodyMedium.copyWith(
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           );
                         },
                       ),

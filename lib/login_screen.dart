@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 import 'screens/main_screen.dart';
 import 'screens/forget_password_screen.dart';
 import 'screens/register_screen.dart';
@@ -21,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _verificationId;
   bool _isLoading = false;
   int _tabIndex = 0;
+  String _selectedCountryCode = '+852'; // Default to Hong Kong
 
   void _showError(String? message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -88,8 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
+    final phoneNumber = '$_selectedCountryCode${_phoneController.text.trim()}';
     await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: _phoneController.text.trim(),
+      phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
         await FirebaseAuth.instance.signInWithCredential(credential);
         if (mounted) {
@@ -214,21 +217,69 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ] else ...[
-                  TextField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: 'Phone Number',
-                      labelStyle: AppTextStyles.bodyMedium,
-                      prefixIcon: const Icon(Icons.phone),
-                    ),
-                    style: AppTextStyles.bodyMedium,
-                    keyboardType: TextInputType.phone,
+                  Row(
+                    children: [
+                      // 国家代码选择器区域
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey.withOpacity(0.1), // 淡灰色背景，增强对比度
+                        ),
+                        width: 115, // 固定宽度，便于对齐
+                        height: 56, // 与 TextField 高度一致
+                        child: CountryCodePicker(
+                          onChanged: (CountryCode countryCode) {
+                            setState(() {
+                              _selectedCountryCode = countryCode.dialCode ?? '+852';
+                            });
+                          },
+                          initialSelection: 'HK',
+                          favorite: const ['HK', 'CN'],
+                          showCountryOnly: false,
+                          showOnlyCountryWhenClosed: false,
+                          alignLeft: false,
+                          textStyle: AppTextStyles.bodyMedium.copyWith(
+                            fontSize: 16,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                          dialogBackgroundColor: Colors.white,
+                          barrierColor: Colors.black54,
+                          flagWidth: 24,
+                          padding: EdgeInsets.zero,
+                          boxDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // 手机号输入框
+                      Expanded(
+                        child: TextField(
+                          controller: _phoneController,
+                          decoration: InputDecoration(
+                            labelText: 'Phone Number',
+                            labelStyle: AppTextStyles.bodyMedium,
+                            hintText: 'Enter phone number',
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                          ),
+                          style: AppTextStyles.bodyMedium,
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _verifyPhone,
                     child: Text('Send Code', style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _smsCodeController,
                     decoration: InputDecoration(

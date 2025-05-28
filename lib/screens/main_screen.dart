@@ -19,13 +19,13 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const ProfileScreen(),
     const ActivitiesScreen(),
-    const PlaceholderScreen(title: 'Settings'),
+    const PlaceholderScreen(title: 'Information'),
   ];
 
   final List<String> _titles = [
     'My Profile',
     'Activities',
-    'Settings',
+    'Information',
   ];
 
   @override
@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'Information',
           ),
         ],
       ),

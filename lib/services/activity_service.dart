@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../models/activity_model.dart';
 
 class ActivityService {
@@ -11,62 +12,65 @@ class ActivityService {
   final Map<DateTime, DocumentSnapshot> _lastDocuments = {};
 
   // 获取指定月份的活动
-  Future<({Map<DateTime, List<Activity>> activities})> getMonthActivities({
-    required DateTime focusedDay,
-  }) async {
+  Future<Map<DateTime, List<Activity>>> getMonthActivities(DateTime focusedDay) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) {
-      return (activities: <DateTime, List<Activity>>{});
-    }
+    if (userId == null) return {};
 
     try {
       final startDate = DateTime(focusedDay.year, focusedDay.month, 1);
       final endDate = DateTime(focusedDay.year, focusedDay.month + 1, 0);
 
-      Query query = _firestore
+      final snapshot = await _firestore
           .collection('activities')
           .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: startDate.toIso8601String())
-          .where('date', isLessThanOrEqualTo: endDate.toIso8601String())
-          .orderBy('date', descending: true)
-          .limit(pageSize);
+          .get();
 
-      final snapshot = await query.get();
       final activities = <DateTime, List<Activity>>{};
       
-      if (snapshot.docs.isNotEmpty) {
-        _lastDocuments[focusedDay] = snapshot.docs.last;
-      }
-
       for (final doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final dateStr = data['date'] as String;
-        final activityDate = DateTime.parse(dateStr);
-
-        if (activityDate.year == focusedDay.year && 
-            activityDate.month == focusedDay.month) {
+        final data = doc.data();
+        
+        try {
           final activity = Activity.fromMap({
             ...data,
             'id': doc.id,
           });
-          
-          final date = DateTime(
-            activity.date.year,
-            activity.date.month,
-            activity.date.day,
-          );
-          
-          if (activities[date] == null) {
-            activities[date] = [];
+
+          if (activity.date.year == focusedDay.year && 
+              activity.date.month == focusedDay.month) {
+            
+            final dateKey = DateTime(
+              activity.date.year,
+              activity.date.month,
+              activity.date.day,
+            );
+            
+            if (activities[dateKey] == null) {
+              activities[dateKey] = [];
+            }
+            activities[dateKey]!.add(activity);
           }
-          activities[date]!.add(activity);
+        } catch (e) {
+          continue;
         }
       }
 
-      return (activities: activities);
+      // Sort activities within each day by time
+      activities.forEach((date, dayActivities) {
+        dayActivities.sort((a, b) {
+          if (a.time == null && b.time != null) return -1;
+          if (a.time != null && b.time == null) return 1;
+          if (a.time == null && b.time == null) {
+            return a.createdAt.compareTo(b.createdAt);
+          }
+          return a.fullDateTime.compareTo(b.fullDateTime);
+        });
+      });
+
+      return activities;
     } catch (e) {
-      print('Error loading activities: $e');
-      return (activities: <DateTime, List<Activity>>{});
+      // Handle error silently
+      return {};
     }
   }
 
@@ -147,71 +151,64 @@ class ActivityService {
   }
 
   // 添加新活动
-  Future<void> addActivity({
+  Future<Activity> addActivity({
     required String title,
-    required String description,
     required DateTime date,
+    String? description,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    try {
-      print('Adding activity for date: ${date.toString()}');
-      final docRef = await _firestore.collection('activities').add({
-        'userId': userId,
-        'title': title.trim(),
-        'description': description.trim(),
-        'date': DateTime(
-          date.year,
-          date.month,
-          date.day,
-        ).toIso8601String(),
-        'createdAt': DateTime.now().toIso8601String(),
-      });
-      
-      print('Activity added with ID: ${docRef.id}');
-      clearPaginationState(); // 清除分页状态以便重新加载
-    } catch (e) {
-      print('Error adding activity: $e');
-      throw Exception('Failed to add activity');
-    }
+    final activity = Activity(
+      id: '',
+      title: title.trim(),
+      description: description?.trim().isEmpty == true ? null : description?.trim(),
+      date: date,
+      time: startTime,
+      endTime: endTime,
+      createdAt: DateTime.now(),
+    );
+
+    final activityData = activity.toMap();
+    activityData['userId'] = userId;
+    
+    final docRef = await _firestore.collection('activities').add(activityData);
+    return activity.copyWith(id: docRef.id);
   }
 
   // 更新活动
   Future<void> updateActivity({
     required String activityId,
     required String title,
-    required String description,
     required DateTime date,
+    String? description,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    required DateTime createdAt,
   }) async {
-    try {
-      print('Updating activity: $activityId');
-      await _firestore.collection('activities').doc(activityId).update({
-        'title': title.trim(),
-        'description': description.trim(),
-        'date': DateTime(
-          date.year,
-          date.month,
-          date.day,
-        ).toIso8601String(),
-      });
-      
-      print('Activity updated successfully');
-      clearPaginationState(); // 清除分页状态以便重新加载
-    } catch (e) {
-      print('Error updating activity: $e');
-      throw Exception('Failed to update activity');
-    }
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    final activity = Activity(
+      id: activityId,
+      title: title.trim(),
+      description: description?.trim().isEmpty == true ? null : description?.trim(),
+      date: date,
+      time: startTime,
+      endTime: endTime,
+      createdAt: createdAt,
+    );
+
+    final activityData = activity.toMap();
+    activityData['userId'] = userId;
+    
+    await _firestore.collection('activities').doc(activityId).update(activityData);
   }
 
   // 删除活动
   Future<void> deleteActivity(String activityId) async {
-    try {
-      await _firestore.collection('activities').doc(activityId).delete();
-      clearPaginationState(); // 清除分页状态以便重新加载
-    } catch (e) {
-      print('Error deleting activity: $e');
-      throw Exception('Failed to delete activity');
-    }
+    await _firestore.collection('activities').doc(activityId).delete();
   }
 } 

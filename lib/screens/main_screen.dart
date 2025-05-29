@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'profile_screen.dart';
 import 'activities_screen.dart';
 import 'placeholder_screen.dart';
@@ -34,12 +33,11 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showWelcomeMessage() {
-    final user = _authService.currentUser;
-    if (user != null) {
+    if (_authService.currentUser != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Welcome back, ${user.displayName ?? user.email ?? 'User'}!',
+            'Welcome back, ${_authService.currentUserDisplayName}!',
             style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
           ),
           backgroundColor: Colors.green,
@@ -58,7 +56,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<String> _titles = [
     'My Profile',
-    'Activities',
+    'Calendar',
     'Information',
   ];
 
@@ -96,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today),
-            label: 'Activities',
+            label: 'Calendar',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

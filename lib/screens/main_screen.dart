@@ -56,7 +56,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<String> _titles = [
     'My Profile',
-    'Activities',
+    'Calendar',
     'Information',
   ];
 
@@ -94,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today),
-            label: 'Activities',
+            label: 'Calendar',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

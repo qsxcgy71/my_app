@@ -17,6 +17,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   final _lessonService = LessonService();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   
   // Tab controller
   late TabController _tabController;
@@ -24,13 +25,11 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   // Data
   List<Lesson> _enrolledLessons = [];
   List<Lesson> _completedLessons = [];
+  List<Lesson> _searchResults = [];
   
-  // Calendar
-  bool _isCalendarVisible = false;
-  late AnimationController _calendarAnimationController;
-  late Animation<double> _calendarAnimation;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  // Search
+  bool _isSearchMode = false;
+  String _searchQuery = '';
 
   // Pagination
   int _currentPage = 0;
@@ -41,46 +40,66 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _selectedDay = _focusedDay;
-    
-    _calendarAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _calendarAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _calendarAnimationController,
-      curve: Curves.easeInOut,
-    ));
     
     _loadLessons();
     
     _tabController.addListener(() {
-      setState(() {
-        _currentPage = 0;
-        _hasMoreData = _getCurrentLessons().length > _pageSize;
-      });
+      if (!_isSearchMode) {
+        setState(() {
+          _currentPage = 0;
+          _hasMoreData = _getCurrentLessons().length > _pageSize;
+        });
+      }
+    });
+
+    _searchController.addListener(() {
+      _performSearch(_searchController.text);
     });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _calendarAnimationController.dispose();
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  void _toggleCalendar() {
+  void _toggleSearchMode() {
     setState(() {
-      _isCalendarVisible = !_isCalendarVisible;
+      _isSearchMode = !_isSearchMode;
+      if (!_isSearchMode) {
+        _searchController.clear();
+        _searchQuery = '';
+        _searchResults.clear();
+        _currentPage = 0;
+        _hasMoreData = _getCurrentLessons().length > _pageSize;
+      }
     });
-    if (_isCalendarVisible) {
-      _calendarAnimationController.forward();
-    } else {
-      _calendarAnimationController.reverse();
+  }
+
+  void _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchQuery = '';
+        _searchResults.clear();
+      });
+      return;
+    }
+
+    setState(() {
+      _searchQuery = query.trim();
+    });
+
+    try {
+      final results = await _lessonService.searchLessons(query.trim());
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+        });
+      }
+    } catch (e) {
+      // Handle search error silently
     }
   }
 
@@ -131,10 +150,16 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   }
 
   List<Lesson> _getCurrentLessons() {
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      return _searchResults;
+    }
     return _tabController.index == 0 ? _enrolledLessons : _completedLessons;
   }
 
   List<Lesson> _getPaginatedLessons() {
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      return _searchResults; // 搜索结果不分页，显示所有结果
+    }
     final lessons = _getCurrentLessons();
     final endIndex = (_currentPage + 1) * _pageSize;
     return lessons.take(endIndex).toList();
@@ -185,237 +210,217 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         backgroundColor: Colors.grey[200],
         elevation: 0,
         title: Text(
-          '我的课程',
+          _isSearchMode ? '搜索课程' : '我的课程',
           style: AppTextStyles.titleLarge.copyWith(
             color: Colors.black,
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              _isCalendarVisible ? Icons.calendar_month : Icons.calendar_today,
-              color: Colors.black,
+          if (_isSearchMode) ...[
+            TextButton(
+              onPressed: _toggleSearchMode,
+              child: Text(
+                '取消',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            onPressed: _toggleCalendar,
-          ),
-          // 临时测试按钮 - 创建示例课程
-          IconButton(
-            icon: const Icon(Icons.add_circle, color: Colors.green),
-            onPressed: _createSampleLessons,
-          ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(
+                Icons.search,
+                color: Colors.black,
+              ),
+              onPressed: _toggleSearchMode,
+            ),
+            // 临时测试按钮 - 创建示例课程
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: Colors.green),
+              onPressed: _createSampleLessons,
+            ),
+          ],
         ],
       ),
       body: Column(
         children: [
-          // Calendar (collapsible)
-          AnimatedBuilder(
-            animation: _calendarAnimation,
-            builder: (context, child) => SizeTransition(
-              sizeFactor: _calendarAnimation,
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: TableCalendar<Lesson>(
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    eventLoader: _getEventsForDay,
-                    startingDayOfWeek: StartingDayOfWeek.sunday,
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                    },
-                    calendarStyle: CalendarStyle(
-                      outsideDaysVisible: false,
-                      weekendTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.red[400]),
-                      defaultTextStyle: AppTextStyles.bodyMedium,
-                      selectedTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
-                      todayTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.blue, fontWeight: FontWeight.w600),
-                      selectedDecoration: const BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      todayDecoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.blue, width: 1),
-                      ),
-                      markerDecoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      markersMaxCount: 3,
-                      markerSize: 6,
-                    ),
-                    headerStyle: HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      titleTextStyle: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    daysOfWeekStyle: DaysOfWeekStyle(
-                      weekdayStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600], fontWeight: FontWeight.w500),
-                      weekendStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.red[400], fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Tab Bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(4),
+          // Search Bar (only visible in search mode)
+          if (_isSearchMode) ...[
+            Container(
+              margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.grey[50]!,
-                    Colors.white,
-                  ],
-                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '搜索课程名称、类别或描述...',
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: Colors.grey[600]),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                  hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+                ),
+                style: AppTextStyles.bodyMedium,
+              ),
+            ),
+          ],
+
+          // Tab Bar (hidden in search mode)
+          if (!_isSearchMode) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.blue.shade400,
-                      Colors.blue.shade600,
+                      Colors.grey[50]!,
+                      Colors.white,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.shade400,
+                        Colors.blue.shade600,
+                      ],
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey[600],
+                  labelStyle: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                  unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  tabs: [
+                    _buildTab('已报读课程', Icons.schedule, 0),
+                    _buildTab('已完成课程', Icons.check_circle, 1),
                   ],
                 ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[600],
-                labelStyle: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-                unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                tabs: [
-                  _buildTab('已报读课程', Icons.schedule, 0),
-                  _buildTab('已完成课程', Icons.check_circle, 1),
-                ],
               ),
             ),
-          ),
+          ],
 
           const SizedBox(height: 16),
 
-          // Content
+          // Lessons List
           Expanded(
-            child: SmartRefresher(
-              enablePullDown: true,
-              enablePullUp: _hasMoreData,
-              header: WaterDropHeader(
-                complete: Text(
-                  'Updated!',
-                  style: AppTextStyles.bodyMedium,
-                ),
-                failed: Text(
-                  'Update Failed',
-                  style: AppTextStyles.bodyMedium,
-                ),
-              ),
-              footer: CustomFooter(
-                builder: (BuildContext context, LoadStatus? mode) {
-                  Widget body;
-                  if (mode == null) {
-                    body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                  } else if (mode == LoadStatus.idle) {
-                    body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                  } else if (mode == LoadStatus.loading) {
-                    body = Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            child: _isSearchMode
+                ? _buildSearchResults()
+                : SmartRefresher(
+                    header: WaterDropHeader(
+                      complete: Text(
+                        'Updated!',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                      failed: Text(
+                        'Update Failed',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    ),
+                    footer: CustomFooter(
+                      builder: (BuildContext context, LoadStatus? mode) {
+                        Widget body;
+                        if (mode == null) {
+                          body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                        } else if (mode == LoadStatus.idle) {
+                          body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                        } else if (mode == LoadStatus.loading) {
+                          body = Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Text("Loading...", style: AppTextStyles.bodyMedium),
+                            ],
+                          );
+                        } else if (mode == LoadStatus.failed) {
+                          body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+                        } else if (mode == LoadStatus.canLoading) {
+                          body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
+                        } else {
+                          body = Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, size: 16, color: Colors.green),
+                              const SizedBox(width: 4),
+                              Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                            ],
+                          );
+                        }
+                        return Container(
+                          height: 55.0,
+                          child: Center(child: body),
+                        );
+                      },
+                    ),
+                    controller: _refreshController,
+                    onRefresh: _onRefresh,
+                    onLoading: _onLoading,
+                    child: TabBarView(
+                      controller: _tabController,
                       children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: 8),
-                        Text("Loading...", style: AppTextStyles.bodyMedium),
+                        _buildLessonsList(_enrolledLessons),
+                        _buildLessonsList(_completedLessons),
                       ],
-                    );
-                  } else if (mode == LoadStatus.failed) {
-                    body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-                  } else if (mode == LoadStatus.canLoading) {
-                    body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
-                  } else {
-                    body = Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle, size: 16, color: Colors.green),
-                        const SizedBox(width: 4),
-                        Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                      ],
-                    );
-                  }
-                  return Container(
-                    height: 55.0,
-                    child: Center(child: body),
-                  );
-                },
-              ),
-              controller: _refreshController,
-              onRefresh: _onRefresh,
-              onLoading: _onLoading,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildLessonsList(_enrolledLessons),
-                  _buildLessonsList(_completedLessons),
-                ],
-              ),
-            ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -576,66 +581,31 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 课程类别标签
-                          if (lesson.courseCategory != null) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                lesson.courseCategory!,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                          ],
-                          
-                          // 课程名称
+                          // 课程名称（主标题）
                           Text(
                             lesson.courseName,
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontSize: 18,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           
-                          // 具体课节名称
+                          // 课节标题（内容）
                           Text(
                             lesson.title,
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.grey[700],
                               fontWeight: FontWeight.w500,
+                              height: 1.4,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          
-                          // 描述
-                          if (lesson.description != null && lesson.description!.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              lesson.description!,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -670,10 +640,202 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     );
   }
 
-  List<Lesson> _getEventsForDay(DateTime day) {
-    final allLessons = [..._enrolledLessons, ..._completedLessons];
-    return allLessons.where((lesson) {
-      return isSameDay(lesson.date, day);
-    }).toList();
+  Widget _buildSearchResults() {
+    if (_searchQuery.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '请输入搜索关键词',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '可搜索课程名称、类别或描述',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_searchResults.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '没有找到相关课程',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '尝试使用其他关键词搜索',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Search results header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            '搜索结果 (${_searchResults.length})',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        // Search results list
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _searchResults.length,
+            itemBuilder: (context, index) {
+              final lesson = _searchResults[index];
+              return _buildSearchResultCard(lesson);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResultCard(Lesson lesson) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LessonDetailScreen(lesson: lesson),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 状态标签
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: lesson.isPastLesson 
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    lesson.isPastLesson ? '已完成' : '已报读',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: lesson.isPastLesson ? Colors.green : Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // 课程名称（主标题）
+                Text(
+                  lesson.courseName,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    fontSize: 18,
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // 课节标题（内容）
+                Text(
+                  lesson.title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // 日期和时间信息
+                Row(
+                  children: [
+                    Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      lesson.timeString,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.grey[600],
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${lesson.date.year}年${lesson.date.month}月${lesson.date.day}日',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.grey[600],
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 } 

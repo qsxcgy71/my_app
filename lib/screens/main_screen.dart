@@ -25,6 +25,27 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    // Show welcome message for new logins
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWelcomeMessage();
+    });
+  }
+
+  void _showWelcomeMessage() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Welcome back, ${user.displayName ?? user.email ?? 'User'}!',
+            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   final List<Widget> _screens = [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'firebase_options.dart';
 import 'login_screen.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -31,13 +32,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kids Profile',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+    return RefreshConfiguration(
+      headerBuilder: () => WaterDropHeader(),
+      footerBuilder: () => ClassicFooter(),
+      headerTriggerDistance: 80.0,
+      springDescription: const SpringDescription(
+        stiffness: 170, 
+        damping: 16, 
+        mass: 1.9
       ),
-      home: const LoginScreen(),
+      maxOverScrollExtent: 100,
+      maxUnderScrollExtent: 0,
+      enableScrollWhenRefreshCompleted: true,
+      enableLoadingWhenFailed: true,
+      hideFooterWhenNotFull: false,
+      enableBallisticLoad: true,
+      child: MaterialApp(
+        title: 'Kids Profile',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+        ),
+        home: const LoginScreen(),
+      ),
     );
   }
 }

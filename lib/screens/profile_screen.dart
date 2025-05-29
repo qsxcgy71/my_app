@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'dart:io';
 
 import '../models/profile_model.dart';
-import '../styles/app_text_styles.dart'; // 引入自定义字体样式
+import '../styles/app_text_styles.dart';
+import '../services/profile_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -18,8 +17,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _firestore = FirebaseFirestore.instance;
-  final _storage = FirebaseStorage.instance;
+  final _profileService = ProfileService();
   final _auth = FirebaseAuth.instance;
   final _imagePicker = ImagePicker();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
@@ -82,27 +80,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserProfile() async {
     setState(() => _isLoading = true);
     try {
-      final userId = _auth.currentUser?.uid;
-      if (userId != null) {
-        final doc = await _firestore.collection('profiles').doc(userId).get();
-        if (doc.exists) {
-          setState(() {
-            _userProfile = UserProfile.fromMap({
-              ...doc.data()!,
-              'userId': userId,
-            });
-            // Reset pagination when loading profile
-            _currentChildrenPage = 0;
-            _hasMoreChildren = (_userProfile?.children.length ?? 0) > _childrenPageSize;
-          });
-        }
+      final profile = await _profileService.getUserProfile();
+      if (profile != null) {
+        setState(() {
+          _userProfile = profile;
+          // Reset pagination when loading profile
+          _currentChildrenPage = 0;
+          _hasMoreChildren = (_userProfile?.children.length ?? 0) > _childrenPageSize;
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading profile: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading profile: $e')),
+        );
+      }
     }
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _onRefresh() async {
@@ -205,6 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               final userId = _auth.currentUser?.uid;
               if (userId == null) return;
+              
               final newProfile = UserProfile(
                 userId: userId,
                 name: nameController.text.trim(),
@@ -212,13 +209,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 email: emailController.text.trim(),
                 children: profile?.children ?? [],
               );
-              await _firestore
-                  .collection('profiles')
-                  .doc(userId)
-                  .set(newProfile.toMap());
-              if (mounted) {
-                Navigator.pop(context);
-                _loadUserProfile();
+
+              try {
+                await _profileService.updateProfile(newProfile);
+                if (mounted) {
+                  Navigator.pop(context);
+                  _loadUserProfile();
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating profile: $e')),
+                  );
+                }
               }
             },
             child: Text('Save', style: AppTextStyles.bodyMedium),
@@ -312,9 +315,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
               
               try {
-                await _firestore.collection('profiles').doc(userId).update({
-                  'children': updatedChildren.map((c) => c.toMap()).toList(),
-                });
+                await _profileService.updateProfile(UserProfile(
+                  userId: _userProfile!.userId,
+                  name: _userProfile!.name,
+                  phone: _userProfile!.phone,
+                  email: _userProfile!.email,
+                  children: updatedChildren,
+                ));
                 
                 if (mounted) {
                   Navigator.pop(context);
@@ -377,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
-    
+
     if (confirm != true) return;
     
     _saveScrollPosition();
@@ -392,8 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Delete photo from storage if exists
       if (child?.photoUrl != null) {
         try {
-          final photoRef = _storage.refFromURL(child!.photoUrl!);
-          await photoRef.delete();
+          await _profileService.deleteChildPhoto(child!.id);
         } catch (e) {
           print('Failed to delete photo: $e');
         }
@@ -401,9 +407,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       final updatedChildren = _userProfile?.children.where((c) => c.id != childId).toList() ?? [];
       
-      await _firestore.collection('profiles').doc(userId).update({
-        'children': updatedChildren.map((c) => c.toMap()).toList(),
-      });
+      await _profileService.updateProfile(UserProfile(
+        userId: _userProfile!.userId,
+        name: _userProfile!.name,
+        phone: _userProfile!.phone,
+        email: _userProfile!.email,
+        children: updatedChildren,
+      ));
       
       if (mounted) {
         // Update locally instead of full refresh
@@ -438,26 +448,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<String?> _uploadImage(File imageFile, String childId) async {
-    try {
-      final userId = _auth.currentUser?.uid;
-      if (userId == null) return null;
-      
-      print('Uploading image for child: $childId');
-      final ref = _storage.ref().child('child_photos/$userId/$childId.jpg');
-      await ref.putFile(imageFile);
-      final url = await ref.getDownloadURL();
-      print('Image uploaded successfully. URL: $url');
-      return url;
-    } catch (e) {
-      print('Error uploading image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading image: $e')),
-      );
-      return null;
-    }
-  }
-
   Future<void> _pickImage(ChildInfo child) async {
     if (_isImagePickerActive) {
       print('Image picker is already active');
@@ -481,11 +471,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _shouldPreserveScroll = false; // Reset if cancelled
         return;
       }
+
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
       
       print('Image picked: ${image.path}');
       final imageFile = File(image.path);
-      final photoUrl = await _uploadImage(imageFile, child.id);
       
+      final photoUrl = await _profileService.uploadChildPhoto(imageFile, userId, child.id);
       if (photoUrl != null) {
         print('Updating child profile with new photo URL');
         final userId = _auth.currentUser?.uid;
@@ -501,9 +494,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             photoUrl: photoUrl,
           );
           
-          await _firestore.collection('profiles').doc(userId).update({
-            'children': updatedChildren.map((c) => c.toMap()).toList(),
-          });
+          await _profileService.updateProfile(UserProfile(
+            userId: _userProfile!.userId,
+            name: _userProfile!.name,
+            phone: _userProfile!.phone,
+            email: _userProfile!.email,
+            children: updatedChildren,
+          ));
           
           print('Profile updated successfully');
           
@@ -562,9 +559,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final allChildren = [...existingChildren, ...testChildren];
 
     try {
-      await _firestore.collection('profiles').doc(userId).update({
-        'children': allChildren.map((c) => c.toMap()).toList(),
-      });
+      await _profileService.updateProfile(UserProfile(
+        userId: _userProfile!.userId,
+        name: _userProfile!.name,
+        phone: _userProfile!.phone,
+        email: _userProfile!.email,
+        children: allChildren,
+      ));
       await _loadUserProfile();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import '../models/activity_model.dart';
 import '../styles/app_text_styles.dart';
+import '../services/activity_service.dart';
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
@@ -14,8 +13,7 @@ class ActivitiesScreen extends StatefulWidget {
 }
 
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
+  final _activityService = ActivityService();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   
   DateTime _focusedDay = DateTime.now();
@@ -25,9 +23,10 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   
   // Pagination variables
   List<Activity> _allActivities = [];
+  bool _hasMoreData = true;
+  bool _isLoading = false;
   int _currentPage = 0;
   final int _pageSize = 10;
-  bool _hasMoreData = true;
 
   @override
   void initState() {
@@ -36,72 +35,43 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     _loadActivities();
   }
 
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadActivities() async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return;
-
+    if (_isLoading) return;
+    _isLoading = true;
+    
     try {
-      final startDate = DateTime(_focusedDay.year, _focusedDay.month, 1);
-      final endDate = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
-
-      print('Loading activities for month: ${startDate.toString()} to ${endDate.toString()}');
-
-      final snapshot = await _firestore
-          .collection('activities')
-          .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: startDate.toIso8601String())
-          .where('date', isLessThanOrEqualTo: endDate.toIso8601String())
-          .orderBy('date', descending: true)
-          .get();
-
-      print('Found ${snapshot.docs.length} activities in total');
-
-      final activities = <DateTime, List<Activity>>{};
-      _allActivities.clear();
-      
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final dateStr = data['date'] as String;
-        final activityDate = DateTime.parse(dateStr);
-
-        if (activityDate.year == _focusedDay.year && 
-            activityDate.month == _focusedDay.month) {
-          final activity = Activity.fromMap({
-            ...data,
-            'id': doc.id,
-          });
-          
-          _allActivities.add(activity);
-          
-          final date = DateTime(
-            activity.date.year,
-            activity.date.month,
-            activity.date.day,
-          );
-          
-          if (activities[date] == null) {
-            activities[date] = [];
-          }
-          activities[date]!.add(activity);
-          print('Added activity for date: $date');
-        }
-      }
+      final result = await _activityService.getMonthActivities(
+        focusedDay: _focusedDay,
+      );
 
       if (mounted) {
         setState(() {
-          _activities = activities;
-          _currentPage = 0;
-          _hasMoreData = _allActivities.length > _pageSize;
+          _activities = result.activities;
+          _allActivities = result.activities.values.expand((list) => list).toList();
+          _hasMoreData = _allActivities.isNotEmpty;
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('Error loading activities: $e');
-      print('Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading activities: $e')),
+        );
+      }
+    } finally {
+      _isLoading = false;
     }
   }
 
   void _onRefresh() async {
     try {
+      _activityService.clearPaginationState();
       await _loadActivities();
       _refreshController.refreshCompleted();
     } catch (e) {
@@ -111,10 +81,11 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
 
   void _onLoading() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500)); // 模拟网络延迟
-      
-      final startIndex = (_currentPage + 1) * _pageSize;
-      if (startIndex >= _allActivities.length) {
+      final result = await _activityService.loadMoreActivities(
+        focusedDay: _focusedDay,
+      );
+
+      if (result.activities.isEmpty) {
         _refreshController.loadNoData();
         setState(() {
           _hasMoreData = false;
@@ -123,16 +94,39 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
       }
 
       setState(() {
-        _currentPage++;
-        if ((_currentPage + 1) * _pageSize >= _allActivities.length) {
-          _hasMoreData = false;
+        for (final entry in result.activities.entries) {
+          if (_activities.containsKey(entry.key)) {
+            _activities[entry.key]!.addAll(entry.value);
+          } else {
+            _activities[entry.key] = entry.value;
+          }
         }
+        _allActivities.addAll(result.activities.values.expand((list) => list));
+        _hasMoreData = result.hasMore;
       });
 
       _refreshController.loadComplete();
     } catch (e) {
       _refreshController.loadFailed();
     }
+  }
+
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (!isSameDay(_selectedDay, selectedDay)) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+        _currentPage = 0; // Reset pagination when selecting a new day
+      });
+    }
+  }
+
+  void _onMonthChanged(DateTime focusedDay) {
+    setState(() {
+      _focusedDay = focusedDay;
+      _currentPage = 0; // Reset pagination when changing month
+    });
+    _loadActivities(); // Reload activities for the new month
   }
 
   Future<void> _showAddActivityDialog([DateTime? date]) async {
@@ -177,33 +171,21 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
           FilledButton(
             onPressed: () async {
               if (titleController.text.isEmpty) return;
-              
-              final userId = _auth.currentUser?.uid;
-              if (userId == null) return;
 
               try {
-                print('Adding activity for date: ${date.toString()}');
-                final docRef = await _firestore.collection('activities').add({
-                  'userId': userId,
-                  'title': titleController.text.trim(),
-                  'description': descriptionController.text.trim(),
-                  'date': DateTime(
-                    date?.year ?? DateTime.now().year,
-                    date?.month ?? DateTime.now().month,
-                    date?.day ?? DateTime.now().day,
-                  ).toIso8601String(),
-                  'createdAt': DateTime.now().toIso8601String(),
-                });
-                
-                print('Activity added with ID: ${docRef.id}');
-
+                Navigator.pop(context);
+                await _activityService.addActivity(
+                  title: titleController.text,
+                  description: descriptionController.text,
+                  date: date!,
+                );
+                await _loadActivities();
+              } catch (e) {
                 if (mounted) {
-                  Navigator.pop(context);
-                  await _loadActivities();  // 等待加载完成
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to add activity: $e')),
+                  );
                 }
-              } catch (e, stackTrace) {
-                print('Error adding activity: $e');
-                print('Stack trace: $stackTrace');
               }
             },
             child: Text('Save', style: AppTextStyles.button.copyWith(color: Colors.white)),
@@ -283,10 +265,18 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
               );
 
               if (confirmed == true && mounted) {
-                await _firestore.collection('activities').doc(activity.id).delete();
-                if (mounted) {
-                  Navigator.pop(context);
-                  _loadActivities();
+                try {
+                  await _activityService.deleteActivity(activity.id);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    await _loadActivities();
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete activity: $e')),
+                    );
+                  }
                 }
               }
             },
@@ -360,35 +350,25 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
           FilledButton(
             onPressed: () async {
               if (titleController.text.isEmpty) return;
-              
-              final userId = _auth.currentUser?.uid;
-              if (userId == null) return;
 
               try {
-                print('Updating activity: ${activity.id}');
-                await _firestore.collection('activities').doc(activity.id).update({
-                  'title': titleController.text.trim(),
-                  'description': descriptionController.text.trim(),
-                  'date': DateTime(
-                    selectedDate.year,
-                    selectedDate.month,
-                    selectedDate.day,
-                  ).toIso8601String(),
-                });
-                
-                print('Activity updated successfully');
+                await _activityService.updateActivity(
+                  activityId: activity.id,
+                  title: titleController.text,
+                  description: descriptionController.text,
+                  date: selectedDate,
+                );
 
                 if (mounted) {
-                  Navigator.pop(context); // Close edit dialog
-                  Navigator.pop(context); // Close details dialog
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                   await _loadActivities();
                 }
-              } catch (e, stackTrace) {
+              } catch (e) {
                 print('Error updating activity: $e');
-                print('Stack trace: $stackTrace');
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error updating activity: $e')),
+                    SnackBar(content: Text('Failed to update activity: $e')),
                   );
                 }
               }
@@ -418,6 +398,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     // Get paginated activities for display
     final displayActivities = _getPaginatedActivities(selectedDayActivities);
 
+    // 确保活动按日期排序
+    selectedDayActivities.sort((a, b) => b.date.compareTo(a.date));
+
     return Column(
       children: [
         TableCalendar(
@@ -431,26 +414,15 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             });
           },
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          onDaySelected: (selectedDay, focusedDay) {
-            print('Day selected: $selectedDay');
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-          },
-          onPageChanged: (focusedDay) {
-            print('Page changed to: $focusedDay');
-            _focusedDay = focusedDay;
-            _loadActivities();
-          },
+          onDaySelected: _onDaySelected,
+          onPageChanged: _onMonthChanged,
           eventLoader: (day) {
-            final events = _activities[DateTime(
+            return _activities[DateTime(
               day.year,
               day.month,
               day.day,
             )] ??
-                <Activity>[];
-            return events;
+                [];
           },
           calendarStyle: CalendarStyle(
             markersMaxCount: 1,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'screens/main_screen.dart';
 import 'screens/forget_password_screen.dart';
 import 'screens/register_screen.dart';
 import 'styles/app_text_styles.dart';
+import 'services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -50,9 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _authService.signInWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
       if (mounted) {
         _navigateToHome();
@@ -66,15 +67,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      if (mounted) {
+      final userCredential = await _authService.signInWithGoogle();
+      if (userCredential != null && mounted) {
         _navigateToHome();
       }
     } on FirebaseAuthException catch (e) {
@@ -91,10 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     final phoneNumber = '$_selectedCountryCode${_phoneController.text.trim()}';
-    await FirebaseAuth.instance.verifyPhoneNumber(
+    await _authService.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        await _authService.signInWithCredential(credential);
         if (mounted) {
           _navigateToHome();
         }
@@ -123,11 +117,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: _smsCodeController.text.trim(),
+      await _authService.signInWithPhoneNumber(
+        _verificationId!,
+        _smsCodeController.text.trim(),
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
       if (mounted) {
         _navigateToHome();
       }

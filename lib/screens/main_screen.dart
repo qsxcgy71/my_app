@@ -5,6 +5,7 @@ import 'activities_screen.dart';
 import 'placeholder_screen.dart';
 import '../styles/app_text_styles.dart';
 import '../login_screen.dart';
+import '../services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -20,6 +21,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _selectedIndex;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showWelcomeMessage() {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _authService.currentUser;
     if (user != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -154,7 +156,7 @@ class _MainScreenState extends State<MainScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await FirebaseAuth.instance.signOut();
+      await _authService.signOut();
       if (mounted) {
         Navigator.pushReplacement(
           context,

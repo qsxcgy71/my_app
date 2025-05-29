@@ -8,6 +8,11 @@ class AuthService {
   // 获取当前用户
   User? get currentUser => _auth.currentUser;
 
+  String get currentUserDisplayName => 
+      _auth.currentUser?.displayName ?? 
+      _auth.currentUser?.email ?? 
+      'User';
+
   // 监听认证状态变化
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 

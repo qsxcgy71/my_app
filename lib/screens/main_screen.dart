@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
-import 'activities_screen.dart';
+import 'lessons_screen.dart';
 import 'placeholder_screen.dart';
 import '../styles/app_text_styles.dart';
 import '../login_screen.dart';
@@ -50,33 +50,19 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const ProfileScreen(),
-    const ActivitiesScreen(),
+    const LessonsScreen(),
     const PlaceholderScreen(title: 'Information'),
   ];
 
   final List<String> _titles = [
     'My Profile',
-    'Calendar',
+    'My Lessons',
     'Information',
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_selectedIndex],
-          style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            tooltip: 'Logout',
-            onPressed: () => _showLogoutConfirmation(context),
-          ),
-        ],
-      ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
@@ -92,9 +78,9 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Profile',
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: 'Calendar',
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Lessons',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

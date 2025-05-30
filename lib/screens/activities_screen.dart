@@ -369,9 +369,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                                 });
                               },
                               activeColor: Colors.blue,
-                            ),
-                          ],
-                        ),
+          ),
+        ],
+      ),
                       ),
                       
                       const SizedBox(height: 16),
@@ -388,11 +388,11 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                                 Text('Date', style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600])),
                                 const SizedBox(height: 4),
-                                Text(
+              Text(
                                   '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
                                   style: AppTextStyles.bodyLarge,
                                 ),
@@ -437,16 +437,16 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                                 children: [
                                   Text('Start Time', style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600])),
                                   const SizedBox(height: 4),
-                                  Text(
+            Text(
                                     startTime?.format(context) ?? 'Select start time',
                                     style: AppTextStyles.bodyLarge,
-                                  ),
-                                ],
-                              ),
+            ),
+          ],
+        ),
                               IconButton(
-                                onPressed: () async {
+            onPressed: () async {
                                   final time = await showTimePicker(
-                                    context: context,
+                context: context,
                                     initialTime: startTime ?? TimeOfDay.now(),
                                   );
                                   if (time != null) {
@@ -507,28 +507,28 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                                   }
                                 },
                                 icon: const Icon(Icons.access_time, color: Colors.blue),
-                              ),
-                            ],
-                          ),
+          ),
+        ],
+      ),
                         ),
                       ],
                       
                       const SizedBox(height: 20),
                       
                       // Description
-                      TextField(
-                        controller: descriptionController,
-                        decoration: InputDecoration(
-                          labelText: 'Description (Optional)',
-                          labelStyle: AppTextStyles.bodyMedium,
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Description (Optional)',
+                  labelStyle: AppTextStyles.bodyMedium,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                          ),
+                ),
                           filled: true,
                           fillColor: Colors.grey[50],
                           alignLabelWithHint: true,
-                        ),
-                        style: AppTextStyles.bodyMedium,
+              ),
+                  style: AppTextStyles.bodyMedium,
                         maxLines: 4,
                         textCapitalization: TextCapitalization.sentences,
                       ),
@@ -661,7 +661,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
         });
       }
 
-      if (mounted) {
+                if (mounted) {
         Navigator.pop(context);
         
         if (editActivity == null && newActivityWithId != null) {
@@ -681,8 +681,8 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error saving activity: $e')),
         );
       }
@@ -907,7 +907,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
             } else if (mode == LoadStatus.loading) {
               body = Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+      children: [
                   const SizedBox(
                     width: 16,
                     height: 16,
@@ -994,29 +994,29 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: TableCalendar<Activity>(
-                              firstDay: DateTime.utc(2020, 1, 1),
-                              lastDay: DateTime.utc(2030, 12, 31),
-                              focusedDay: _focusedDay,
-                              calendarFormat: _calendarFormat,
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: _focusedDay,
+          calendarFormat: _calendarFormat,
                               eventLoader: _getEventsForDay,
                               startingDayOfWeek: StartingDayOfWeek.sunday,
-                              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                              onDaySelected: (selectedDay, focusedDay) {
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          onDaySelected: (selectedDay, focusedDay) {
                                 if (!isSameDay(_selectedDay, selectedDay)) {
-                                  setState(() {
-                                    _selectedDay = selectedDay;
-                                    _focusedDay = focusedDay;
+            setState(() {
+              _selectedDay = selectedDay;
+              _focusedDay = focusedDay;
                                     // Reset pagination when switching days
                                     _currentPage = 0;
                                     _updateSelectedDayActivities();
-                                  });
+            });
                                 }
-                              },
-                              onPageChanged: (focusedDay) {
-                                _focusedDay = focusedDay;
-                                _loadActivities();
-                              },
-                              calendarStyle: CalendarStyle(
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+            _loadActivities();
+          },
+          calendarStyle: CalendarStyle(
                                 outsideDaysVisible: false,
                                 weekendTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.red[400]),
                                 holidayTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.red[400]),
@@ -1031,7 +1031,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                                 ),
                                 selectedDecoration: BoxDecoration(
                                   color: isSelectedDayToday ? Colors.green : Colors.blue,
-                                  shape: BoxShape.circle,
+              shape: BoxShape.circle,
                                   border: isSelectedDayToday ? Border.all(color: Colors.green.shade700, width: 2) : null,
                                 ),
                                 todayDecoration: BoxDecoration(
@@ -1083,8 +1083,8 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      children: [
-                        Text(
+                  children: [
+                    Text(
                           _isSearching && _searchQuery.isNotEmpty
                               ? 'Search Results'
                               : _selectedDay != null 
@@ -1103,9 +1103,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                               color: Colors.green,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(
+                        child: Text(
                               'TODAY',
-                              style: AppTextStyles.bodyMedium.copyWith(
+                          style: AppTextStyles.bodyMedium.copyWith(
                                 color: Colors.white,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -1172,9 +1172,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                         style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[500]),
                       ),
                     ],
-                  ),
-                ),
-              )
+                          ),
+                        ),
+                      )
             else
               SliverList(
                 delegate: SliverChildBuilderDelegate(
@@ -1207,7 +1207,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                           height: 50,
                           decoration: BoxDecoration(
                             color: activity.time == null ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             activity.time == null ? Icons.event : Icons.schedule,
@@ -1220,8 +1220,8 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                           style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
                         ),
                         subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
                             const SizedBox(height: 4),
                             Text(
                               activity.timeString,
@@ -1240,17 +1240,17 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                                 ),
                               ),
                             ],
-                            if (activity.description?.isNotEmpty == true) ...[
+                                      if (activity.description?.isNotEmpty == true) ...[
                               const SizedBox(height: 4),
-                              Text(
-                                activity.description!,
+                                        Text(
+                                          activity.description!,
                                 style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
-                        ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                         trailing: PopupMenuButton<String>(
                           icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1285,9 +1285,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> with TickerProvider
                           ],
                         ),
                         onTap: () => _showAddActivityDialog(activity.date, activity),
-                      ),
-                    );
-                  },
+                            ),
+                          );
+                        },
                   childCount: _getPaginatedActivities().length,
                 ),
               ),

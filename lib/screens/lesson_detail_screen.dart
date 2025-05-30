@@ -202,6 +202,7 @@ class LessonDetailScreen extends StatelessWidget {
             // 课程描述
             if (lesson.description != null && lesson.description!.isNotEmpty) ...[
               Container(
+                width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -225,11 +226,14 @@ class LessonDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      lesson.description!,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        height: 1.6,
-                        color: Colors.grey[700],
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        lesson.description!,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          height: 1.6,
+                          color: Colors.grey[700],
+                        ),
                       ),
                     ),
                   ],
@@ -240,6 +244,7 @@ class LessonDetailScreen extends StatelessWidget {
 
             // 课程详细信息
             Container(
+              width: double.infinity,
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(

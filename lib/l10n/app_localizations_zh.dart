@@ -298,4 +298,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeGoldenAmber => '金秋黄';
+
+  @override
+  String get themeReduce => '降溫主題';
+
+  @override
+  String get themeTepid => '暖和主題';
+
+  @override
+  String get themeDefence => '護衛主題';
+
+  @override
+  String get themeDreams => '美夢主題';
+
+  @override
+  String get themeEnergize => '活力主題';
+
+  @override
+  String get themeJoyful => '喜悅主題';
+
+  @override
+  String get themeFresh => '清新主題';
+
+  @override
+  String get themePeaceful => '安定主題';
+
+  @override
+  String get themeAgile => '敏捷主題';
+
+  @override
+  String get themeMelody => '甜聲主題';
+
+  @override
+  String get themeRespire => '呼吸主題';
+
+  @override
+  String get themeComfort => '舒暢主題';
 }

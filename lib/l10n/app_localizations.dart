@@ -667,6 +667,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Golden Amber'**
   String get themeGoldenAmber;
+
+  /// No description provided for @themeReduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool Down'**
+  String get themeReduce;
+
+  /// No description provided for @themeTepid.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Up'**
+  String get themeTepid;
+
+  /// No description provided for @themeDefence.
+  ///
+  /// In en, this message translates to:
+  /// **'Defence'**
+  String get themeDefence;
+
+  /// No description provided for @themeDreams.
+  ///
+  /// In en, this message translates to:
+  /// **'Dreams'**
+  String get themeDreams;
+
+  /// No description provided for @themeEnergize.
+  ///
+  /// In en, this message translates to:
+  /// **'Energize'**
+  String get themeEnergize;
+
+  /// No description provided for @themeJoyful.
+  ///
+  /// In en, this message translates to:
+  /// **'Joyful'**
+  String get themeJoyful;
+
+  /// No description provided for @themeFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get themeFresh;
+
+  /// No description provided for @themePeaceful.
+  ///
+  /// In en, this message translates to:
+  /// **'Peaceful'**
+  String get themePeaceful;
+
+  /// No description provided for @themeAgile.
+  ///
+  /// In en, this message translates to:
+  /// **'Agile'**
+  String get themeAgile;
+
+  /// No description provided for @themeMelody.
+  ///
+  /// In en, this message translates to:
+  /// **'Melody'**
+  String get themeMelody;
+
+  /// No description provided for @themeRespire.
+  ///
+  /// In en, this message translates to:
+  /// **'Respire'**
+  String get themeRespire;
+
+  /// No description provided for @themeComfort.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfort'**
+  String get themeComfort;
 }
 
 class _AppLocalizationsDelegate

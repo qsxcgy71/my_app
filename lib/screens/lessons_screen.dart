@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:provider/provider.dart';
 import '../models/lesson_model.dart';
 import '../styles/app_text_styles.dart';
 import '../services/lesson_service.dart';
+import '../models/app_theme.dart';
+import '../providers/theme_provider.dart';
+import '../widgets/theme_selector.dart';
 import 'lesson_detail_screen.dart';
 
 class LessonsScreen extends StatefulWidget {
@@ -15,8 +19,8 @@ class LessonsScreen extends StatefulWidget {
 
 class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateMixin {
   final _lessonService = LessonService();
-  final RefreshController _refreshController = RefreshController(initialRefresh: false);
-  final ScrollController _scrollController = ScrollController();
+  final _refreshController = RefreshController(initialRefresh: false);
+  final _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   
   // Tab controller
@@ -31,6 +35,13 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   bool _isSearchMode = false;
   String _searchQuery = '';
 
+  // Calendar
+  bool _isCalendarVisible = false;
+  late AnimationController _calendarAnimationController;
+  late Animation<double> _calendarAnimation;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
   // Pagination
   int _currentPage = 0;
   final int _pageSize = 5;
@@ -40,6 +51,19 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _selectedDay = _focusedDay;
+    
+    _calendarAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _calendarAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _calendarAnimationController,
+      curve: Curves.easeInOut,
+    ));
     
     _loadLessons();
     
@@ -204,15 +228,18 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentTheme = themeProvider.currentThemeData;
+    
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: currentTheme.primaryColor.withOpacity(0.05),
       appBar: AppBar(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: currentTheme.primaryColor.withOpacity(0.1),
         elevation: 0,
         title: Text(
           _isSearchMode ? '搜索课程' : '我的课程',
           style: AppTextStyles.titleLarge.copyWith(
-            color: Colors.black,
+            color: currentTheme.primaryColor,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -223,22 +250,25 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               child: Text(
                 '取消',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: Colors.grey[700],
+                  color: currentTheme.primaryColor.withOpacity(0.8),
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
           ] else ...[
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.search,
-                color: Colors.black,
+                color: currentTheme.primaryColor,
               ),
               onPressed: _toggleSearchMode,
             ),
-            // 临时测试按钮 - 创建示例课程
+            const ThemeSelector(),
             IconButton(
-              icon: const Icon(Icons.add_circle, color: Colors.green),
+              icon: Icon(
+                Icons.add_circle,
+                color: currentTheme.primaryColor,
+              ),
               onPressed: _createSampleLessons,
             ),
           ],
@@ -255,7 +285,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: currentTheme.primaryColor.withOpacity(0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -268,18 +298,18 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   hintText: '搜索课程名称、类别或描述...',
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.clear, color: Colors.grey[600]),
+                          icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
                           onPressed: () {
                             _searchController.clear();
                           },
                         )
                       : null,
-                  hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+                  hintStyle: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor.withOpacity(0.6)),
                 ),
-                style: AppTextStyles.bodyMedium,
+                style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor),
               ),
             ),
           ],
@@ -293,7 +323,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: currentTheme.primaryColor.withOpacity(0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -307,8 +337,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.grey[50]!,
                       Colors.white,
+                      currentTheme.primaryColor.withOpacity(0.05),
                     ],
                   ),
                 ),
@@ -319,21 +349,21 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.blue.shade400,
-                        Colors.blue.shade600,
+                        currentTheme.primaryColor,
+                        currentTheme.secondaryColor,
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
+                        color: currentTheme.primaryColor.withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey[600],
+                  unselectedLabelColor: currentTheme.primaryColor.withOpacity(0.6),
                   labelStyle: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,

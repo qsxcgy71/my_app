@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'login_screen.dart';
+import 'providers/theme_provider.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 
 Future<void> main() async {
@@ -24,7 +26,12 @@ Future<void> main() async {
     print('Error initializing Firebase: $e');
   }
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -47,13 +54,12 @@ class MyApp extends StatelessWidget {
       enableLoadingWhenFailed: true,
       hideFooterWhenNotFull: false,
       enableBallisticLoad: true,
-      child: MaterialApp(
-        title: 'Kids Profile',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) => MaterialApp(
+          title: 'Kids Profile',
+          theme: themeProvider.themeData,
+          home: const LoginScreen(),
         ),
-        home: const LoginScreen(),
       ),
     );
   }

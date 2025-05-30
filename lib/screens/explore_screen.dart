@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../styles/app_text_styles.dart';
 import '../models/course_model.dart';
+import '../models/course_filter.dart';
 import '../services/course_service.dart';
 import '../screens/course_detail_screen.dart';
 import '../providers/theme_provider.dart';
@@ -23,10 +24,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<Course> _allCourses = [];
-  List<Course> _searchResults = [];
+  List<Course> _filteredCourses = [];
   bool _isLoading = true;
   bool _isSearchMode = false;
   String _searchQuery = '';
+  CourseFilter _currentFilter = CourseFilter();
+  bool _showFilterPanel = false;
   
   // Pagination
   int _currentPage = 0;
@@ -72,18 +75,81 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void _performSearch(String query) {
     setState(() {
       _searchQuery = query.trim();
-      if (_searchQuery.isEmpty) {
-        _searchResults.clear();
-        _isSearchMode = false;
-      } else {
-        _isSearchMode = true;
-        _searchResults = _allCourses.where((course) {
-          return course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                 course.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                 course.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                 course.instructor.toLowerCase().contains(_searchQuery.toLowerCase());
+      _updateFilteredCourses();
+    });
+  }
+
+  void _updateFilteredCourses() {
+    List<Course> results = List.from(_allCourses);
+    
+    // 文本搜索
+    if (_searchQuery.isNotEmpty) {
+      results = results.where((course) {
+        return course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               course.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               course.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               course.instructor.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+    
+    // 应用过滤器
+    if (_currentFilter.hasFilters) {
+      // 年龄过滤
+      if (_currentFilter.ageRange != null) {
+        results = results.where((course) {
+          // 假设课程有推荐年龄范围字段
+          return course.recommendedAge >= _currentFilter.ageRange!.minAge &&
+                 course.recommendedAge <= _currentFilter.ageRange!.maxAge;
         }).toList();
       }
+      
+      // 课程类型过滤
+      if (_currentFilter.courseTypes.isNotEmpty) {
+        results = results.where((course) {
+          return _currentFilter.courseTypes.contains(course.category);
+        }).toList();
+      }
+      
+      // 难度过滤
+      if (_currentFilter.difficulties.isNotEmpty) {
+        results = results.where((course) {
+          return _currentFilter.difficulties.contains(course.difficulty);
+        }).toList();
+      }
+      
+      // 价格过滤
+      if (_currentFilter.minPrice != null) {
+        results = results.where((course) => course.price >= _currentFilter.minPrice!).toList();
+      }
+      if (_currentFilter.maxPrice != null) {
+        results = results.where((course) => course.price <= _currentFilter.maxPrice!).toList();
+      }
+      
+      // 在线课程过滤
+      if (_currentFilter.onlineOnly) {
+        results = results.where((course) => course.isOnline).toList();
+      }
+    }
+    
+    setState(() {
+      _filteredCourses = results;
+      _isSearchMode = _searchQuery.isNotEmpty || _currentFilter.hasFilters;
+    });
+  }
+
+  void _applyFilter(CourseFilter newFilter) {
+    setState(() {
+      _currentFilter = newFilter;
+      _updateFilteredCourses();
+    });
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _currentFilter = CourseFilter();
+      _searchController.clear();
+      _searchQuery = '';
+      _updateFilteredCourses();
     });
   }
 
@@ -144,171 +210,498 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: SmartRefresher(
-        controller: _refreshController,
-        enablePullDown: true,
-        enablePullUp: !_isSearchMode && _hasMoreData,
-        onRefresh: _onRefresh,
-        onLoading: _onLoading,
-        header: WaterDropHeader(
-          complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-          failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-        ),
-        footer: CustomFooter(
-          builder: (BuildContext context, LoadStatus? mode) {
-            Widget body;
-            if (mode == null || mode == LoadStatus.idle) {
-              body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-            } else if (mode == LoadStatus.loading) {
-              body = Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          // 固定头部
+          Container(
+            color: Colors.white,
+            child: SafeArea(
+              child: Column(
                 children: [
-                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                  const SizedBox(width: 8),
-                  Text("Loading...", style: AppTextStyles.bodyMedium),
-                ],
-              );
-            } else if (mode == LoadStatus.failed) {
-              body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-            } else if (mode == LoadStatus.canLoading) {
-              body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
-            } else {
-              body = Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, size: 16, color: Colors.green),
-                  const SizedBox(width: 4),
-                  Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                ],
-              );
-            }
-            return Container(
-              height: 55.0,
-              child: Center(child: body),
-            );
-          },
-        ),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 顶部安全区域
-              const SizedBox(height: 50),
-              
-              // 问候语区域
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      currentTheme.primaryColor.withOpacity(0.1),
-                      currentTheme.secondaryColor.withOpacity(0.1),
-                    ],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_getGreeting()},',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: currentTheme.primaryColor.withOpacity(0.8),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getUserDisplayName(),
-                            style: AppTextStyles.titleLarge.copyWith(
-                              color: currentTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                  // 问候语区域
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          currentTheme.primaryColor.withOpacity(0.1),
+                          currentTheme.secondaryColor.withOpacity(0.1),
                         ],
                       ),
                     ),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            currentTheme.primaryColor,
-                            currentTheme.secondaryColor,
-                          ],
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_getGreeting()},',
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  color: currentTheme.primaryColor.withOpacity(0.8),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _getUserDisplayName(),
+                                style: AppTextStyles.titleLarge.copyWith(
+                                  color: currentTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                currentTheme.primaryColor,
+                                currentTheme.secondaryColor,
+                              ],
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // 搜索栏
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchAllCourses,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
-                            onPressed: () => _searchController.clear(),
-                          )
-                        : null,
-                    hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[500]),
                   ),
-                  style: AppTextStyles.bodyMedium,
+                  
+                  // 搜索栏和过滤器
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // 搜索栏
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  decoration: InputDecoration(
+                                    hintText: l10n.searchAllCourses,
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                    prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
+                                    suffixIcon: _searchQuery.isNotEmpty
+                                        ? IconButton(
+                                            icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
+                                            onPressed: () => _searchController.clear(),
+                                          )
+                                        : null,
+                                    hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[500]),
+                                  ),
+                                  style: AppTextStyles.bodyMedium,
+                                ),
+                              ),
+                              // 过滤器按钮
+                              Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Stack(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _showFilterPanel = !_showFilterPanel;
+                                        });
+                                      },
+                                      icon: Icon(
+                                        _showFilterPanel ? Icons.filter_list_off : Icons.filter_list,
+                                        color: _currentFilter.hasFilters 
+                                            ? currentTheme.primaryColor 
+                                            : currentTheme.primaryColor.withOpacity(0.6),
+                                      ),
+                                    ),
+                                    if (_currentFilter.hasFilters)
+                                      Positioned(
+                                        right: 8,
+                                        top: 8,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                          child: Text(
+                                            '${_currentFilter.activeFiltersCount}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              // 搜索确定按钮
+                              Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: ElevatedButton(
+                                  onPressed: _updateFilteredCourses,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: currentTheme.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: Text(l10n.search, style: const TextStyle(fontSize: 14)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // 过滤器面板
+                        if (_showFilterPanel)
+                          _buildFilterPanel(l10n, currentTheme),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // 可滚动内容区域
+          Expanded(
+            child: SmartRefresher(
+              controller: _refreshController,
+              enablePullDown: true,
+              enablePullUp: !_isSearchMode && _hasMoreData,
+              onRefresh: _onRefresh,
+              onLoading: _onLoading,
+              header: WaterDropHeader(
+                complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+                failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+              ),
+              footer: CustomFooter(
+                builder: (BuildContext context, LoadStatus? mode) {
+                  Widget body;
+                  if (mode == null || mode == LoadStatus.idle) {
+                    body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                  } else if (mode == LoadStatus.loading) {
+                    body = Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        const SizedBox(width: 8),
+                        Text("Loading...", style: AppTextStyles.bodyMedium),
+                      ],
+                    );
+                  } else if (mode == LoadStatus.failed) {
+                    body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+                  } else if (mode == LoadStatus.canLoading) {
+                    body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+                  } else {
+                    body = Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, size: 16, color: Colors.green),
+                        const SizedBox(width: 4),
+                        Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                      ],
+                    );
+                  }
+                  return Container(
+                    height: 55.0,
+                    child: Center(child: body),
+                  );
+                },
+              ),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    
+                    if (_isSearchMode) ...[
+                      // 搜索结果
+                      _buildSearchResults(l10n, currentTheme),
+                    ] else ...[
+                      // 热门课程
+                      _buildFeaturedCourses(l10n, currentTheme),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // 全部课程
+                      _buildAllCourses(l10n, currentTheme),
+                    ],
+                    
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
-              
-              const SizedBox(height: 32),
-              
-              if (_isSearchMode) ...[
-                // 搜索结果
-                _buildSearchResults(l10n, currentTheme),
-              ] else ...[
-                // 热门课程
-                _buildFeaturedCourses(l10n, currentTheme),
-                
-                const SizedBox(height: 32),
-                
-                // 全部课程
-                _buildAllCourses(l10n, currentTheme),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterPanel(AppLocalizations l10n, dynamic currentTheme) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(top: 16),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6, // 限制最大高度
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 过滤器标题和清除按钮
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.filterConditions,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: currentTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (_currentFilter.hasFilters)
+                  TextButton(
+                    onPressed: _clearAllFilters,
+                    child: Text(
+                      l10n.clearAll,
+                      style: TextStyle(color: currentTheme.primaryColor),
+                    ),
+                  ),
               ],
-              
-              const SizedBox(height: 100),
-            ],
+            ),
+          ),
+          
+          // 可滚动内容区域
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 年龄范围
+                  _buildFilterSection(
+                    title: l10n.suitableAge,
+                    content: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChip(
+                          label: l10n.noAgeLimit,
+                          isSelected: _currentFilter.ageRange == null,
+                          onTap: () {
+                            _applyFilter(_currentFilter.copyWith(ageRange: null));
+                          },
+                          currentTheme: currentTheme,
+                        ),
+                        ...AgeRange.predefinedRanges.map((ageRange) =>
+                          _buildFilterChip(
+                            label: ageRange.displayName,
+                            isSelected: _currentFilter.ageRange == ageRange,
+                            onTap: () {
+                              _applyFilter(_currentFilter.copyWith(ageRange: ageRange));
+                            },
+                            currentTheme: currentTheme,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 课程类型
+                  _buildFilterSection(
+                    title: l10n.courseType,
+                    content: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: CourseTypes.all.map((type) =>
+                        _buildFilterChip(
+                          label: type,
+                          isSelected: _currentFilter.courseTypes.contains(type),
+                          onTap: () {
+                            final newTypes = List<String>.from(_currentFilter.courseTypes);
+                            if (newTypes.contains(type)) {
+                              newTypes.remove(type);
+                            } else {
+                              newTypes.add(type);
+                            }
+                            _applyFilter(_currentFilter.copyWith(courseTypes: newTypes));
+                          },
+                          currentTheme: currentTheme,
+                        ),
+                      ).toList(),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 时间段
+                  _buildFilterSection(
+                    title: l10n.classTime,
+                    content: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChip(
+                          label: l10n.noTimeLimit,
+                          isSelected: _currentFilter.timeRange == null,
+                          onTap: () {
+                            _applyFilter(_currentFilter.copyWith(timeRange: null));
+                          },
+                          currentTheme: currentTheme,
+                        ),
+                        ...TimeRange.predefinedRanges.map((timeRange) =>
+                          _buildFilterChip(
+                            label: timeRange.getLocalizedDisplayName(Localizations.localeOf(context).languageCode),
+                            isSelected: _currentFilter.timeRange == timeRange,
+                            onTap: () {
+                              _applyFilter(_currentFilter.copyWith(timeRange: timeRange));
+                            },
+                            currentTheme: currentTheme,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 难度等级
+                  _buildFilterSection(
+                    title: l10n.difficultyLevel,
+                    content: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: Difficulties.all.map((difficulty) =>
+                        _buildFilterChip(
+                          label: difficulty,
+                          isSelected: _currentFilter.difficulties.contains(difficulty),
+                          onTap: () {
+                            final newDifficulties = List<String>.from(_currentFilter.difficulties);
+                            if (newDifficulties.contains(difficulty)) {
+                              newDifficulties.remove(difficulty);
+                            } else {
+                              newDifficulties.add(difficulty);
+                            }
+                            _applyFilter(_currentFilter.copyWith(difficulties: newDifficulties));
+                          },
+                          currentTheme: currentTheme,
+                        ),
+                      ).toList(),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // 其他选项
+                  CheckboxListTile(
+                    title: Text(l10n.onlineCoursesOnly),
+                    value: _currentFilter.onlineOnly,
+                    onChanged: (value) {
+                      _applyFilter(_currentFilter.copyWith(onlineOnly: value ?? false));
+                    },
+                    activeColor: currentTheme.primaryColor,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection({
+    required String title,
+    required Widget content,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTextStyles.bodyLarge.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        content,
+      ],
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required dynamic currentTheme,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? currentTheme.primaryColor : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? currentTheme.primaryColor : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ),
@@ -316,11 +709,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildSearchResults(AppLocalizations l10n, dynamic currentTheme) {
-    if (_searchResults.isEmpty) {
+    if (_filteredCourses.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         child: Center(
-        child: Column(
+          child: Column(
             children: [
               Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
@@ -328,6 +721,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 l10n.noSearchResults,
                 style: AppTextStyles.bodyLarge.copyWith(color: Colors.grey[600]),
               ),
+              if (_currentFilter.hasFilters) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _clearAllFilters,
+                  child: Text(
+                    l10n.clearFilters,
+                    style: TextStyle(color: currentTheme.primaryColor),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -339,12 +742,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            '${l10n.searchResults} (${_searchResults.length})',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: currentTheme.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${l10n.searchResults} (${_filteredCourses.length})',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: currentTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (_currentFilter.hasFilters)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: currentTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    l10n.filtersApplied(_currentFilter.activeFiltersCount),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: currentTheme.primaryColor,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -352,9 +775,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: _searchResults.length,
+          itemCount: _filteredCourses.length,
           itemBuilder: (context, index) {
-            return _buildCourseCard(_searchResults[index], currentTheme);
+            return _buildCourseCard(_filteredCourses[index], currentTheme);
           },
         ),
       ],
@@ -403,7 +826,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
@@ -413,8 +836,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-            ),
-            const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 16),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -481,7 +904,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   children: [
                     Icon(Icons.person, color: Colors.white.withOpacity(0.8), size: 16),
                     const SizedBox(width: 4),
-            Text(
+                    Text(
                       course.instructor,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.white.withOpacity(0.8),

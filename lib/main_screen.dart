@@ -7,6 +7,7 @@ import 'screens/lessons_screen.dart';
 import 'screens/message_screen.dart';
 import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
+import 'services/message_service.dart';
 import 'l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final MessageService _messageService = MessageService();
   
   late final List<Widget> _screens;
 
@@ -69,7 +71,7 @@ class _MainScreenState extends State<MainScreen> {
                   label: l10n.lessons,
                   index: 1,
                 ),
-                _buildNavItem(
+                _buildNavItemWithBadge(
                   icon: Icons.message,
                   label: l10n.messages,
                   index: 2,
@@ -113,6 +115,82 @@ class _MainScreenState extends State<MainScreen> {
               icon,
               color: isSelected ? Colors.blue : Colors.grey[600],
               size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.blue : Colors.grey[600],
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithBadge({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.blue : Colors.grey[600],
+                  size: 24,
+                ),
+                StreamBuilder<int>(
+                  stream: _messageService.getUnreadCount(),
+                  builder: (context, snapshot) {
+                    final unreadCount = snapshot.data ?? 0;
+                    if (unreadCount == 0) return const SizedBox.shrink();
+                    
+                    return Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

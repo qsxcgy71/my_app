@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => '儿童档案';
+  String get appTitle => 'Kids Profile';
 
   @override
   String get welcomeBack => '欢迎回来';
@@ -33,7 +33,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phoneNumber => '手机号码';
 
   @override
-  String get enterPhoneNumber => '输入手机号码';
+  String get enterPhoneNumber => '请输入手机号码';
 
   @override
   String get sendCode => '发送验证码';
@@ -45,7 +45,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get verifyAndLogin => '验证并登录';
 
   @override
-  String get continueWithGoogle => '使用 Google 继续';
+  String get continueWithGoogle => '使用 Google 登录';
 
   @override
   String get dontHaveAccount => '还没有账户？';
@@ -99,13 +99,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchLessons => '搜索课程';
 
   @override
-  String get enrolledLessons => '已报读课程';
+  String get enrolledLessons => '已报名';
 
   @override
-  String get completedLessons => '已完成课程';
+  String get completedLessons => '已完成';
 
   @override
-  String get noEnrolledLessons => '暂无已报读课程';
+  String get noEnrolledLessons => '暂无已报名课程';
 
   @override
   String get noCompletedLessons => '暂无已完成课程';
@@ -120,19 +120,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchResults => '搜索结果';
 
   @override
-  String get noSearchResults => '没有找到相关课程';
+  String get noSearchResults => '暂无相关课程';
 
   @override
-  String get tryOtherKeywords => '尝试使用其他关键词搜索';
+  String get tryOtherKeywords => '试试其他关键词';
 
   @override
   String get enterSearchKeywords => '请输入搜索关键词';
 
   @override
-  String get canSearchCourses => '可搜索课程名称、类别或描述';
+  String get canSearchCourses => '可以搜索课程名称、类别或描述';
 
   @override
-  String get enrolled => '已报读';
+  String get enrolled => '已报名';
 
   @override
   String get completed => '已完成';
@@ -179,7 +179,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirmLogout => '确认退出';
 
   @override
-  String get logoutMessage => '您确定要退出登录吗？';
+  String get logoutMessage => '确定要退出登录吗？';
 
   @override
   String get logoutSuccess => '退出登录成功';
@@ -205,7 +205,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get comingSoon => '即将推出';
 
   @override
-  String get searchAllCourses => '搜索所有课程';
+  String get searchAllCourses => '搜索全部课程';
 
   @override
   String get popularCourses => '热门课程';
@@ -224,7 +224,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String totalLessons(int count) {
-    return '共$count节课';
+    return '$count节课';
   }
 
   @override
@@ -234,7 +234,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rating => '评分';
 
   @override
-  String get enrolledStudents => '已报名学员';
+  String get enrolledStudents => '报名学员';
 
   @override
   String get courseCatalog => '课程目录';
@@ -246,7 +246,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get enroll => '立即报名';
 
   @override
-  String get goodMorning => '早安';
+  String get goodMorning => '早上好';
 
   @override
   String get goodAfternoon => '下午好';
@@ -255,10 +255,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get goodEvening => '晚上好';
 
   @override
-  String get profileLogoutSuccess => '退出登录成功';
+  String get profileLogoutSuccess => '退出成功';
 
   @override
-  String get profileLogoutFailed => '退出登录失败';
+  String get profileLogoutFailed => '退出失败';
 
   @override
   String get selectTheme => '选择主题';
@@ -298,4 +298,126 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeGoldenAmber => '金秋黄';
+
+  @override
+  String get filterConditions => '筛选条件';
+
+  @override
+  String get clearAll => '清除全部';
+
+  @override
+  String get suitableAge => '适合年龄';
+
+  @override
+  String get noAgeLimit => '不限年龄';
+
+  @override
+  String get courseType => '课程类型';
+
+  @override
+  String get classTime => '上课时间';
+
+  @override
+  String get noTimeLimit => '不限时间';
+
+  @override
+  String get morningSlot => '上午时段';
+
+  @override
+  String get afternoonSlot => '下午时段';
+
+  @override
+  String get eveningSlot => '晚上时段';
+
+  @override
+  String get allDay => '全天';
+
+  @override
+  String get difficultyLevel => '难度等级';
+
+  @override
+  String get beginnerLevel => '入门级';
+
+  @override
+  String get primaryLevel => '初级';
+
+  @override
+  String get intermediateLevel => '中级';
+
+  @override
+  String get advancedLevel => '高级';
+
+  @override
+  String get onlineCoursesOnly => '仅显示在线课程';
+
+  @override
+  String get search => '搜索';
+
+  @override
+  String get clearFilters => '清除筛选条件';
+
+  @override
+  String filtersApplied(int count) {
+    return '$count个筛选';
+  }
+
+  @override
+  String get noMessages => '暂无消息';
+
+  @override
+  String get yourMessagesWillAppearHere => '您的消息将在这里显示';
+
+  @override
+  String get createSampleMessages => '创建示例消息';
+
+  @override
+  String get markAllAsRead => '全部已读';
+
+  @override
+  String get allMessagesMarkedAsRead => '所有消息已标记为已读';
+
+  @override
+  String get operationFailed => '操作失败';
+
+  @override
+  String get messageDeleted => '消息已删除';
+
+  @override
+  String get deleteFailed => '删除失败';
+
+  @override
+  String get sampleMessagesCreated => '示例消息已创建';
+
+  @override
+  String get createFailed => '创建失败';
+
+  @override
+  String get loadMessagesFailed => '加载消息失败';
+
+  @override
+  String get confirmDelete => '确认删除';
+
+  @override
+  String get confirmDeleteMessage => '确定要删除这条消息吗？';
+
+  @override
+  String get delete => '删除';
+
+  @override
+  String get justNow => '刚刚';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '$minutes分钟前';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '$hours小时前';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return '$days天前';
+  }
 }

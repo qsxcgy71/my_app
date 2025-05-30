@@ -1,0 +1,110 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kids Profile",
+  "welcomeBack": "Welcome back",
+  "signInToContinue": "Sign in to your account to continue",
+  "email": "Email",
+  "password": "Password",
+  "login": "Login",
+  "phone": "Phone",
+  "phoneNumber": "Phone Number",
+  "enterPhoneNumber": "Enter phone number",
+  "sendCode": "Send Code",
+  "smsCode": "SMS Code",
+  "verifyAndLogin": "Verify & Login",
+  "continueWithGoogle": "Continue with Google",
+  "dontHaveAccount": "Don't have an account?",
+  "signUp": "Sign up",
+  "forgotPassword": "Forgot password?",
+  "pleaseEnterEmailAndPassword": "Please enter email and password",
+  "pleaseEnterPhoneNumber": "Please enter phone number",
+  "pleaseEnterVerificationCode": "Please enter verification code",
+  "loginFailed": "Login failed",
+  "language": "Language",
+  "chinese": "中文",
+  "english": "English",
+  "selectLanguage": "Select Language",
+  
+  "explore": "Explore",
+  "lessons": "Lessons",
+  "messages": "Messages",
+  "profile": "Profile",
+  
+  "myLessons": "My Lessons",
+  "searchLessons": "Search Lessons",
+  "enrolledLessons": "Enrolled",
+  "completedLessons": "Completed",
+  "noEnrolledLessons": "No enrolled lessons",
+  "noCompletedLessons": "No completed lessons",
+  "searchCoursePlaceholder": "Search course name, category or description...",
+  "cancel": "Cancel",
+  "searchResults": "Search Results",
+  "noSearchResults": "No courses found",
+  "tryOtherKeywords": "Try using other keywords",
+  "enterSearchKeywords": "Please enter search keywords",
+  "canSearchCourses": "You can search course names, categories or descriptions",
+  "enrolled": "Enrolled",
+  "completed": "Completed",
+  
+  "exploreComingSoon": "Explore feature coming soon",
+  "messagesComingSoon": "Messages feature coming soon",
+  
+  "lessonDetails": "Lesson Details",
+  "courseInfo": "Course Information",
+  "courseIntroduction": "Course Introduction",
+  "startTime": "Start Time",
+  "endTime": "End Time",
+  "courseDate": "Course Date",
+  "courseStatus": "Course Status",
+  "courseCategory": "Course Category",
+  
+  "welcomeBackUser": "Welcome back, {userName}!",
+  "@welcomeBackUser": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "logout": "Logout",
+  "confirmLogout": "Confirm Logout",
+  "logoutMessage": "Are you sure you want to logout?",
+  "logoutSuccess": "Logged out successfully",
+  "logoutFailed": "Logout failed",
+  "hello": "Hello",
+  "emailOrPhone": "Email or Phone",
+  "signInWithGoogle": "Sign in with Google",
+  "welcome": "Welcome, {name}",
+  "@welcome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comingSoon": "Coming Soon",
+  "searchAllCourses": "Search all courses",
+  "popularCourses": "Popular Courses",
+  "featuredCourses": "Featured Courses",
+  "allCourses": "All Courses",
+  "courseDetails": "Course Details",
+  "instructor": "Instructor",
+  "totalLessons": "{count} lessons",
+  "@totalLessons": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration": "Duration",
+  "rating": "Rating",
+  "enrolledStudents": "Enrolled Students",
+  "courseCatalog": "Course Catalog",
+  "preview": "Preview",
+  "enroll": "Enroll Now",
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good Evening"
+} 

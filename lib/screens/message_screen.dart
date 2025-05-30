@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../styles/app_text_styles.dart';
+import '../l10n/app_localizations.dart';
 
 class MessageScreen extends StatelessWidget {
   const MessageScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('消息', style: AppTextStyles.titleLarge),
+        title: Text(l10n.messages, style: AppTextStyles.titleLarge),
       ),
       body: Center(
         child: Column(
@@ -21,7 +24,7 @@ class MessageScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '消息功能即将上线',
+              l10n.messagesComingSoon,
               style: AppTextStyles.bodyLarge,
             ),
           ],

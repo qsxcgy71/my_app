@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/lesson_model.dart';
 import '../styles/app_text_styles.dart';
+import '../l10n/app_localizations.dart';
 
 class LessonDetailScreen extends StatelessWidget {
   final Lesson lesson;
@@ -12,6 +13,8 @@ class LessonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -22,7 +25,7 @@ class LessonDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '课程详情',
+          l10n.lessonDetails,
           style: AppTextStyles.titleLarge.copyWith(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -185,7 +188,7 @@ class LessonDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        lesson.isPastLesson ? '已完成' : '已报读',
+                        lesson.isPastLesson ? l10n.completed : l10n.enrolled,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                           color: lesson.isPastLesson ? Colors.green : Colors.orange,
@@ -220,7 +223,7 @@ class LessonDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '课程介绍',
+                      l10n.courseIntroduction,
                       style: AppTextStyles.titleMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -262,20 +265,20 @@ class LessonDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '课程信息',
+                    l10n.courseInfo,
                     style: AppTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 16),
                   
-                  _buildInfoRow('开始时间', lesson.startTimeString),
-                  _buildInfoRow('结束时间', _formatTime(lesson.endTime)),
-                  _buildInfoRow('课程日期', lesson.dateString),
-                  _buildInfoRow('课程状态', lesson.isPastLesson ? '已完成' : '已报读'),
+                  _buildInfoRow(l10n.startTime, lesson.startTimeString, l10n),
+                  _buildInfoRow(l10n.endTime, _formatTime(lesson.endTime), l10n),
+                  _buildInfoRow(l10n.courseDate, lesson.dateString, l10n),
+                  _buildInfoRow(l10n.courseStatus, lesson.isPastLesson ? l10n.completed : l10n.enrolled, l10n),
                   
                   if (lesson.courseCategory != null)
-                    _buildInfoRow('课程类别', lesson.courseCategory!),
+                    _buildInfoRow(l10n.courseCategory, lesson.courseCategory!, l10n),
                 ],
               ),
             ),
@@ -287,7 +290,7 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

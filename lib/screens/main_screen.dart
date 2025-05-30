@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'profile_screen.dart';
 import 'lessons_screen.dart';
 import 'explore_screen.dart';
@@ -6,6 +7,8 @@ import 'message_screen.dart';
 import '../styles/app_text_styles.dart';
 import '../login_screen.dart';
 import '../services/auth_service.dart';
+import '../services/language_service.dart';
+import '../l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -35,10 +38,11 @@ class _MainScreenState extends State<MainScreen> {
 
   void _showWelcomeMessage() {
     if (_authService.currentUser != null) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Welcome back, ${_authService.currentUserDisplayName}!',
+            l10n.welcomeBackUser(_authService.currentUserDisplayName),
             style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
           ),
           backgroundColor: Colors.green,
@@ -58,6 +62,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
@@ -67,26 +73,26 @@ class _MainScreenState extends State<MainScreen> {
             _selectedIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: '探索',
+            icon: const Icon(Icons.explore_outlined),
+            selectedIcon: const Icon(Icons.explore),
+            label: l10n.explore,
           ),
           NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school),
-            label: '课程',
+            icon: const Icon(Icons.school_outlined),
+            selectedIcon: const Icon(Icons.school),
+            label: l10n.lessons,
           ),
           NavigationDestination(
-            icon: Icon(Icons.message_outlined),
-            selectedIcon: Icon(Icons.message),
-            label: '消息',
+            icon: const Icon(Icons.message_outlined),
+            selectedIcon: const Icon(Icons.message),
+            label: l10n.messages,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: '会员',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: l10n.profile,
           ),
         ],
       ),

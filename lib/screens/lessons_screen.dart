@@ -5,6 +5,7 @@ import '../models/lesson_model.dart';
 import '../styles/app_text_styles.dart';
 import '../services/lesson_service.dart';
 import 'lesson_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class LessonsScreen extends StatefulWidget {
   const LessonsScreen({super.key});
@@ -204,13 +205,15 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
         title: Text(
-          _isSearchMode ? '搜索课程' : '我的课程',
+          _isSearchMode ? l10n.searchLessons : l10n.myLessons,
           style: AppTextStyles.titleLarge.copyWith(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -221,7 +224,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             TextButton(
               onPressed: _toggleSearchMode,
               child: Text(
-                '取消',
+                l10n.cancel,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: Colors.grey[700],
                   fontWeight: FontWeight.w500,
@@ -265,7 +268,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: '搜索课程名称、类别或描述...',
+                  hintText: l10n.searchCoursePlaceholder,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
@@ -345,8 +348,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   tabs: [
-                    _buildTab('已报读课程', Icons.schedule, 0),
-                    _buildTab('已完成课程', Icons.check_circle, 1),
+                    _buildTab(l10n.enrolledLessons, Icons.schedule, 0),
+                    _buildTab(l10n.completedLessons, Icons.check_circle, 1),
                   ],
                 ),
               ),
@@ -358,7 +361,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
           // Lessons List
           Expanded(
             child: _isSearchMode
-                ? _buildSearchResults()
+                ? _buildSearchResults(l10n)
                 : SmartRefresher(
                     header: WaterDropHeader(
                       complete: Text(
@@ -416,8 +419,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildLessonsList(_enrolledLessons),
-                        _buildLessonsList(_completedLessons),
+                        _buildLessonsList(_enrolledLessons, l10n),
+                        _buildLessonsList(_completedLessons, l10n),
                       ],
                     ),
                   ),
@@ -427,7 +430,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildLessonsList(List<Lesson> lessons) {
+  Widget _buildLessonsList(List<Lesson> lessons, AppLocalizations l10n) {
     if (lessons.isEmpty) {
       return Center(
         child: Column(
@@ -440,7 +443,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             ),
             const SizedBox(height: 16),
             Text(
-              _tabController.index == 0 ? '暂无已报读课程' : '暂无已完成课程',
+              _tabController.index == 0 ? l10n.noEnrolledLessons : l10n.noCompletedLessons,
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.grey[600],
               ),
@@ -535,14 +538,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   children: [
                     // 左侧：日期和时间
                     Container(
-                      width: 80,
+                      width: 85,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // 日期
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 6,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -556,8 +559,10 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: lesson.isPastLesson ? Colors.green : Colors.orange,
-                                fontSize: 12,
+                                fontSize: 11,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -569,12 +574,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
                     
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     
                     // 右侧：课程信息
                     Expanded(
@@ -623,9 +630,10 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     final isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
@@ -633,14 +641,20 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               color: isSelected ? Colors.white : Colors.grey[600],
             ),
             const SizedBox(width: 6),
-            Text(text),
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(AppLocalizations l10n) {
     if (_searchQuery.isEmpty) {
       return Center(
         child: Column(
@@ -653,14 +667,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             ),
             const SizedBox(height: 16),
             Text(
-              '请输入搜索关键词',
+              l10n.enterSearchKeywords,
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '可搜索课程名称、类别或描述',
+              l10n.canSearchCourses,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: Colors.grey[500],
               ),
@@ -682,14 +696,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             ),
             const SizedBox(height: 16),
             Text(
-              '没有找到相关课程',
+              l10n.noSearchResults,
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '尝试使用其他关键词搜索',
+              l10n.tryOtherKeywords,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: Colors.grey[500],
               ),
@@ -706,7 +720,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            '搜索结果 (${_searchResults.length})',
+            '${l10n.searchResults} (${_searchResults.length})',
             style: AppTextStyles.bodyMedium.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.w500,
@@ -721,7 +735,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             itemCount: _searchResults.length,
             itemBuilder: (context, index) {
               final lesson = _searchResults[index];
-              return _buildSearchResultCard(lesson);
+              return _buildSearchResultCard(lesson, l10n);
             },
           ),
         ),
@@ -729,7 +743,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildSearchResultCard(Lesson lesson) {
+  Widget _buildSearchResultCard(Lesson lesson, AppLocalizations l10n) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -749,7 +763,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -770,7 +784,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    lesson.isPastLesson ? '已完成' : '已报读',
+                    lesson.isPastLesson ? l10n.completed : l10n.enrolled,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: lesson.isPastLesson ? Colors.green : Colors.orange,
                       fontSize: 12,
@@ -789,6 +803,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                     color: Colors.black87,
                     fontSize: 18,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 
                 const SizedBox(height: 8),
@@ -812,21 +828,29 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   children: [
                     Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      lesson.timeString,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.grey[600],
-                        fontSize: 13,
+                    Flexible(
+                      child: Text(
+                        lesson.timeString,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      '${lesson.date.year}年${lesson.date.month}月${lesson.date.day}日',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.grey[600],
-                        fontSize: 13,
+                    Flexible(
+                      child: Text(
+                        '${lesson.date.year}年${lesson.date.month}月${lesson.date.day}日',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],

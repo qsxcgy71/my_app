@@ -8,6 +8,8 @@ import 'dart:io';
 import '../models/profile_model.dart';
 import '../styles/app_text_styles.dart';
 import '../services/profile_service.dart';
+import '../services/auth_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -19,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _profileService = ProfileService();
   final _auth = FirebaseAuth.instance;
+  final _authService = AuthService();
   final _imagePicker = ImagePicker();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   final ScrollController _scrollController = ScrollController();
@@ -586,6 +589,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -652,6 +657,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 标题和登出按钮区域
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.profile,
+                  style: AppTextStyles.titleLarge.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _showLogoutConfirmation(context, l10n),
+                  icon: const Icon(Icons.logout),
+                  tooltip: l10n.logout,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    foregroundColor: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             if (_userProfile == null)
               Center(
                 child: ElevatedButton(
@@ -824,5 +852,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showLogoutConfirmation(BuildContext context, AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          l10n.confirmLogout,
+          style: AppTextStyles.titleLarge.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          l10n.logoutMessage,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              l10n.cancel,
+              style: AppTextStyles.button.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(
+              l10n.logout,
+              style: AppTextStyles.button.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _authService.signOut();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.logoutSuccess,
+                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.logoutFailed,
+                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
   }
 }

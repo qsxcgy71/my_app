@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'firebase_options.dart';
 import 'login_screen.dart';
+import 'main_screen.dart';
+import 'services/language_service.dart';
+import 'services/auth_service.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   try {
@@ -32,29 +38,91 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshConfiguration(
-      headerBuilder: () => WaterDropHeader(),
-      footerBuilder: () => ClassicFooter(),
-      headerTriggerDistance: 80.0,
-      springDescription: const SpringDescription(
-        stiffness: 170, 
-        damping: 16, 
-        mass: 1.9
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageService()),
+        Provider(create: (_) => AuthService()),
+      ],
+      child: Consumer<LanguageService>(
+        builder: (context, languageService, child) {
+          return RefreshConfiguration(
+            headerBuilder: () => WaterDropHeader(
+              waterDropColor: Colors.blue,
+              complete: Text(
+                'Refresh completed',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              failed: Text(
+                'Refresh failed',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            footerBuilder: () => ClassicFooter(
+              loadStyle: LoadStyle.ShowWhenLoading,
+              completeDuration: Duration(milliseconds: 500),
+            ),
+            headerTriggerDistance: 80.0,
+            springDescription: SpringDescription(
+              stiffness: 170,
+              damping: 16,
+              mass: 1.9
+            ),
+            maxOverScrollExtent: 100,
+            maxUnderScrollExtent: 0,
+            enableScrollWhenRefreshCompleted: true,
+            enableLoadingWhenFailed: true,
+            hideFooterWhenNotFull: false,
+            enableBallisticLoad: true,
+            child: MaterialApp(
+              title: 'Kids Profile',
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+                useMaterial3: true,
+              ),
+              // 国际化配置
+              locale: languageService.currentLocale,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: LanguageService.supportedLocales,
+              home: const AuthWrapper(),
+            ),
+          );
+        },
       ),
-      maxOverScrollExtent: 100,
-      maxUnderScrollExtent: 0,
-      enableScrollWhenRefreshCompleted: true,
-      enableLoadingWhenFailed: true,
-      hideFooterWhenNotFull: false,
-      enableBallisticLoad: true,
-      child: MaterialApp(
-        title: 'Kids Profile',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
-        home: const LoginScreen(),
-      ),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    
+    return StreamBuilder(
+      stream: authService.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        if (snapshot.hasData) {
+          // 用户已登录，显示主界面
+          return const MainScreen();
+        } else {
+          // 用户未登录，显示登录界面
+          return const LoginScreen();
+        }
+      },
     );
   }
 }

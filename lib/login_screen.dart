@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/forget_password_screen.dart';
 import 'screens/register_screen.dart';
 import 'styles/app_text_styles.dart';
 import 'services/auth_service.dart';
+import 'services/language_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,11 +28,39 @@ class _LoginScreenState extends State<LoginScreen> {
   int _tabIndex = 0;
   String _selectedCountryCode = '+852'; // Default to Hong Kong
 
+  // 显示语言选择对话框
+  void _showLanguageDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.selectLanguage),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: LanguageService.supportedLocales.map((locale) {
+            final languageService = Provider.of<LanguageService>(context);
+            final isSelected = languageService.currentLocale == locale;
+            
+            return ListTile(
+              title: Text(languageService.getLanguageName(locale)),
+              trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
+              onTap: () {
+                languageService.changeLanguage(locale);
+                Navigator.pop(context);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   void _showError(String? message) {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          message ?? '登录失败',
+          message ?? l10n.loginFailed,
           style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
         ),
       ),
@@ -44,8 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithEmail() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError('请输入邮箱和密码');
+      _showError(l10n.pleaseEnterEmailAndPassword);
       return;
     }
 
@@ -78,8 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _verifyPhone() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_phoneController.text.isEmpty) {
-      _showError('请输入手机号码');
+      _showError(l10n.pleaseEnterPhoneNumber);
       return;
     }
 
@@ -110,8 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithSmsCode() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_verificationId == null || _smsCodeController.text.isEmpty) {
-      _showError('请输入验证码');
+      _showError(l10n.pleaseEnterVerificationCode);
       return;
     }
 
@@ -132,6 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: Center(
         child: Card(
@@ -141,13 +177,25 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 语言选择按钮
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.language),
+                      label: Text(l10n.language),
+                      onPressed: _showLanguageDialog,
+                    ),
+                  ],
+                ),
+                
                 Text(
-                  'Welcome back',
+                  l10n.welcomeBack,
                   style: AppTextStyles.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to your account to continue',
+                  l10n.signInToContinue,
                   style: AppTextStyles.bodyMedium,
                 ),
                 const SizedBox(height: 24),
@@ -155,11 +203,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   segments: [
                     ButtonSegment(
                       value: 0,
-                      label: Text('Email', style: AppTextStyles.button),
+                      label: Text(l10n.email, style: AppTextStyles.button),
                     ),
                     ButtonSegment(
                       value: 1,
-                      label: Text('Phone', style: AppTextStyles.button),
+                      label: Text(l10n.phone, style: AppTextStyles.button),
                     ),
                   ],
                   selected: {_tabIndex},
@@ -170,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      labelText: l10n.email,
                       labelStyle: AppTextStyles.bodyMedium,
                       prefixIcon: const Icon(Icons.email),
                     ),
@@ -181,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _passwordController,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l10n.password,
                       labelStyle: AppTextStyles.bodyMedium,
                       prefixIcon: const Icon(Icons.lock),
                     ),
@@ -191,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: _isLoading ? null : _signInWithEmail,
-                    child: Text('Login', style: AppTextStyles.button.copyWith(color: Colors.white)),
+                    child: Text(l10n.login, style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                   TextButton(
                     onPressed: () {
@@ -203,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      'Forgot password?',
+                      l10n.forgotPassword,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Theme.of(context).primaryColor,
                       ),
@@ -254,9 +302,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: TextField(
                           controller: _phoneController,
                           decoration: InputDecoration(
-                            labelText: 'Phone Number',
+                            labelText: l10n.phoneNumber,
                             labelStyle: AppTextStyles.bodyMedium,
-                            hintText: 'Enter phone number',
+                            hintText: l10n.enterPhoneNumber,
                             border: const OutlineInputBorder(),
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -270,13 +318,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _verifyPhone,
-                    child: Text('Send Code', style: AppTextStyles.button.copyWith(color: Colors.white)),
+                    child: Text(l10n.sendCode, style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _smsCodeController,
                     decoration: InputDecoration(
-                      labelText: 'SMS Code',
+                      labelText: l10n.smsCode,
                       labelStyle: AppTextStyles.bodyMedium,
                       prefixIcon: const Icon(Icons.sms),
                     ),
@@ -286,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _signInWithSmsCode,
-                    child: Text('Verify & Login', style: AppTextStyles.button.copyWith(color: Colors.white)),
+                    child: Text(l10n.verifyAndLogin, style: AppTextStyles.button.copyWith(color: Colors.white)),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -295,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 OutlinedButton.icon(
                   icon: const Icon(Icons.g_mobiledata),
                   label: Text(
-                    'Continue with Google',
+                    l10n.continueWithGoogle,
                     style: AppTextStyles.button.copyWith(
                       color: Theme.of(context).primaryColor,
                     ),
@@ -310,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account?",
+                      l10n.dontHaveAccount,
                       style: AppTextStyles.bodyMedium,
                     ),
                     TextButton(
@@ -323,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: Text(
-                        'Sign up',
+                        l10n.signUp,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: Theme.of(context).primaryColor,
                         ),

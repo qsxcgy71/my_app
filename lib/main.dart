@@ -114,7 +114,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     // 定期检查认证状态，防止卡住
-    _authCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    _authCheckTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
       if (mounted) {
         setState(() {
           // 强制刷新状态

@@ -194,32 +194,68 @@ class _ExploreScreenState extends State<ExploreScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 顶部安全区域
-              const SizedBox(height: 50),
+              //const SizedBox(height: 50),
               
               // 问候语区域
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                width: MediaQuery.of(context).size.width,
+                height: 200,
+                padding: const EdgeInsets.only(left: 24, right: 24, top: 48, bottom: 24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                     colors: [
-                      currentTheme.primaryColor.withOpacity(0.1),
-                      currentTheme.secondaryColor.withOpacity(0.1),
+                      currentTheme.backgroundColor,
+                      currentTheme.backgroundColor.withOpacity(0.8),
+                      currentTheme.backgroundColor.withOpacity(0.5),
+                      currentTheme.backgroundColor.withOpacity(0),
                     ],
                   ),
                 ),
-                child: Row(
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Expanded(
+                    // Background pattern
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 0.8,
+                        child: Transform.scale(
+                          scale: 1.5,
+                          child: Image.asset(
+                            'assets/theme_wellcome/pattern.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Hero image
+                    Positioned(
+                      right: 0,
+                      bottom: -60,
+                      width: 200,
+                      height: 200,
+                      child: Transform.rotate(
+                        angle: 0.05, // 约-5.7度
+                        child: Image.asset(
+                          'assets/theme_wellcome/theme_${themeProvider.currentTheme.toString().split('.').last.toLowerCase()}_hero.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    // Greeting text
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '${_getGreeting()},',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: currentTheme.primaryColor.withOpacity(0.8),
-                              fontWeight: FontWeight.w500,
+                            style: AppTextStyles.titleLarge.copyWith(
+                              color: currentTheme.primaryColor,
+                              fontSize: 28,
+                              height: 1.2,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -227,68 +263,56 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             _getUserDisplayName(),
                             style: AppTextStyles.titleLarge.copyWith(
                               color: currentTheme.primaryColor,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
+                              height: 1.2,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            currentTheme.primaryColor,
-                            currentTheme.secondaryColor,
-                          ],
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 24,
                       ),
                     ),
                   ],
                 ),
               ),
               
-              const SizedBox(height: 24),
+              //const SizedBox(height: 24),
               
               // 搜索栏
               Container(
+                //height: 100,
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: currentTheme.searchBoxColor,
+                    width: 3.0,
+                  ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: l10n.searchAllCourses,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
+                    //border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: currentTheme.primaryColor.withOpacity(0.5),
+                    ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
+                            icon: Icon(
+                              Icons.clear,
+                              color: currentTheme.primaryColor.withOpacity(0.5),
+                            ),
                             onPressed: () => _searchController.clear(),
                           )
                         : null,
                     hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[500]),
                   ),
-                  style: AppTextStyles.bodyMedium,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: currentTheme.primaryColor,
+                  ),
                 ),
               ),
               

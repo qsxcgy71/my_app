@@ -84,6 +84,31 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/photos/default_avatar.png
+    - assets/theme_icon/theme_reduce.png
+    - assets/theme_icon/theme_tepid.png
+    - assets/theme_icon/theme_defence.png
+    - assets/theme_icon/theme_dreams.png
+    - assets/theme_icon/theme_energize.png
+    - assets/theme_icon/theme_joyful.png
+    - assets/theme_icon/theme_fresh.png
+    - assets/theme_icon/theme_peaceful.png
+    - assets/theme_icon/theme_agile.png
+    - assets/theme_icon/theme_melody.png
+    - assets/theme_icon/theme_respire.png
+    - assets/theme_icon/theme_comfort.png
+    - assets/theme_wellcome/pattern.png
+    - assets/theme_wellcome/theme_reduce_hero.png
+    - assets/theme_wellcome/theme_tepid_hero.png
+    - assets/theme_wellcome/theme_defence_hero.png
+    - assets/theme_wellcome/theme_dreams_hero.png
+    - assets/theme_wellcome/theme_energize_hero.png
+    - assets/theme_wellcome/theme_joyful_hero.png
+    - assets/theme_wellcome/theme_fresh_hero.png
+    - assets/theme_wellcome/theme_peaceful_hero.png
+    - assets/theme_wellcome/theme_agile_hero.png
+    - assets/theme_wellcome/theme_melody_hero.png
+    - assets/theme_wellcome/theme_respire_hero.png
+    - assets/theme_wellcome/theme_comfort_hero.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

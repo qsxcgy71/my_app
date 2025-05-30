@@ -123,6 +123,20 @@
   "themeElegantGrey": "Elegant Grey",
   "themeFreshCyan": "Fresh Cyan",
   "themeGoldenAmber": "Golden Amber",
+
+  "themeReduce": "Cool Down",
+  "themeTepid": "Warm Up",
+  "themeDefence": "Defence",
+  "themeDreams": "Dreams",
+  "themeEnergize": "Energize",
+  "themeJoyful": "Joyful",
+  "themeFresh": "Fresh",
+  "themePeaceful": "Peaceful",
+  "themeAgile": "Agile",
+  "themeMelody": "Melody",
+  "themeRespire": "Respire",
+  "themeComfort": "Comfort"
+
   
   "filterConditions": "Filter Conditions",
   "clearAll": "Clear All",
@@ -192,4 +206,5 @@
       }
     }
   }
+
 } 

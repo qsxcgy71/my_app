@@ -302,6 +302,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeGoldenAmber => 'Golden Amber';
 
   @override
+
+  String get themeReduce => 'Cool Down';
+
+  @override
+  String get themeTepid => 'Warm Up';
+
+  @override
+  String get themeDefence => 'Defence';
+
+  @override
+  String get themeDreams => 'Dreams';
+
+  @override
+  String get themeEnergize => 'Energize';
+
+  @override
+  String get themeJoyful => 'Joyful';
+
+  @override
+  String get themeFresh => 'Fresh';
+
+  @override
+  String get themePeaceful => 'Peaceful';
+
+  @override
+  String get themeAgile => 'Agile';
+
+  @override
+  String get themeMelody => 'Melody';
+
+  @override
+  String get themeRespire => 'Respire';
+
+  @override
+  String get themeComfort => 'Comfort';
+
   String get filterConditions => 'Filter Conditions';
 
   @override
@@ -426,4 +462,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(int days) {
     return '$days days ago';
   }
+
 }

@@ -89,7 +89,7 @@ flutter:
   fonts:
     - family: Fredoka
       fonts:
-        - asset: assets/fonts/Fredoka/Fredoka-VariableFont_wdth,wght.tt
+        - asset: assets/fonts/Fredoka/Fredoka-VariableFont_wdth,wght.ttf
     - family: GenSenRounded
       fonts:
         - asset: assets/fonts/GensenRounded/GenSenRounded2TC-L.otf

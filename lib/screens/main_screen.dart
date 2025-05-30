@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
 import 'lessons_screen.dart';
-import 'placeholder_screen.dart';
+import 'explore_screen.dart';
+import 'message_screen.dart';
 import '../styles/app_text_styles.dart';
 import '../login_screen.dart';
 import '../services/auth_service.dart';
@@ -49,15 +50,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   final List<Widget> _screens = [
-    const ProfileScreen(),
+    const ExploreScreen(),
     const LessonsScreen(),
-    const PlaceholderScreen(title: 'Information'),
-  ];
-
-  final List<String> _titles = [
-    'My Profile',
-    'My Lessons',
-    'Information',
+    const MessageScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -73,19 +69,24 @@ class _MainScreenState extends State<MainScreen> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore),
+            label: '探索',
           ),
           NavigationDestination(
             icon: Icon(Icons.school_outlined),
             selectedIcon: Icon(Icons.school),
-            label: 'Lessons',
+            label: '课程',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Information',
+            icon: Icon(Icons.message_outlined),
+            selectedIcon: Icon(Icons.message),
+            label: '消息',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: '会员',
           ),
         ],
       ),

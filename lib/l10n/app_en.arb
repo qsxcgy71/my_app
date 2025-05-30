@@ -142,6 +142,7 @@
   "advancedLevel": "Advanced",
   "onlineCoursesOnly": "Online courses only",
   "search": "Search",
+  "searchAndCollapse": "Search",
   "clearFilters": "Clear Filters",
   "filtersApplied": "{count} filters",
   "@filtersApplied": {

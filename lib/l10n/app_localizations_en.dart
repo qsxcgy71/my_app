@@ -356,6 +356,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search => 'Search';
 
   @override
+  String get searchAndCollapse => 'Search';
+
+  @override
   String get clearFilters => 'Clear Filters';
 
   @override

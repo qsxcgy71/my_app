@@ -123,6 +123,7 @@
   "themeElegantGrey": "Elegant Grey",
   "themeFreshCyan": "Fresh Cyan",
   "themeGoldenAmber": "Golden Amber",
+
   "themeReduce": "Cool Down",
   "themeTepid": "Warm Up",
   "themeDefence": "Defence",
@@ -135,4 +136,75 @@
   "themeMelody": "Melody",
   "themeRespire": "Respire",
   "themeComfort": "Comfort"
+
+  
+  "filterConditions": "Filter Conditions",
+  "clearAll": "Clear All",
+  "suitableAge": "Suitable Age",
+  "noAgeLimit": "No Age Limit",
+  "courseType": "Course Type",
+  "classTime": "Class Time",
+  "noTimeLimit": "No Time Limit",
+  "morningSlot": "Morning",
+  "afternoonSlot": "Afternoon", 
+  "eveningSlot": "Evening",
+  "allDay": "All Day",
+  "difficultyLevel": "Difficulty Level",
+  "beginnerLevel": "Beginner",
+  "primaryLevel": "Primary",
+  "intermediateLevel": "Intermediate",
+  "advancedLevel": "Advanced",
+  "onlineCoursesOnly": "Online courses only",
+  "search": "Search",
+  "searchAndCollapse": "Search",
+  "clearFilters": "Clear Filters",
+  "filtersApplied": "{count} filters",
+  "@filtersApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "noMessages": "No Messages",
+  "yourMessagesWillAppearHere": "Your messages will appear here",
+  "createSampleMessages": "Create Sample Messages",
+  "markAllAsRead": "Mark All as Read",
+  "allMessagesMarkedAsRead": "All messages marked as read",
+  "operationFailed": "Operation failed",
+  "messageDeleted": "Message deleted",
+  "deleteFailed": "Delete failed",
+  "sampleMessagesCreated": "Sample messages created",
+  "createFailed": "Create failed",
+  "loadMessagesFailed": "Failed to load messages",
+  "confirmDelete": "Confirm Delete",
+  "confirmDeleteMessage": "Are you sure you want to delete this message?",
+  "delete": "Delete",
+  "justNow": "Just now",
+  "minutesAgo": "{minutes} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} hours ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+
 } 

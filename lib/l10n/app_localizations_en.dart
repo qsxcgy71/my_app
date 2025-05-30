@@ -302,6 +302,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeGoldenAmber => 'Golden Amber';
 
   @override
+
   String get themeReduce => 'Cool Down';
 
   @override
@@ -336,4 +337,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeComfort => 'Comfort';
+
+  String get filterConditions => 'Filter Conditions';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get suitableAge => 'Suitable Age';
+
+  @override
+  String get noAgeLimit => 'No Age Limit';
+
+  @override
+  String get courseType => 'Course Type';
+
+  @override
+  String get classTime => 'Class Time';
+
+  @override
+  String get noTimeLimit => 'No Time Limit';
+
+  @override
+  String get morningSlot => 'Morning';
+
+  @override
+  String get afternoonSlot => 'Afternoon';
+
+  @override
+  String get eveningSlot => 'Evening';
+
+  @override
+  String get allDay => 'All Day';
+
+  @override
+  String get difficultyLevel => 'Difficulty Level';
+
+  @override
+  String get beginnerLevel => 'Beginner';
+
+  @override
+  String get primaryLevel => 'Primary';
+
+  @override
+  String get intermediateLevel => 'Intermediate';
+
+  @override
+  String get advancedLevel => 'Advanced';
+
+  @override
+  String get onlineCoursesOnly => 'Online courses only';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get searchAndCollapse => 'Search';
+
+  @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String filtersApplied(int count) {
+    return '$count filters';
+  }
+
+  @override
+  String get noMessages => 'No Messages';
+
+  @override
+  String get yourMessagesWillAppearHere => 'Your messages will appear here';
+
+  @override
+  String get createSampleMessages => 'Create Sample Messages';
+
+  @override
+  String get markAllAsRead => 'Mark All as Read';
+
+  @override
+  String get allMessagesMarkedAsRead => 'All messages marked as read';
+
+  @override
+  String get operationFailed => 'Operation failed';
+
+  @override
+  String get messageDeleted => 'Message deleted';
+
+  @override
+  String get deleteFailed => 'Delete failed';
+
+  @override
+  String get sampleMessagesCreated => 'Sample messages created';
+
+  @override
+  String get createFailed => 'Create failed';
+
+  @override
+  String get loadMessagesFailed => 'Failed to load messages';
+
+  @override
+  String get confirmDelete => 'Confirm Delete';
+
+  @override
+  String get confirmDeleteMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '$minutes minutes ago';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '$hours hours ago';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return '$days days ago';
+  }
+
 }

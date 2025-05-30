@@ -1,18 +1,18 @@
 {
   "@@locale": "zh",
-  "appTitle": "儿童档案",
+  "appTitle": "Kids Profile",
   "welcomeBack": "欢迎回来",
   "signInToContinue": "登录您的账户以继续",
   "email": "邮箱",
-  "password": "密码", 
+  "password": "密码",
   "login": "登录",
   "phone": "手机",
   "phoneNumber": "手机号码",
-  "enterPhoneNumber": "输入手机号码",
+  "enterPhoneNumber": "请输入手机号码",
   "sendCode": "发送验证码",
   "smsCode": "短信验证码",
   "verifyAndLogin": "验证并登录",
-  "continueWithGoogle": "使用 Google 继续",
+  "continueWithGoogle": "使用 Google 登录",
   "dontHaveAccount": "还没有账户？",
   "signUp": "注册",
   "forgotPassword": "忘记密码？",
@@ -32,18 +32,18 @@
   
   "myLessons": "我的课程",
   "searchLessons": "搜索课程",
-  "enrolledLessons": "已报读课程",
-  "completedLessons": "已完成课程",
-  "noEnrolledLessons": "暂无已报读课程",
+  "enrolledLessons": "已报名",
+  "completedLessons": "已完成",
+  "noEnrolledLessons": "暂无已报名课程",
   "noCompletedLessons": "暂无已完成课程",
   "searchCoursePlaceholder": "搜索课程名称、类别或描述...",
   "cancel": "取消",
   "searchResults": "搜索结果",
-  "noSearchResults": "没有找到相关课程",
-  "tryOtherKeywords": "尝试使用其他关键词搜索",
+  "noSearchResults": "暂无相关课程",
+  "tryOtherKeywords": "试试其他关键词",
   "enterSearchKeywords": "请输入搜索关键词",
-  "canSearchCourses": "可搜索课程名称、类别或描述",
-  "enrolled": "已报读",
+  "canSearchCourses": "可以搜索课程名称、类别或描述",
+  "enrolled": "已报名",
   "completed": "已完成",
   
   "exploreComingSoon": "探索功能即将上线",
@@ -69,7 +69,7 @@
   
   "logout": "退出登录",
   "confirmLogout": "确认退出",
-  "logoutMessage": "您确定要退出登录吗？",
+  "logoutMessage": "确定要退出登录吗？",
   "logoutSuccess": "退出登录成功",
   "logoutFailed": "退出登录失败",
   "hello": "你好",
@@ -84,16 +84,13 @@
     }
   },
   "comingSoon": "即将推出",
-  "goodMorning": "早安",
-  "goodAfternoon": "下午好",
-  "goodEvening": "晚上好",
-  "searchAllCourses": "搜索所有课程",
+  "searchAllCourses": "搜索全部课程",
   "popularCourses": "热门课程",
   "featuredCourses": "精选课程",
   "allCourses": "全部课程",
   "courseDetails": "课程详情",
   "instructor": "讲师",
-  "totalLessons": "共{count}节课",
+  "totalLessons": "{count}节课",
   "@totalLessons": {
     "placeholders": {
       "count": {
@@ -103,12 +100,15 @@
   },
   "duration": "时长",
   "rating": "评分",
-  "enrolledStudents": "已报名学员",
+  "enrolledStudents": "报名学员",
   "courseCatalog": "课程目录",
   "preview": "预览",
   "enroll": "立即报名",
-  "profileLogoutSuccess": "退出登录成功",
-  "profileLogoutFailed": "退出登录失败",
+  "goodMorning": "早上好",
+  "goodAfternoon": "下午好",
+  "goodEvening": "晚上好",
+  "profileLogoutSuccess": "退出成功",
+  "profileLogoutFailed": "退出失败",
   
   "selectTheme": "选择主题",
   "themeOceanBlue": "海洋蓝",
@@ -123,6 +123,7 @@
   "themeElegantGrey": "优雅灰",
   "themeFreshCyan": "清新青",
   "themeGoldenAmber": "金秋黄",
+
   "themeReduce": "降溫主題",
   "themeTepid": "暖和主題",
   "themeDefence": "護衛主題",
@@ -135,4 +136,75 @@
   "themeMelody": "甜聲主題",
   "themeRespire": "呼吸主題",
   "themeComfort": "舒暢主題"
+
+  
+  "filterConditions": "筛选条件",
+  "clearAll": "清除全部",
+  "suitableAge": "适合年龄",
+  "noAgeLimit": "不限年龄",
+  "courseType": "课程类型",
+  "classTime": "上课时间",
+  "noTimeLimit": "不限时间",
+  "morningSlot": "上午时段",
+  "afternoonSlot": "下午时段",
+  "eveningSlot": "晚上时段",
+  "allDay": "全天",
+  "difficultyLevel": "难度等级",
+  "beginnerLevel": "入门级",
+  "primaryLevel": "初级",
+  "intermediateLevel": "中级",
+  "advancedLevel": "高级",
+  "onlineCoursesOnly": "仅显示在线课程",
+  "search": "搜索",
+  "searchAndCollapse": "搜索",
+  "clearFilters": "清除筛选条件",
+  "filtersApplied": "{count}个筛选",
+  "@filtersApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "noMessages": "暂无消息",
+  "yourMessagesWillAppearHere": "您的消息将在这里显示",
+  "createSampleMessages": "创建示例消息",
+  "markAllAsRead": "全部已读",
+  "allMessagesMarkedAsRead": "所有消息已标记为已读",
+  "operationFailed": "操作失败",
+  "messageDeleted": "消息已删除",
+  "deleteFailed": "删除失败",
+  "sampleMessagesCreated": "示例消息已创建",
+  "createFailed": "创建失败",
+  "loadMessagesFailed": "加载消息失败",
+  "confirmDelete": "确认删除",
+  "confirmDeleteMessage": "确定要删除这条消息吗？",
+  "delete": "删除",
+  "justNow": "刚刚",
+  "minutesAgo": "{minutes}分钟前",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours}小时前",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days}天前",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
+
 } 

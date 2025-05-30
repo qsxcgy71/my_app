@@ -14,6 +14,12 @@ class Course {
   final bool isFeatured;
   final DateTime createdAt;
   final List<CourseLesson> lessons;
+  
+  // 新增过滤器字段
+  final int recommendedAge; // 推荐年龄
+  final String difficulty; // 难度等级
+  final double price; // 价格
+  final bool isOnline; // 是否在线课程
 
   Course({
     required this.id,
@@ -29,6 +35,10 @@ class Course {
     required this.isFeatured,
     required this.createdAt,
     required this.lessons,
+    this.recommendedAge = 6, // 默认推荐年龄
+    this.difficulty = '初级', // 默认难度
+    this.price = 0.0, // 默认免费
+    this.isOnline = true, // 默认在线课程
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
@@ -48,6 +58,10 @@ class Course {
       lessons: (json['lessons'] as List<dynamic>? ?? [])
           .map((lessonJson) => CourseLesson.fromJson(lessonJson))
           .toList(),
+      recommendedAge: json['recommendedAge'] ?? 6,
+      difficulty: json['difficulty'] ?? '初级',
+      price: (json['price'] ?? 0.0).toDouble(),
+      isOnline: json['isOnline'] ?? true,
     );
   }
 
@@ -66,6 +80,10 @@ class Course {
       'isFeatured': isFeatured,
       'createdAt': createdAt.toIso8601String(),
       'lessons': lessons.map((lesson) => lesson.toJson()).toList(),
+      'recommendedAge': recommendedAge,
+      'difficulty': difficulty,
+      'price': price,
+      'isOnline': isOnline,
     };
   }
 
@@ -101,6 +119,15 @@ class Course {
       } else {
         return '$enrolledCount enrolled';
       }
+    }
+  }
+
+  // 格式化价格显示
+  String get priceString {
+    if (price == 0) {
+      return '免费';
+    } else {
+      return '¥${price.toStringAsFixed(0)}';
     }
   }
 

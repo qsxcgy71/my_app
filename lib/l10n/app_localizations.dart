@@ -739,6 +739,241 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Comfort'**
   String get themeComfort;
+
+  /// No description provided for @filterConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Conditions'**
+  String get filterConditions;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearAll;
+
+  /// No description provided for @suitableAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Suitable Age'**
+  String get suitableAge;
+
+  /// No description provided for @noAgeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'No Age Limit'**
+  String get noAgeLimit;
+
+  /// No description provided for @courseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Type'**
+  String get courseType;
+
+  /// No description provided for @classTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Class Time'**
+  String get classTime;
+
+  /// No description provided for @noTimeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'No Time Limit'**
+  String get noTimeLimit;
+
+  /// No description provided for @morningSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get morningSlot;
+
+  /// No description provided for @afternoonSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon'**
+  String get afternoonSlot;
+
+  /// No description provided for @eveningSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get eveningSlot;
+
+  /// No description provided for @allDay.
+  ///
+  /// In en, this message translates to:
+  /// **'All Day'**
+  String get allDay;
+
+  /// No description provided for @difficultyLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Difficulty Level'**
+  String get difficultyLevel;
+
+  /// No description provided for @beginnerLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get beginnerLevel;
+
+  /// No description provided for @primaryLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary'**
+  String get primaryLevel;
+
+  /// No description provided for @intermediateLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get intermediateLevel;
+
+  /// No description provided for @advancedLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advancedLevel;
+
+  /// No description provided for @onlineCoursesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Online courses only'**
+  String get onlineCoursesOnly;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @searchAndCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchAndCollapse;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @filtersApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} filters'**
+  String filtersApplied(int count);
+
+  /// No description provided for @noMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No Messages'**
+  String get noMessages;
+
+  /// No description provided for @yourMessagesWillAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Your messages will appear here'**
+  String get yourMessagesWillAppearHere;
+
+  /// No description provided for @createSampleMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Sample Messages'**
+  String get createSampleMessages;
+
+  /// No description provided for @markAllAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark All as Read'**
+  String get markAllAsRead;
+
+  /// No description provided for @allMessagesMarkedAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'All messages marked as read'**
+  String get allMessagesMarkedAsRead;
+
+  /// No description provided for @operationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed'**
+  String get operationFailed;
+
+  /// No description provided for @messageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get messageDeleted;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed'**
+  String get deleteFailed;
+
+  /// No description provided for @sampleMessagesCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample messages created'**
+  String get sampleMessagesCreated;
+
+  /// No description provided for @createFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Create failed'**
+  String get createFailed;
+
+  /// No description provided for @loadMessagesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load messages'**
+  String get loadMessagesFailed;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delete'**
+  String get confirmDelete;
+
+  /// No description provided for @confirmDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this message?'**
+  String get confirmDeleteMessage;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes ago'**
+  String minutesAgo(int minutes);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hours ago'**
+  String hoursAgo(int hours);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String daysAgo(int days);
+
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 
 import '../models/profile_model.dart';
@@ -10,6 +11,7 @@ import '../styles/app_text_styles.dart';
 import '../services/profile_service.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
+import '../login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -660,21 +662,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 标题和登出按钮区域
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  l10n.profile,
-                  style: AppTextStyles.titleLarge.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    l10n.profile,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _showLogoutConfirmation(context, l10n),
-                  icon: const Icon(Icons.logout),
-                  tooltip: l10n.logout,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.1),
-                    foregroundColor: Colors.red,
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _showLogoutConfirmation(context, l10n),
+                    icon: const Icon(Icons.logout),
+                    tooltip: l10n.logout,
+                    color: Colors.red,
+                    iconSize: 24,
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
                   ),
                 ),
               ],
@@ -898,33 +912,190 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirmed == true && mounted) {
-      try {
-        await _authService.signOut();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.logoutSuccess,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+      await _performLogout(context, l10n);
+    }
+  }
+
+  Future<void> _performLogout(BuildContext context, AppLocalizations l10n) async {
+    bool isLoadingDialogShown = false;
+    
+    try {
+      print('Profile: Starting logout process...');
+      
+      // 显示加载状态
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            isLoadingDialogShown = true;
+            return WillPopScope(
+              onWillPop: () async => false, // 防止用户关闭对话框
+              child: const AlertDialog(
+                content: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(width: 16),
+                    Text('正在退出登录...'),
+                  ],
+                ),
               ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
+            );
+          },
+        );
+      }
+
+      // 使用Provider获取AuthService
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // 执行退出登录
+      await authService.signOut();
+      
+      print('Profile: Logout completed successfully');
+      
+    } catch (e) {
+      print('Profile: Logout error: $e');
+      
+      // 根据错误类型显示不同的错误信息
+      String errorMessage = l10n.profileLogoutFailed;
+      if (e.toString().contains('Google signOut: false')) {
+        errorMessage = '退出Google账号失败，请重试';
+      } else if (e.toString().contains('Firebase signOut: false')) {
+        errorMessage = '退出Firebase失败，请重试';
+      } else if (e.toString().contains('Sign out incomplete')) {
+        errorMessage = '退出登录不完整，建议重启应用';
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errorMessage,
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
             ),
-          );
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: '重试',
+              textColor: Colors.white,
+              onPressed: () {
+                // 递归调用重试
+                _showLogoutConfirmation(context, l10n);
+              },
+            ),
+          ),
+        );
+        
+        // 如果是退出不完整，显示紧急退出选项
+        if (e.toString().contains('Sign out incomplete')) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    '可以尝试紧急退出（强制清除）',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.orange,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 6),
+                  action: SnackBarAction(
+                    label: '紧急退出',
+                    textColor: Colors.white,
+                    onPressed: () async {
+                      await _performForceLogout(context);
+                    },
+                  ),
+                ),
+              );
+            }
+          });
         }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.logoutFailed,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+      }
+    } finally {
+      // 确保关闭加载对话框
+      if (isLoadingDialogShown && mounted) {
+        try {
+          Navigator.of(context).pop();
+          print('Profile: Loading dialog closed');
+        } catch (e) {
+          print('Profile: Error closing loading dialog: $e');
+        }
+      }
+      
+      // 等待一小段时间确保状态更新
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // 强制导航到登录界面（无论成功还是失败）
+      if (mounted) {
+        print('Profile: Navigating to login screen...');
+        try {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+          print('Profile: Navigation completed');
+        } catch (e) {
+          print('Profile: Navigation error: $e');
+          // 如果导航失败，尝试替代方法
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+      }
+    }
+  }
+
+  Future<void> _performForceLogout(BuildContext context) async {
+    bool isLoadingDialogShown = false;
+    
+    try {
+      // 显示强制退出加载状态
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            isLoadingDialogShown = true;
+            return WillPopScope(
+              onWillPop: () async => false,
+              child: const AlertDialog(
+                content: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(width: 16),
+                    Text('强制退出中...'),
+                  ],
+                ),
               ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+            );
+          },
+        );
+      }
+
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.forceSignOut();
+      
+      print('Profile: Force logout completed');
+    } catch (e) {
+      print('Profile: Force logout error: $e');
+    } finally {
+      // 确保关闭加载对话框
+      if (isLoadingDialogShown && mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (e) {
+          print('Profile: Error closing force logout dialog: $e');
         }
+      }
+      
+      // 强制导航到登录界面
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
       }
     }
   }

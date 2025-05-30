@@ -108,13 +108,126 @@ class AuthService {
   // 退出登录
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      print('Starting sign out process...');
+      
+      // 获取当前认证状态
+      final currentUser = _auth.currentUser;
+      print('Current user before signout: ${currentUser?.uid ?? 'null'}');
+      
+      // 存储清理状态
+      bool googleSignOutSuccess = true;
+      bool googleDisconnectSuccess = true;
+      bool firebaseSignOutSuccess = true;
+      
+      // 尝试清除Google登录状态
+      try {
+        print('Attempting to sign out from Google...');
+        await _googleSignIn.signOut().timeout(const Duration(seconds: 10));
+        print('Google signOut completed');
+      } catch (e) {
+        print('Google signOut failed: $e');
+        googleSignOutSuccess = false;
+      }
+      
+      // 尝试断开Google连接
+      try {
+        print('Attempting to disconnect Google...');
+        await _googleSignIn.disconnect().timeout(const Duration(seconds: 10));
+        print('Google disconnect completed');
+      } catch (e) {
+        print('Google disconnect failed: $e');
+        googleDisconnectSuccess = false;
+      }
+      
+      // 清除Firebase认证状态
+      try {
+        print('Attempting to sign out from Firebase...');
+        await _auth.signOut().timeout(const Duration(seconds: 10));
+        print('Firebase signOut completed');
+      } catch (e) {
+        print('Firebase signOut failed: $e');
+        firebaseSignOutSuccess = false;
+      }
+      
+      // 等待状态更新，但设置超时
+      print('Waiting for auth state to update...');
+      await Future.delayed(const Duration(milliseconds: 1000));
+      
+      // 验证退出状态
+      final userAfterSignOut = _auth.currentUser;
+      print('Current user after signout: ${userAfterSignOut?.uid ?? 'null'}');
+      
+      if (userAfterSignOut != null) {
+        print('Warning: User still exists after signout, attempting force signout...');
+        try {
+          await _auth.signOut().timeout(const Duration(seconds: 5));
+          await Future.delayed(const Duration(milliseconds: 500));
+        } catch (e) {
+          print('Force signout also failed: $e');
+        }
+      }
+      
+      // 检查最终状态
+      final finalUser = _auth.currentUser;
+      print('Final user state: ${finalUser?.uid ?? 'null'}');
+      
+      // 即使用户仍然存在，也不抛出异常，让UI层处理
+      if (finalUser != null) {
+        print('WARNING: User still exists after all signout attempts');
+        // 不抛出异常，让应用继续执行
+      }
+      
+      print('Sign out process completed');
     } catch (e) {
       print('Sign out error: $e');
-      rethrow;
+      // 不重新抛出异常，让应用继续执行
+    }
+  }
+
+  // 强制清除认证状态（用于调试和紧急情况）
+  Future<void> forceSignOut() async {
+    try {
+      print('Force signing out...');
+      
+      // 多次尝试Firebase退出
+      for (int i = 0; i < 3; i++) {
+        try {
+          await _auth.signOut();
+          print('Firebase signOut attempt ${i + 1} completed');
+          break;
+        } catch (e) {
+          print('Firebase signOut attempt ${i + 1} failed: $e');
+          if (i == 2) rethrow;
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
+      
+      // 尝试Google退出（不抛出异常）
+      try {
+        await _googleSignIn.signOut();
+        print('Google signOut completed');
+      } catch (e) {
+        print('Google signOut failed (ignored): $e');
+      }
+      
+      try {
+        await _googleSignIn.disconnect();
+        print('Google disconnect completed');
+      } catch (e) {
+        print('Google disconnect failed (ignored): $e');
+      }
+      
+      // 最终验证
+      await Future.delayed(const Duration(milliseconds: 500));
+      final finalUser = _auth.currentUser;
+      print('Force sign out completed - final user: ${finalUser?.uid ?? 'null'}');
+      
+      if (finalUser != null) {
+        print('Warning: User still exists after force signout');
+      }
+    } catch (e) {
+      print('Force sign out error: $e');
+      // 即使出错也继续，确保清除状态
     }
   }
 

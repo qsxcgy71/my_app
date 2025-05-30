@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'main_screen.dart';
 import 'services/language_service.dart';
 import 'services/auth_service.dart';
+import 'providers/theme_provider.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'l10n/app_localizations.dart';
 
@@ -30,7 +31,16 @@ Future<void> main() async {
     print('Error initializing Firebase: $e');
   }
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageService()),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -38,61 +48,52 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => LanguageService()),
-        Provider(create: (_) => AuthService()),
-      ],
-      child: Consumer<LanguageService>(
-        builder: (context, languageService, child) {
-          return RefreshConfiguration(
-            headerBuilder: () => WaterDropHeader(
-              waterDropColor: Colors.blue,
-              complete: Text(
-                'Refresh completed',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              failed: Text(
-                'Refresh failed',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
+    return Consumer2<LanguageService, ThemeProvider>(
+      builder: (context, languageService, themeProvider, child) {
+        return RefreshConfiguration(
+          headerBuilder: () => WaterDropHeader(
+            waterDropColor: themeProvider.currentThemeData.primaryColor,
+            complete: Text(
+              'Refresh completed',
+              style: TextStyle(color: Colors.grey[600]),
             ),
-            footerBuilder: () => ClassicFooter(
-              loadStyle: LoadStyle.ShowWhenLoading,
-              completeDuration: Duration(milliseconds: 500),
+            failed: Text(
+              'Refresh failed',
+              style: TextStyle(color: Colors.grey[600]),
             ),
-            headerTriggerDistance: 80.0,
-            springDescription: SpringDescription(
-              stiffness: 170,
-              damping: 16,
-              mass: 1.9
-            ),
-            maxOverScrollExtent: 100,
-            maxUnderScrollExtent: 0,
-            enableScrollWhenRefreshCompleted: true,
-            enableLoadingWhenFailed: true,
-            hideFooterWhenNotFull: false,
-            enableBallisticLoad: true,
-            child: MaterialApp(
-              title: 'Kids Profile',
-              theme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-                useMaterial3: true,
-              ),
-              // 国际化配置
-              locale: languageService.currentLocale,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: LanguageService.supportedLocales,
-              home: const AuthWrapper(),
-            ),
-          );
-        },
-      ),
+          ),
+          footerBuilder: () => ClassicFooter(
+            loadStyle: LoadStyle.ShowWhenLoading,
+            completeDuration: const Duration(milliseconds: 500),
+          ),
+          headerTriggerDistance: 80.0,
+          springDescription: const SpringDescription(
+            stiffness: 170,
+            damping: 16,
+            mass: 1.9
+          ),
+          maxOverScrollExtent: 100,
+          maxUnderScrollExtent: 0,
+          enableScrollWhenRefreshCompleted: true,
+          enableLoadingWhenFailed: true,
+          hideFooterWhenNotFull: false,
+          enableBallisticLoad: true,
+          child: MaterialApp(
+            title: 'Kids Profile',
+            theme: themeProvider.themeData,
+            // 国际化配置
+            locale: languageService.currentLocale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: LanguageService.supportedLocales,
+            home: const AuthWrapper(),
+          ),
+        );
+      },
     );
   }
 }

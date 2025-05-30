@@ -253,4 +253,49 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get goodEvening => '晚上好';
+
+  @override
+  String get profileLogoutSuccess => '退出登录成功';
+
+  @override
+  String get profileLogoutFailed => '退出登录失败';
+
+  @override
+  String get selectTheme => '选择主题';
+
+  @override
+  String get themeOceanBlue => '海洋蓝';
+
+  @override
+  String get themeMysteryPurple => '神秘紫';
+
+  @override
+  String get themeForestGreen => '森林绿';
+
+  @override
+  String get themeVibrantOrange => '活力橙';
+
+  @override
+  String get themePassionRed => '热情红';
+
+  @override
+  String get themeRomanticPink => '浪漫粉';
+
+  @override
+  String get themeTealGreen => '青碧绿';
+
+  @override
+  String get themeIndigoBlue => '靛青蓝';
+
+  @override
+  String get themeEarthBrown => '大地棕';
+
+  @override
+  String get themeElegantGrey => '优雅灰';
+
+  @override
+  String get themeFreshCyan => '清新青';
+
+  @override
+  String get themeGoldenAmber => '金秋黄';
 }

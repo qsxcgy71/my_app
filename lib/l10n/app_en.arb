@@ -106,5 +106,21 @@
   "enroll": "Enroll Now",
   "goodMorning": "Good Morning",
   "goodAfternoon": "Good Afternoon",
-  "goodEvening": "Good Evening"
+  "goodEvening": "Good Evening",
+  "profileLogoutSuccess": "Logout successful",
+  "profileLogoutFailed": "Logout failed",
+  
+  "selectTheme": "Select Theme",
+  "themeOceanBlue": "Ocean Blue",
+  "themeMysteryPurple": "Mystery Purple",
+  "themeForestGreen": "Forest Green",
+  "themeVibrantOrange": "Vibrant Orange",
+  "themePassionRed": "Passion Red",
+  "themeRomanticPink": "Romantic Pink",
+  "themeTealGreen": "Teal Green",
+  "themeIndigoBlue": "Indigo Blue",
+  "themeEarthBrown": "Earth Brown",
+  "themeElegantGrey": "Elegant Grey",
+  "themeFreshCyan": "Fresh Cyan",
+  "themeGoldenAmber": "Golden Amber"
 } 

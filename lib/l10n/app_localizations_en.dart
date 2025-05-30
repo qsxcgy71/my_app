@@ -255,4 +255,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goodEvening => 'Good Evening';
+
+  @override
+  String get profileLogoutSuccess => 'Logout successful';
+
+  @override
+  String get profileLogoutFailed => 'Logout failed';
+
+  @override
+  String get selectTheme => 'Select Theme';
+
+  @override
+  String get themeOceanBlue => 'Ocean Blue';
+
+  @override
+  String get themeMysteryPurple => 'Mystery Purple';
+
+  @override
+  String get themeForestGreen => 'Forest Green';
+
+  @override
+  String get themeVibrantOrange => 'Vibrant Orange';
+
+  @override
+  String get themePassionRed => 'Passion Red';
+
+  @override
+  String get themeRomanticPink => 'Romantic Pink';
+
+  @override
+  String get themeTealGreen => 'Teal Green';
+
+  @override
+  String get themeIndigoBlue => 'Indigo Blue';
+
+  @override
+  String get themeEarthBrown => 'Earth Brown';
+
+  @override
+  String get themeElegantGrey => 'Elegant Grey';
+
+  @override
+  String get themeFreshCyan => 'Fresh Cyan';
+
+  @override
+  String get themeGoldenAmber => 'Golden Amber';
 }

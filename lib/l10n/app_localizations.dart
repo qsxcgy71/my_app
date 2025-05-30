@@ -577,6 +577,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Good Evening'**
   String get goodEvening;
+
+  /// No description provided for @profileLogoutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout successful'**
+  String get profileLogoutSuccess;
+
+  /// No description provided for @profileLogoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout failed'**
+  String get profileLogoutFailed;
+
+  /// No description provided for @selectTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Theme'**
+  String get selectTheme;
+
+  /// No description provided for @themeOceanBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean Blue'**
+  String get themeOceanBlue;
+
+  /// No description provided for @themeMysteryPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Mystery Purple'**
+  String get themeMysteryPurple;
+
+  /// No description provided for @themeForestGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Green'**
+  String get themeForestGreen;
+
+  /// No description provided for @themeVibrantOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrant Orange'**
+  String get themeVibrantOrange;
+
+  /// No description provided for @themePassionRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Passion Red'**
+  String get themePassionRed;
+
+  /// No description provided for @themeRomanticPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Romantic Pink'**
+  String get themeRomanticPink;
+
+  /// No description provided for @themeTealGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal Green'**
+  String get themeTealGreen;
+
+  /// No description provided for @themeIndigoBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo Blue'**
+  String get themeIndigoBlue;
+
+  /// No description provided for @themeEarthBrown.
+  ///
+  /// In en, this message translates to:
+  /// **'Earth Brown'**
+  String get themeEarthBrown;
+
+  /// No description provided for @themeElegantGrey.
+  ///
+  /// In en, this message translates to:
+  /// **'Elegant Grey'**
+  String get themeElegantGrey;
+
+  /// No description provided for @themeFreshCyan.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh Cyan'**
+  String get themeFreshCyan;
+
+  /// No description provided for @themeGoldenAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Golden Amber'**
+  String get themeGoldenAmber;
 }
 
 class _AppLocalizationsDelegate

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'dart:async';
+=======
+import 'package:provider/provider.dart';
+import '../styles/app_text_styles.dart';
+import '../providers/theme_provider.dart';
+>>>>>>> origin/dev
 
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
@@ -204,6 +210,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final l10n = AppLocalizations.of(context)!;
     
     if (_isLoading) {
@@ -368,9 +375,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
               
               const SizedBox(height: 100),
             ],
+=======
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentTheme = themeProvider.currentThemeData;
+
+    return Scaffold(
+      backgroundColor: currentTheme.primaryColor.withOpacity(0.05),
+      appBar: AppBar(
+        backgroundColor: currentTheme.primaryColor.withOpacity(0.1),
+        elevation: 0,
+        title: Text(
+          '探索',
+          style: AppTextStyles.titleLarge.copyWith(
+            color: currentTheme.primaryColor,
+            fontWeight: FontWeight.w600,
+>>>>>>> origin/dev
           ),
         ),
       ),
+      body: Container(), // 空白的主体内容
     );
   }
 

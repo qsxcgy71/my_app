@@ -106,5 +106,21 @@
   "enrolledStudents": "已报名学员",
   "courseCatalog": "课程目录",
   "preview": "预览",
-  "enroll": "立即报名"
+  "enroll": "立即报名",
+  "profileLogoutSuccess": "退出登录成功",
+  "profileLogoutFailed": "退出登录失败",
+  
+  "selectTheme": "选择主题",
+  "themeOceanBlue": "海洋蓝",
+  "themeMysteryPurple": "神秘紫",
+  "themeForestGreen": "森林绿",
+  "themeVibrantOrange": "活力橙",
+  "themePassionRed": "热情红",
+  "themeRomanticPink": "浪漫粉",
+  "themeTealGreen": "青碧绿",
+  "themeIndigoBlue": "靛青蓝",
+  "themeEarthBrown": "大地棕",
+  "themeElegantGrey": "优雅灰",
+  "themeFreshCyan": "清新青",
+  "themeGoldenAmber": "金秋黄"
 } 

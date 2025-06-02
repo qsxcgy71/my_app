@@ -851,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchAndCollapse.
   ///
   /// In en, this message translates to:
-  /// **'Search'**
+  /// **'Search & Close'**
   String get searchAndCollapse;
 
   /// No description provided for @clearFilters.

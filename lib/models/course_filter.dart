@@ -1,16 +1,16 @@
 class CourseFilter {
-  final AgeRange? ageRange;
+  final List<AgeRange> ageRanges;
   final List<String> courseTypes;
-  final TimeRange? timeRange;
+  final List<TimeRange> timeRanges;
   final List<String> difficulties;
   final double? minPrice;
   final double? maxPrice;
   final bool onlineOnly;
 
   CourseFilter({
-    this.ageRange,
+    this.ageRanges = const [],
     this.courseTypes = const [],
-    this.timeRange,
+    this.timeRanges = const [],
     this.difficulties = const [],
     this.minPrice,
     this.maxPrice,
@@ -19,9 +19,9 @@ class CourseFilter {
 
   // 检查是否有任何过滤条件被设置
   bool get hasFilters {
-    return ageRange != null ||
+    return ageRanges.isNotEmpty ||
            courseTypes.isNotEmpty ||
-           timeRange != null ||
+           timeRanges.isNotEmpty ||
            difficulties.isNotEmpty ||
            minPrice != null ||
            maxPrice != null ||
@@ -31,28 +31,28 @@ class CourseFilter {
   // 获取活跃过滤器数量
   int get activeFiltersCount {
     int count = 0;
-    if (ageRange != null) count++;
-    if (courseTypes.isNotEmpty) count++;
-    if (timeRange != null) count++;
-    if (difficulties.isNotEmpty) count++;
+    count += ageRanges.length;
+    count += courseTypes.length;
+    count += timeRanges.length;
+    count += difficulties.length;
     if (minPrice != null || maxPrice != null) count++;
     if (onlineOnly) count++;
     return count;
   }
 
   CourseFilter copyWith({
-    AgeRange? ageRange,
+    List<AgeRange>? ageRanges,
     List<String>? courseTypes,
-    TimeRange? timeRange,
+    List<TimeRange>? timeRanges,
     List<String>? difficulties,
     double? minPrice,
     double? maxPrice,
     bool? onlineOnly,
   }) {
     return CourseFilter(
-      ageRange: ageRange ?? this.ageRange,
+      ageRanges: ageRanges ?? this.ageRanges,
       courseTypes: courseTypes ?? this.courseTypes,
-      timeRange: timeRange ?? this.timeRange,
+      timeRanges: timeRanges ?? this.timeRanges,
       difficulties: difficulties ?? this.difficulties,
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,

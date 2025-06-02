@@ -12,6 +12,8 @@ import '../services/profile_service.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
 import 'login_screen.dart';
+import '../widgets/keyboard_dismisser.dart';
+import '../widgets/anti_spam_button.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -894,7 +896,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          FilledButton(
+          AntiSpamButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

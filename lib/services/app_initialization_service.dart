@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../providers/theme_provider.dart';
 import 'profile_service.dart';
 import 'lesson_service.dart';
+import 'language_service.dart';
 
 class AppInitializationService {
   final BuildContext context;
@@ -41,10 +43,20 @@ class AppInitializationService {
         lessonService.getCompletedLessons(),
       ]);
 
+      // 初始化语言服务
+      await LanguageService().initLanguage();
+      
+      // 可以在这里添加其他初始化逻辑
+      if (kDebugMode) {
+        print('App initialization completed');
+      }
+
       return true;
     } catch (e) {
-      print('Error during app initialization: $e');
-      return false;
+      if (kDebugMode) {
+        print('App initialization failed: $e');
+      }
+      rethrow;
     }
   }
 } 

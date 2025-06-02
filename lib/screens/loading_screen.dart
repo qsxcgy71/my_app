@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/app_initialization_service.dart';
-import 'login_screen.dart';
-import 'main_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/auth_wrapper.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -11,8 +10,6 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  String _loadingText = 'Initializing...';
-
   @override
   void initState() {
     super.initState();
@@ -20,25 +17,25 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   Future<void> _initializeApp() async {
-    final initService = AppInitializationService(
-      context: context,
-      onStatusUpdate: (status) {
-        if (mounted) {
-          setState(() => _loadingText = status);
-        }
-      },
-    );
-
-    final success = await initService.initializeApp();
-
-    if (mounted) {
-      if (success) {
+    try {
+      // 等待一小段时间确保Firebase初始化完成
+      await Future.delayed(const Duration(seconds: 2));
+      
+      if (mounted) {
+        // 导航到AuthWrapper，它会处理认证状态检查
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 0)),
+          MaterialPageRoute(
+            builder: (context) => const AuthWrapper(),
+          ),
         );
-      } else {
+      }
+    } catch (e) {
+      if (mounted) {
+        // 如果出现错误，也导航到AuthWrapper
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AuthWrapper(),
+          ),
         );
       }
     }
@@ -46,31 +43,45 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App Logo
-            Image.asset(
-              'assets/app_icon/app_icon_1.png',
+            // 使用app_icon_1.png图片
+            Container(
               width: 120,
               height: 120,
-              fit: BoxFit.contain,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/app_icon/app_icon_1.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             const SizedBox(height: 32),
-            
-            // Loading Indicator
             const CircularProgressIndicator(),
-            const SizedBox(height: 24),
-            
-            // Loading Text
+            const SizedBox(height: 16),
             Text(
-              _loadingText,
-              style: theme.textTheme.bodyLarge,
-              textAlign: TextAlign.center,
+              'Loading...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

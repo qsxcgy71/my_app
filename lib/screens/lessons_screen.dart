@@ -10,6 +10,8 @@ import '../providers/theme_provider.dart';
 import '../widgets/theme_selector.dart';
 import 'lesson_detail_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/keyboard_dismisser.dart';
+import '../widgets/anti_spam_button.dart';
 
 class LessonsScreen extends StatefulWidget {
   const LessonsScreen({super.key});
@@ -232,218 +234,230 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     final themeProvider = Provider.of<ThemeProvider>(context);
     final currentTheme = themeProvider.currentThemeData;
     
-    return Scaffold(
-      backgroundColor: currentTheme.primaryColor.withOpacity(0.05),
-      appBar: AppBar(
-        backgroundColor: currentTheme.primaryColor.withOpacity(0.1),
-        elevation: 0,
-        title: Text(
-          _isSearchMode ? l10n.searchLessons : l10n.myLessons,
-          style: AppTextStyles.titleLarge.copyWith(
-            color: currentTheme.primaryColor,
-            fontWeight: FontWeight.w600,
+    return KeyboardDismisser(
+      child: Scaffold(
+        backgroundColor: currentTheme.primaryColor.withOpacity(0.05),
+        appBar: AppBar(
+          backgroundColor: currentTheme.primaryColor.withOpacity(0.1),
+          elevation: 0,
+          title: Text(
+            _isSearchMode ? l10n.searchLessons : l10n.myLessons,
+            style: AppTextStyles.titleLarge.copyWith(
+              color: currentTheme.primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          actions: [
+            if (_isSearchMode) ...[
+              AntiSpamWrapper(
+                onTap: _toggleSearchMode,
+                child: TextButton(
+                  onPressed: null, // 由 AntiSpamWrapper 处理
+                  child: Text(
+                    l10n.cancel,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: currentTheme.primaryColor.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ] else ...[
+              AntiSpamWrapper(
+                onTap: _toggleSearchMode,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: currentTheme.primaryColor,
+                  ),
+                  onPressed: null, // 由 AntiSpamWrapper 处理
+                ),
+              ),
+              const ThemeSelector(),
+              AntiSpamWrapper(
+                onTap: _createSampleLessons,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.add_circle,
+                    color: currentTheme.primaryColor,
+                  ),
+                  onPressed: null, // 由 AntiSpamWrapper 处理
+                ),
+              ),
+            ],
+          ],
         ),
-        actions: [
-          if (_isSearchMode) ...[
-            TextButton(
-              onPressed: _toggleSearchMode,
-              child: Text(
-                l10n.cancel,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: currentTheme.primaryColor.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ] else ...[
-            IconButton(
-              icon: Icon(
-                Icons.search,
-                color: currentTheme.primaryColor,
-              ),
-              onPressed: _toggleSearchMode,
-            ),
-            const ThemeSelector(),
-            IconButton(
-              icon: Icon(
-                Icons.add_circle,
-                color: currentTheme.primaryColor,
-              ),
-              onPressed: _createSampleLessons,
-            ),
-          ],
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar (only visible in search mode)
-          if (_isSearchMode) ...[
-            Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: currentTheme.primaryColor.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.searchCoursePlaceholder,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
-                          onPressed: () {
-                            _searchController.clear();
-                          },
-                        )
-                      : null,
-                  hintStyle: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor.withOpacity(0.6)),
-                ),
-                style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor),
-              ),
-            ),
-          ],
-
-          // Tab Bar (hidden in search mode)
-          if (!_isSearchMode) ...[
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: currentTheme.primaryColor.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(4),
+        body: Column(
+          children: [
+            // Search Bar (only visible in search mode)
+            if (_isSearchMode) ...[
+              Container(
+                margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white,
-                      currentTheme.primaryColor.withOpacity(0.05),
-                    ],
-                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: currentTheme.primaryColor.withOpacity(0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchCoursePlaceholder,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? AntiSpamWrapper(
+                            onTap: () => _searchController.clear(),
+                            child: IconButton(
+                              icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
+                              onPressed: null, // 由 AntiSpamWrapper 处理
+                            ),
+                          )
+                        : null,
+                    hintStyle: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor.withOpacity(0.6)),
+                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor),
+                ),
+              ),
+            ],
+
+            // Tab Bar (hidden in search mode)
+            if (!_isSearchMode) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: currentTheme.primaryColor.withOpacity(0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        currentTheme.primaryColor,
-                        currentTheme.secondaryColor,
+                        Colors.white,
+                        currentTheme.primaryColor.withOpacity(0.05),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: currentTheme.primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          currentTheme.primaryColor,
+                          currentTheme.secondaryColor,
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentTheme.primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: currentTheme.primaryColor.withOpacity(0.6),
+                    labelStyle: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                    unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    tabs: [
+                      _buildTab(l10n.enrolledLessons, Icons.schedule, 0),
+                      _buildTab(l10n.completedLessons, Icons.check_circle, 1),
                     ],
                   ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: currentTheme.primaryColor.withOpacity(0.6),
-                  labelStyle: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                  unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
-                  tabs: [
-                    _buildTab(l10n.enrolledLessons, Icons.schedule, 0),
-                    _buildTab(l10n.completedLessons, Icons.check_circle, 1),
-                  ],
                 ),
               ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Lessons List
+            Expanded(
+              child: _isSearchMode
+                  ? _buildSearchResults(l10n)
+                  : SmartRefresher(
+                      controller: _refreshController,
+                      enablePullDown: true,
+                      enablePullUp: !_isSearchMode && _hasMoreData,
+                      onRefresh: _onRefresh,
+                      onLoading: _onLoading,
+                      header: WaterDropHeader(
+                        complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+                        failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+                      ),
+                      footer: CustomFooter(
+                        builder: (BuildContext context, LoadStatus? mode) {
+                          Widget body;
+                          if (mode == null || mode == LoadStatus.idle) {
+                            body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                          } else if (mode == LoadStatus.loading) {
+                            body = Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 8),
+                                Text("Loading...", style: AppTextStyles.bodyMedium),
+                              ],
+                            );
+                          } else if (mode == LoadStatus.failed) {
+                            body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+                          } else if (mode == LoadStatus.canLoading) {
+                            body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+                          } else {
+                            body = Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                                const SizedBox(width: 4),
+                                Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                              ],
+                            );
+                          }
+                          return Container(
+                            height: 55.0,
+                            child: Center(child: body),
+                          );
+                        },
+                      ),
+                      child: _tabController.index == 0
+                          ? _buildLessonsList(_enrolledLessons, l10n)
+                          : _buildLessonsList(_completedLessons, l10n),
+                    ),
             ),
           ],
-
-          const SizedBox(height: 16),
-
-          // Lessons List
-          Expanded(
-            child: _isSearchMode
-                ? _buildSearchResults(l10n)
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: !_isSearchMode && _hasMoreData,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    header: WaterDropHeader(
-                      complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-                      failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-                    ),
-                    footer: CustomFooter(
-                      builder: (BuildContext context, LoadStatus? mode) {
-                        Widget body;
-                        if (mode == null || mode == LoadStatus.idle) {
-                          body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                        } else if (mode == LoadStatus.loading) {
-                          body = Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              const SizedBox(width: 8),
-                              Text("Loading...", style: AppTextStyles.bodyMedium),
-                            ],
-                          );
-                        } else if (mode == LoadStatus.failed) {
-                          body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-                        } else if (mode == LoadStatus.canLoading) {
-                          body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
-                        } else {
-                          body = Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                              const SizedBox(width: 4),
-                              Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                            ],
-                          );
-                        }
-                        return Container(
-                          height: 55.0,
-                          child: Center(child: body),
-                        );
-                      },
-                    ),
-                    child: _tabController.index == 0
-                        ? _buildLessonsList(_enrolledLessons, l10n)
-                        : _buildLessonsList(_completedLessons, l10n),
-                  ),
-          ),
-        ],
+        ),
       ),
     );
   }

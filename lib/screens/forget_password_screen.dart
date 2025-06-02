@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../styles/app_text_styles.dart';
 import '../services/auth_service.dart';
+import '../widgets/keyboard_dismisser.dart';
+import '../widgets/anti_spam_button.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -57,59 +59,53 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return KeyboardDismissibleScaffold(
       appBar: AppBar(
         title: Text(
           'Reset Password',
           style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
         ),
       ),
-      body: Center(
-        child: Card(
-          margin: const EdgeInsets.all(24),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Reset Password',
-                  style: AppTextStyles.titleLarge,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Card(
+              margin: const EdgeInsets.all(24),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Reset Password',
+                      style: AppTextStyles.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Enter your email address and we\'ll send you instructions to reset your password.',
+                      style: AppTextStyles.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: AppTextStyles.bodyMedium,
+                        prefixIcon: const Icon(Icons.email),
+                      ),
+                      style: AppTextStyles.bodyMedium,
+                      keyboardType: TextInputType.emailAddress,
+                      enabled: !_isLoading,
+                    ),
+                    const SizedBox(height: 24),
+                    AntiSpamButton(
+                      onPressed: _isLoading ? null : _resetPassword,
+                      child: Text('Send Reset Link', style: AppTextStyles.button.copyWith(color: Colors.white)),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Enter your email address and we\'ll send you instructions to reset your password.',
-                  style: AppTextStyles.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: AppTextStyles.bodyMedium,
-                    prefixIcon: const Icon(Icons.email),
-                  ),
-                  style: AppTextStyles.bodyMedium,
-                  keyboardType: TextInputType.emailAddress,
-                  enabled: !_isLoading,
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _isLoading ? null : _resetPassword,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text('Send Reset Link', style: AppTextStyles.button),
-                ),
-              ],
+              ),
             ),
           ),
         ),

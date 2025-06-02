@@ -678,10 +678,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
             const SizedBox(width: 4),
             GestureDetector(
               onTap: onRemove,
-              child: Icon(
-                Icons.close,
-                size: 16,
-                color: currentTheme.primaryColor,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.transparent,
+                ),
+                child: Icon(
+                  Icons.close,
+                  size: 14,
+                  color: currentTheme.primaryColor,
+                ),
               ),
             ),
           ],

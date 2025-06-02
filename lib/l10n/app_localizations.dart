@@ -973,7 +973,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days} days ago'**
   String daysAgo(int days);
-
 }
 
 class _AppLocalizationsDelegate

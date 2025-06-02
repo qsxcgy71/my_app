@@ -367,7 +367,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
                 
                 // 新的搜索和筛选布局
                 _buildSearchAndFilterSection(l10n, currentTheme),

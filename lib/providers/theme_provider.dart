@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  static const String _themeKey = 'selected_theme';
+  late SharedPreferences _prefs;
   AppThemeType _currentTheme = AppThemeType.reduce;  // Default to reduce theme
 
   AppThemeType get currentTheme => _currentTheme;
   AppThemeData get currentThemeData => AppThemeData.themeData[_currentTheme]!;
+
+  // Initialize the provider and load saved theme
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+    // Load saved theme or use default
+    final savedTheme = _prefs.getString(_themeKey);
+    if (savedTheme != null) {
+      try {
+        _currentTheme = AppThemeType.values.firstWhere(
+          (type) => type.toString() == savedTheme,
+          orElse: () => AppThemeType.reduce,
+        );
+      } catch (e) {
+        _currentTheme = AppThemeType.reduce;
+      }
+      notifyListeners();
+    }
+  }
 
   ThemeData get themeData {
     final themeData = AppThemeData.themeData[_currentTheme]!;
@@ -84,9 +105,11 @@ class ThemeProvider extends ChangeNotifier {
     );
   }
 
-  void setTheme(AppThemeType theme) {
+  Future<void> setTheme(AppThemeType theme) async {
     if (_currentTheme != theme) {
       _currentTheme = theme;
+      // Save theme preference
+      await _prefs.setString(_themeKey, theme.toString());
       notifyListeners();
     }
   }

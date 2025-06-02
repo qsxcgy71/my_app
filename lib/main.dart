@@ -33,12 +33,16 @@ Future<void> main() async {
     print('Error initializing Firebase: $e');
   }
 
+  // Create and initialize ThemeProvider
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageService()),
         Provider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const MyApp(),
     ),

@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../models/lesson_model.dart';
 
 class LessonService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _storage = FirebaseStorage.instance;
 
   // 获取已报读的课程（未来的课程）
   Future<List<Lesson>> getEnrolledLessons() async {
@@ -315,6 +318,74 @@ class LessonService {
       } catch (e) {
         print('Error creating sample lesson: $e');
       }
+    }
+  }
+
+  // 根据ID获取课程
+  Future<Lesson?> getLessonById(String lessonId) async {
+    try {
+      final doc = await _firestore.collection('lessons').doc(lessonId).get();
+      if (!doc.exists) return null;
+
+      return Lesson.fromMap({
+        ...doc.data()!,
+        'id': doc.id,
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 添加课程照片
+  Future<void> addLessonPhoto(String lessonId, String localImagePath, {String? description}) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    try {
+      // 1. 上传图片到Firebase Storage
+      final file = File(localImagePath);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final photoId = 'lesson_photos/$lessonId/$timestamp';
+      
+      final uploadTask = _storage.ref(photoId).putFile(file);
+      final snapshot = await uploadTask;
+      final photoUrl = await snapshot.ref.getDownloadURL();
+
+      // 2. 创建照片对象
+      final photo = LessonPhoto(
+        id: photoId,
+        url: photoUrl,
+        thumbnailUrl: photoUrl, // 这里可以添加缩略图处理逻辑
+        takenAt: DateTime.now(),
+        description: description ?? '课程照片',
+      );
+
+      // 3. 更新课程文档，添加新照片
+      await _firestore.collection('lessons').doc(lessonId).update({
+        'photos': FieldValue.arrayUnion([photo.toMap()]),
+      });
+    } catch (e) {
+      throw Exception('上传照片失败: $e');
+    }
+  }
+
+  // 删除课程照片
+  Future<void> deleteLessonPhoto(String lessonId, String photoId) async {
+    try {
+      // 1. 从Storage中删除照片
+      await _storage.ref(photoId).delete();
+
+      // 2. 从课程文档中移除照片记录
+      final doc = await _firestore.collection('lessons').doc(lessonId).get();
+      if (!doc.exists) return;
+
+      final photos = (doc.data()?['photos'] as List? ?? [])
+          .where((photo) => photo['id'] != photoId)
+          .toList();
+
+      await doc.reference.update({'photos': photos});
+    } catch (e) {
+      throw Exception('删除照片失败: $e');
     }
   }
 } 

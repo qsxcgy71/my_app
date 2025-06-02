@@ -108,9 +108,10 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setTheme(AppThemeType theme) async {
     if (_currentTheme != theme) {
       _currentTheme = theme;
+      // Notify listeners before saving to ensure immediate UI update
+      notifyListeners();
       // Save theme preference
       await _prefs.setString(_themeKey, theme.toString());
-      notifyListeners();
     }
   }
 } 

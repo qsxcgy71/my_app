@@ -125,6 +125,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
+  Widget _buildGreeting() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentTheme = themeProvider.currentThemeData;
+    
+    return Text(
+      _getGreeting(),
+      style: TextStyle(
+        fontSize: 24,
+        fontFamily: 'GenSenRounded',
+        color: currentTheme.primaryColor,
+        fontWeight: FontWeight.w700, // 使用Bold字重
+        height: 1.2,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
   String _getUserDisplayName() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.displayName ?? user?.email?.split('@')[0] ?? 'Melody';
@@ -250,14 +267,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${_getGreeting()},',
-                            style: AppTextStyles.titleLarge.copyWith(
-                              color: currentTheme.primaryColor,
-                              fontSize: 28,
-                              height: 1.2,
-                            ),
-                          ),
+                          _buildGreeting(),
                           const SizedBox(height: 4),
                           Text(
                             _getUserDisplayName(),

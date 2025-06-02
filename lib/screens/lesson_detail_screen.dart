@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/lesson_model.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class LessonDetailScreen extends StatelessWidget {
   final Lesson lesson;
@@ -10,6 +11,101 @@ class LessonDetailScreen extends StatelessWidget {
     super.key,
     required this.lesson,
   });
+
+  Widget _buildPhotoGrid(BuildContext context) {
+    // 如果课程未完成，返回空
+    if (!lesson.isPastLesson) {
+      return const SizedBox.shrink();
+    }
+
+    // 如果没有照片，使用默认照片
+    final photos = lesson.photos.isEmpty
+        ? [
+            LessonPhoto(
+              id: 'default',
+              url: 'asset:///assets/photos/default_avatar.png',
+              thumbnailUrl: 'asset:///assets/photos/default_avatar.png',
+              takenAt: DateTime.now(),
+              description: '课程默认照片',
+            ),
+          ]
+        : lesson.photos;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '课程照片',
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: photos.length,
+            itemBuilder: (context, index) {
+              final photo = photos[index];
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: photo.url.startsWith('asset:///')
+                    ? Image.asset(
+                        photo.url.replaceFirst('asset:///', ''),
+                        fit: BoxFit.cover,
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: photo.url,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.error),
+                        ),
+                      ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +181,12 @@ class LessonDetailScreen extends StatelessWidget {
             ],
 
             const SizedBox(height: 20),
+
+            // 照片展示板块（仅在课程完成时显示）
+            if (lesson.isPastLesson) ...[
+              _buildPhotoGrid(context),
+              const SizedBox(height: 20),
+            ],
 
             // 课程信息卡片
             Container(

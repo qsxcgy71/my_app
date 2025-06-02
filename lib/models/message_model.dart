@@ -17,6 +17,8 @@ class Message {
   final String? lessonId; // 关联的课程ID
   final String? imageUrl; // 消息图片
   final Map<String, dynamic>? extraData; // 额外数据
+  final String? messageKey; // 消息类型键，用于国际化
+  final Map<String, String>? messageParams; // 消息参数
 
   Message({
     required this.id,
@@ -28,7 +30,61 @@ class Message {
     this.lessonId,
     this.imageUrl,
     this.extraData,
+    this.messageKey,
+    this.messageParams,
   });
+
+  // 根据语言获取本地化标题
+  String getLocalizedTitle(String languageCode) {
+    if (messageKey == null) return title;
+    
+    switch (messageKey!) {
+      case 'welcome':
+        return languageCode == 'zh' ? '欢迎使用Kids Profile！' : 'Welcome to Kids Profile!';
+      case 'class_reminder':
+        return languageCode == 'zh' ? '课程提醒' : 'Class Reminder';
+      case 'class_completed':
+        return languageCode == 'zh' ? '课程完成' : 'Class Completed';
+      case 'class_starting_soon':
+        return languageCode == 'zh' ? '课程即将开始' : 'Class Starting Soon';
+      case 'class_ending_soon':
+        return languageCode == 'zh' ? '课程即将结束' : 'Class Ending Soon';
+      default:
+        return title;
+    }
+  }
+
+  // 根据语言获取本地化内容
+  String getLocalizedContent(String languageCode) {
+    if (messageKey == null) return content;
+    
+    final courseName = messageParams?['courseName'] ?? '';
+    
+    switch (messageKey!) {
+      case 'welcome':
+        return languageCode == 'zh' 
+            ? '感谢您选择我们的儿童教育平台，让我们一起为孩子创造美好的学习体验。'
+            : 'Thank you for choosing our children\'s education platform. Let\'s create wonderful learning experiences for your child together.';
+      case 'class_reminder':
+        return languageCode == 'zh' 
+            ? '您为孩子预订的《$courseName》课程将在明天下午2:00开始，请准时参加。'
+            : 'The "$courseName" class you booked for your child will start tomorrow at 2:00 PM. Please attend on time.';
+      case 'class_completed':
+        return languageCode == 'zh' 
+            ? '恭喜！您的孩子已完成《$courseName》课程，可以查看课程总结与作品展示。'
+            : 'Congratulations! Your child has completed the "$courseName" course. You can view the course summary and artwork showcase.';
+      case 'class_starting_soon':
+        return languageCode == 'zh' 
+            ? '课程《$courseName》即将在15分钟后开始，请及时参加。'
+            : 'The class "$courseName" will start in 15 minutes. Please join on time.';
+      case 'class_ending_soon':
+        return languageCode == 'zh' 
+            ? '课程《$courseName》即将在15分钟后结束，请做好接送准备。'
+            : 'The class "$courseName" will end in 15 minutes. Please prepare for pickup.';
+      default:
+        return content;
+    }
+  }
 
   // 获取消息类型图标
   String get typeIcon {
@@ -105,6 +161,8 @@ class Message {
       'lessonId': lessonId,
       'imageUrl': imageUrl,
       'extraData': extraData,
+      'messageKey': messageKey,
+      'messageParams': messageParams,
       'userId': '', // 这将在保存时设置
     };
   }
@@ -123,6 +181,10 @@ class Message {
       lessonId: map['lessonId'] as String?,
       imageUrl: map['imageUrl'] as String?,
       extraData: map['extraData'] as Map<String, dynamic>?,
+      messageKey: map['messageKey'] as String?,
+      messageParams: map['messageParams'] != null
+          ? Map<String, String>.from(map['messageParams'])
+          : null,
     );
   }
 
@@ -136,6 +198,8 @@ class Message {
     String? lessonId,
     String? imageUrl,
     Map<String, dynamic>? extraData,
+    String? messageKey,
+    Map<String, String>? messageParams,
   }) {
     return Message(
       id: id ?? this.id,
@@ -147,6 +211,8 @@ class Message {
       lessonId: lessonId ?? this.lessonId,
       imageUrl: imageUrl ?? this.imageUrl,
       extraData: extraData ?? this.extraData,
+      messageKey: messageKey ?? this.messageKey,
+      messageParams: messageParams ?? this.messageParams,
     );
   }
 } 

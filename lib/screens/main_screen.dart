@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'profile_screen.dart';
-import 'lessons_screen.dart';
+
 import 'explore_screen.dart';
+import 'lessons_screen.dart';
 import 'message_screen.dart';
-import '../styles/app_text_styles.dart';
-import 'login_screen.dart';
+import 'profile_screen.dart';
 import '../services/auth_service.dart';
-import '../services/language_service.dart';
+import '../services/message_service.dart';
 import '../l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
@@ -23,137 +23,201 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late int _selectedIndex;
-  final _authService = AuthService();
+  late int _currentIndex;
+  final MessageService _messageService = MessageService();
+  
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.initialIndex;
-    // Show welcome message for new logins
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showWelcomeMessage();
-    });
+    _currentIndex = widget.initialIndex;
+    _screens = [
+      const ExploreScreen(),
+      const LessonsScreen(),
+      const MessageScreen(),
+      const ProfileScreen(),
+    ];
   }
-
-  void _showWelcomeMessage() {
-    if (_authService.currentUser != null) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.welcomeBackUser(_authService.currentUserDisplayName),
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  final List<Widget> _screens = [
-    const ExploreScreen(),
-    const LessonsScreen(),
-    const MessageScreen(),
-    const ProfileScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final user = FirebaseAuth.instance.currentUser;
+    final theme = Theme.of(context);
     
     return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.explore_outlined),
-            selectedIcon: const Icon(Icons.explore),
-            label: l10n.explore,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  icon: Icons.explore,
+                  label: l10n.explore,
+                  index: 0,
+                ),
+                _buildNavItem(
+                  icon: Icons.school,
+                  label: l10n.lessons,
+                  index: 1,
+                ),
+                _buildNavItemWithBadge(
+                  icon: Icons.message,
+                  label: l10n.messages,
+                  index: 2,
+                ),
+                _buildNavItem(
+                  icon: Icons.person,
+                  label: l10n.profile,
+                  index: 3,
+                ),
+              ],
+            ),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.school_outlined),
-            selectedIcon: const Icon(Icons.school),
-            label: l10n.lessons,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.message_outlined),
-            selectedIcon: const Icon(Icons.message),
-            label: l10n.messages,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person),
-            label: l10n.profile,
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Future<void> _showLogoutConfirmation(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Confirm Logout',
-          style: AppTextStyles.titleLarge.copyWith(
-            fontFamily: 'GenSenRounded',
-            fontWeight: FontWeight.w700,
-          ),
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final unselectedColor = theme.colorScheme.onSurface.withOpacity(0.6);
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
-        content: Text(
-          'Are you sure you want to log out?',
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontFamily: 'GenSenRounded',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: AppTextStyles.button.copyWith(
-                fontFamily: 'GenSenRounded',
-                fontWeight: FontWeight.w500,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? primaryColor : unselectedColor,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? primaryColor : unselectedColor,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(
-              'Logout',
-              style: AppTextStyles.button.copyWith(
-                color: Colors.white,
-                fontFamily: 'GenSenRounded',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
 
-    if (confirmed == true && mounted) {
-      await _authService.signOut();
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      }
-    }
+  Widget _buildNavItemWithBadge({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final unselectedColor = theme.colorScheme.onSurface.withOpacity(0.6);
+    final errorColor = theme.colorScheme.error;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? primaryColor : unselectedColor,
+                  size: 24,
+                ),
+                StreamBuilder<int>(
+                  stream: _messageService.getUnreadCount(),
+                  builder: (context, snapshot) {
+                    final unreadCount = snapshot.data ?? 0;
+                    if (unreadCount == 0) return const SizedBox.shrink();
+                    
+                    return Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: errorColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: TextStyle(
+                            color: theme.colorScheme.onError,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? primaryColor : unselectedColor,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 } 

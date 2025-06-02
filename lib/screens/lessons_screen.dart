@@ -137,6 +137,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         setState(() {
           _enrolledLessons = enrolled;
           _completedLessons = completed;
+          _currentPage = 0;
           _hasMoreData = _getCurrentLessons().length > _pageSize;
         });
       }
@@ -182,10 +183,10 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   }
 
   List<Lesson> _getPaginatedLessons() {
-    if (_isSearchMode && _searchQuery.isNotEmpty) {
-      return _searchResults; // 搜索结果不分页，显示所有结果
-    }
     final lessons = _getCurrentLessons();
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      return lessons; // 搜索结果不分页，显示所有结果
+    }
     final endIndex = (_currentPage + 1) * _pageSize;
     return lessons.take(endIndex).toList();
   }
@@ -203,8 +204,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     try {
       await Future.delayed(const Duration(milliseconds: 500));
       
-      final startIndex = (_currentPage + 1) * _pageSize;
       final currentLessons = _getCurrentLessons();
+      final startIndex = (_currentPage + 1) * _pageSize;
       
       if (startIndex >= currentLessons.length) {
         _refreshController.loadNoData();
@@ -216,9 +217,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
 
       setState(() {
         _currentPage++;
-        if ((_currentPage + 1) * _pageSize >= currentLessons.length) {
-          _hasMoreData = false;
-        }
+        _hasMoreData = (_currentPage + 1) * _pageSize < currentLessons.length;
       });
 
       _refreshController.loadComplete();
@@ -392,22 +391,19 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             child: _isSearchMode
                 ? _buildSearchResults(l10n)
                 : SmartRefresher(
+                    controller: _refreshController,
+                    enablePullDown: true,
+                    enablePullUp: !_isSearchMode && _hasMoreData,
+                    onRefresh: _onRefresh,
+                    onLoading: _onLoading,
                     header: WaterDropHeader(
-                      complete: Text(
-                        'Updated!',
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                      failed: Text(
-                        'Update Failed',
-                        style: AppTextStyles.bodyMedium,
-                      ),
+                      complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+                      failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
                     ),
                     footer: CustomFooter(
                       builder: (BuildContext context, LoadStatus? mode) {
                         Widget body;
-                        if (mode == null) {
-                          body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                        } else if (mode == LoadStatus.idle) {
+                        if (mode == null || mode == LoadStatus.idle) {
                           body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
                         } else if (mode == LoadStatus.loading) {
                           body = Row(
@@ -425,12 +421,12 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                         } else if (mode == LoadStatus.failed) {
                           body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
                         } else if (mode == LoadStatus.canLoading) {
-                          body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
+                          body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
                         } else {
                           body = Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.check_circle, size: 16, color: Colors.green),
+                              const Icon(Icons.check_circle, size: 16, color: Colors.green),
                               const SizedBox(width: 4),
                               Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
                             ],
@@ -442,16 +438,9 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                         );
                       },
                     ),
-                    controller: _refreshController,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildLessonsList(_enrolledLessons, l10n),
-                        _buildLessonsList(_completedLessons, l10n),
-                      ],
-                    ),
+                    child: _tabController.index == 0
+                        ? _buildLessonsList(_enrolledLessons, l10n)
+                        : _buildLessonsList(_completedLessons, l10n),
                   ),
           ),
         ],
@@ -485,7 +474,6 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     final paginatedLessons = _getPaginatedLessons();
 
     return ListView.builder(
-      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: paginatedLessons.length,
       itemBuilder: (context, index) {

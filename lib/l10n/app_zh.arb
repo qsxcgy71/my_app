@@ -155,7 +155,7 @@
   "advancedLevel": "高级",
   "onlineCoursesOnly": "仅显示在线课程",
   "search": "搜索",
-  "searchAndCollapse": "搜索",
+  "searchAndCollapse": "搜索并收起",
   "clearFilters": "清除筛选条件",
   "filtersApplied": "{count}个筛选",
   "@filtersApplied": {

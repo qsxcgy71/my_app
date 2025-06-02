@@ -392,7 +392,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search => 'Search';
 
   @override
-  String get searchAndCollapse => 'Search';
+  String get searchAndCollapse => 'Search & Close';
 
   @override
   String get clearFilters => 'Clear Filters';

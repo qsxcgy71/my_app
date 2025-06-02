@@ -390,7 +390,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get search => '搜索';
 
   @override
-  String get searchAndCollapse => '搜索';
+  String get searchAndCollapse => '搜索并收起';
 
   @override
   String get clearFilters => '清除筛选条件';

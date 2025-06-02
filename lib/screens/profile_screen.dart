@@ -11,7 +11,7 @@ import '../styles/app_text_styles.dart';
 import '../services/profile_service.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
-import '../login_screen.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);

@@ -302,7 +302,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeGoldenAmber => 'Golden Amber';
 
   @override
-
   String get themeReduce => 'Cool Down';
 
   @override
@@ -338,6 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get themeComfort => 'Comfort';
 
+  @override
   String get filterConditions => 'Filter Conditions';
 
   @override
@@ -462,5 +462,4 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(int days) {
     return '$days days ago';
   }
-
 }

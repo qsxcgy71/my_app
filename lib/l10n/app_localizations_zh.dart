@@ -300,7 +300,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeGoldenAmber => '金秋黄';
 
   @override
-
   String get themeReduce => '降溫主題';
 
   @override
@@ -336,6 +335,7 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get themeComfort => '舒暢主題';
 
+  @override
   String get filterConditions => '筛选条件';
 
   @override
@@ -459,5 +459,4 @@ class AppLocalizationsZh extends AppLocalizations {
   String daysAgo(int days) {
     return '$days天前';
   }
-
 }

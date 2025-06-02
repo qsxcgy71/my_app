@@ -3,8 +3,11 @@ import '../models/lesson_model.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/lesson_service.dart';
+import 'photo_view_screen.dart';
 
-class LessonDetailScreen extends StatelessWidget {
+class LessonDetailScreen extends StatefulWidget {
   final Lesson lesson;
 
   const LessonDetailScreen({
@@ -12,24 +15,69 @@ class LessonDetailScreen extends StatelessWidget {
     required this.lesson,
   });
 
+  @override
+  State<LessonDetailScreen> createState() => _LessonDetailScreenState();
+}
+
+class _LessonDetailScreenState extends State<LessonDetailScreen> {
+  final LessonService _lessonService = LessonService();
+  bool _isUploading = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    final ImagePicker picker = ImagePicker();
+    
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      setState(() {
+        _isUploading = true;
+      });
+
+      // 上传照片并更新课程
+      await _lessonService.addLessonPhoto(
+        widget.lesson.id,
+        image.path,
+        description: '课程照片',
+      );
+
+      // 重新获取最新的课程数据
+      final updatedLesson = await _lessonService.getLessonById(widget.lesson.id);
+      if (mounted && updatedLesson != null) {
+        setState(() {
+          widget.lesson.photos.clear();
+          widget.lesson.photos.addAll(updatedLesson.photos);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('上传照片失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
   Widget _buildPhotoGrid(BuildContext context) {
     // 如果课程未完成，返回空
-    if (!lesson.isPastLesson) {
+    if (!widget.lesson.isPastLesson) {
       return const SizedBox.shrink();
     }
-
-    // 如果没有照片，使用默认照片
-    final photos = lesson.photos.isEmpty
-        ? [
-            LessonPhoto(
-              id: 'default',
-              url: 'asset:///assets/photos/default_avatar.png',
-              thumbnailUrl: 'asset:///assets/photos/default_avatar.png',
-              takenAt: DateTime.now(),
-              description: '课程默认照片',
-            ),
-          ]
-        : lesson.photos;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -48,60 +96,201 @@ class LessonDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '课程照片',
-            style: AppTextStyles.titleMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          // 标题栏
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '课程照片',
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              // 添加照片按钮
+              _isUploading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : IconButton(
+                    onPressed: _pickAndUploadPhoto,
+                    icon: const Icon(Icons.add_photo_alternate_outlined),
+                    tooltip: '添加照片',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.blue.withOpacity(0.1),
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+            ],
           ),
           const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: photos.length,
-            itemBuilder: (context, index) {
-              final photo = photos[index];
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+          if (widget.lesson.photos.isEmpty) ...[
+            // 没有照片时显示提示信息
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '暂无照片',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: photo.url.startsWith('asset:///')
-                    ? Image.asset(
-                        photo.url.replaceFirst('asset:///', ''),
-                        fit: BoxFit.cover,
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: photo.url,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.error),
+                  ),
+                  if (!_isUploading) ...[
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: _pickAndUploadPhoto,
+                      icon: const Icon(Icons.add_photo_alternate),
+                      label: const Text('添加照片'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        textStyle: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                ),
-              );
-            },
-          ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ] else ...[
+            // 有照片时显示水平滚动的照片列表
+            SizedBox(
+              height: 200, // 固定高度
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: widget.lesson.photos.length + 1, // 增加一个用于显示"查看全部"的位置
+                itemBuilder: (context, index) {
+                  // 如果是最后一个位置且有更多照片，显示"查看全部"按钮
+                  if (index == widget.lesson.photos.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PhotoViewScreen(
+                                  photos: widget.lesson.photos,
+                                  initialIndex: 0,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.photo_library_outlined,
+                                  size: 32,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '查看全部\n${widget.lesson.photos.length}张',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.grey[600],
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final photo = widget.lesson.photos[index];
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: index == 0 ? 0 : 8,
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PhotoViewScreen(
+                                photos: widget.lesson.photos,
+                                initialIndex: index,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: 'photo_${photo.id}',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: photo.url.startsWith('asset:///')
+                                ? Image.asset(
+                                    photo.url.replaceFirst('asset:///', ''),
+                                    fit: BoxFit.cover,
+                                  )
+                                : CachedNetworkImage(
+                                    imageUrl: photo.url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.error),
+                                    ),
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -133,20 +322,20 @@ class LessonDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 课程图片
-            if (lesson.imageUrl != null) ...[
+            if (widget.lesson.imageUrl != null) ...[
               Container(
                 width: double.infinity,
                 height: 200,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
-                  image: lesson.imageUrl != null
+                  image: widget.lesson.imageUrl != null
                       ? DecorationImage(
-                          image: NetworkImage(lesson.imageUrl!),
+                          image: NetworkImage(widget.lesson.imageUrl!),
                           fit: BoxFit.cover,
                         )
                       : null,
                 ),
-                child: lesson.imageUrl == null
+                child: widget.lesson.imageUrl == null
                     ? Center(
                         child: Icon(
                           Icons.school,
@@ -183,7 +372,7 @@ class LessonDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 照片展示板块（仅在课程完成时显示）
-            if (lesson.isPastLesson) ...[
+            if (widget.lesson.isPastLesson) ...[
               _buildPhotoGrid(context),
               const SizedBox(height: 20),
             ],
@@ -207,7 +396,7 @@ class LessonDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 课程类别
-                  if (lesson.courseCategory != null) ...[
+                  if (widget.lesson.courseCategory != null) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
@@ -215,7 +404,7 @@ class LessonDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        lesson.courseCategory!,
+                        widget.lesson.courseCategory!,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: Colors.blue,
                           fontWeight: FontWeight.w500,
@@ -227,7 +416,7 @@ class LessonDetailScreen extends StatelessWidget {
 
                   // 课程名称
                   Text(
-                    lesson.courseName,
+                    widget.lesson.courseName,
                     style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[800],
@@ -238,7 +427,7 @@ class LessonDetailScreen extends StatelessWidget {
 
                   // 课节标题
                   Text(
-                    lesson.title,
+                    widget.lesson.title,
                     style: AppTextStyles.titleLarge.copyWith(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -254,7 +443,7 @@ class LessonDetailScreen extends StatelessWidget {
                       Icon(Icons.access_time, size: 20, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        lesson.timeString,
+                        widget.lesson.timeString,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -270,7 +459,7 @@ class LessonDetailScreen extends StatelessWidget {
                       Icon(Icons.calendar_today, size: 20, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        '${lesson.date.year}年${lesson.date.month}月${lesson.date.day}日',
+                        '${widget.lesson.date.year}年${widget.lesson.date.month}月${widget.lesson.date.day}日',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -284,16 +473,16 @@ class LessonDetailScreen extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        lesson.isPastLesson ? Icons.check_circle : Icons.schedule,
+                        widget.lesson.isPastLesson ? Icons.check_circle : Icons.schedule,
                         size: 20,
-                        color: lesson.isPastLesson ? Colors.green : Colors.orange,
+                        color: widget.lesson.isPastLesson ? Colors.green : Colors.orange,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        lesson.isPastLesson ? l10n.completed : l10n.enrolled,
+                        widget.lesson.isPastLesson ? l10n.completed : l10n.enrolled,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
-                          color: lesson.isPastLesson ? Colors.green : Colors.orange,
+                          color: widget.lesson.isPastLesson ? Colors.green : Colors.orange,
                         ),
                       ),
                     ],
@@ -305,7 +494,7 @@ class LessonDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 课程描述
-            if (lesson.description != null && lesson.description!.isNotEmpty) ...[
+            if (widget.lesson.description != null && widget.lesson.description!.isNotEmpty) ...[
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -334,7 +523,7 @@ class LessonDetailScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: Text(
-                        lesson.description!,
+                        widget.lesson.description!,
                         style: AppTextStyles.bodyMedium.copyWith(
                           height: 1.6,
                           color: Colors.grey[700],
@@ -374,13 +563,13 @@ class LessonDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  _buildInfoRow(l10n.startTime, lesson.startTimeString, l10n),
-                  _buildInfoRow(l10n.endTime, _formatTime(lesson.endTime), l10n),
-                  _buildInfoRow(l10n.courseDate, lesson.dateString, l10n),
-                  _buildInfoRow(l10n.courseStatus, lesson.isPastLesson ? l10n.completed : l10n.enrolled, l10n),
+                  _buildInfoRow(l10n.startTime, widget.lesson.startTimeString, l10n),
+                  _buildInfoRow(l10n.endTime, _formatTime(widget.lesson.endTime), l10n),
+                  _buildInfoRow(l10n.courseDate, widget.lesson.dateString, l10n),
+                  _buildInfoRow(l10n.courseStatus, widget.lesson.isPastLesson ? l10n.completed : l10n.enrolled, l10n),
                   
-                  if (lesson.courseCategory != null)
-                    _buildInfoRow(l10n.courseCategory, lesson.courseCategory!, l10n),
+                  if (widget.lesson.courseCategory != null)
+                    _buildInfoRow(l10n.courseCategory, widget.lesson.courseCategory!, l10n),
                 ],
               ),
             ),

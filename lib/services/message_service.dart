@@ -142,6 +142,32 @@ class MessageService {
     }
   }
 
+  // 创建课程完成消息
+  Future<void> createClassCompletedMessage(String courseName) async {
+    if (_currentUserId == null) return;
+
+    try {
+      final message = Message(
+        id: '',
+        title: '课程完成',
+        content: '恭喜！您的孩子已完成《$courseName》课程，可以查看课程总结与作品展示。',
+        type: MessageType.general,
+        createdAt: DateTime.now(),
+        extraData: {
+          'courseName': courseName,
+        },
+      );
+
+      final data = message.toMap();
+      data['userId'] = _currentUserId;
+
+      await _firestore.collection('messages').add(data);
+    } catch (e) {
+      print('Error creating class completed message: $e');
+      rethrow;
+    }
+  }
+
   // 创建一般消息
   Future<void> createMessage({
     required String title,

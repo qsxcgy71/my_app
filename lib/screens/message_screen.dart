@@ -317,6 +317,7 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Widget _buildMessageCard(Message message, dynamic currentTheme) {
     final isUnread = !message.isRead;
+    final l10n = AppLocalizations.of(context)!;
     
     return Dismissible(
       key: Key(message.id),
@@ -405,7 +406,7 @@ class _MessageScreenState extends State<MessageScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                message.title,
+                                message.title, // 直接使用message.title
                                 style: AppTextStyles.titleSmall.copyWith(
                                   fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                                   color: isUnread ? Colors.black87 : Colors.grey[700],
@@ -441,7 +442,7 @@ class _MessageScreenState extends State<MessageScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                message.content,
+                message.content, // 直接使用message.content
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: isUnread ? Colors.black87 : Colors.grey[600],
                   fontWeight: isUnread ? FontWeight.w500 : FontWeight.normal,
@@ -463,7 +464,7 @@ class _MessageScreenState extends State<MessageScreen> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          '课程: ${message.extraData!['courseName'] ?? ''}',
+                          '${l10n.courseInfo}: ${message.extraData!['courseName'] ?? ''}',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: Colors.grey[600],
                           ),

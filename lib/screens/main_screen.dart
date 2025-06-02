@@ -5,7 +5,7 @@ import 'lessons_screen.dart';
 import 'explore_screen.dart';
 import 'message_screen.dart';
 import '../styles/app_text_styles.dart';
-import '../login_screen.dart';
+import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../services/language_service.dart';
 import '../l10n/app_localizations.dart';

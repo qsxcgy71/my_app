@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:country_code_picker/country_code_picker.dart';
-import 'l10n/app_localizations.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'screens/main_screen.dart';
-import 'screens/forget_password_screen.dart';
-import 'screens/register_screen.dart';
-import 'styles/app_text_styles.dart';
-import 'services/auth_service.dart';
-import 'services/language_service.dart';
+import 'main_screen.dart';
+import 'forget_password_screen.dart';
+import 'register_screen.dart';
+import '../styles/app_text_styles.dart';
+import '../services/auth_service.dart';
+import '../services/language_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

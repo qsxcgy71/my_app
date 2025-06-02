@@ -36,11 +36,15 @@ Future<void> main() async {
     final languageService = LanguageService();
     await languageService.initLanguage();
 
+    // Initialize ThemeProvider and load saved theme
+    final themeProvider = ThemeProvider();
+    await themeProvider.init();
+
     runApp(
       MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: languageService),
-          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider.value(value: themeProvider),
           Provider(create: (_) => AuthService()),
         ],
         child: const MyApp(),
@@ -49,11 +53,19 @@ Future<void> main() async {
   } catch (e) {
     print('Error initializing app: $e');
     // 即使出错也要启动应用
+    final themeProvider = ThemeProvider();
+    // 即使在catch块中也要尝试初始化主题
+    try {
+      await themeProvider.init();
+    } catch (initError) {
+      print('Error initializing theme provider: $initError');
+    }
+    
     runApp(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => LanguageService()),
-          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider.value(value: themeProvider),
           Provider(create: (_) => AuthService()),
         ],
         child: const MyApp(),

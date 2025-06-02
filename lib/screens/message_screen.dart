@@ -115,7 +115,7 @@ class _MessageScreenState extends State<MessageScreen> {
     final currentTheme = themeProvider.currentThemeData;
     
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: currentTheme.backgroundColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -146,7 +146,7 @@ class _MessageScreenState extends State<MessageScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: currentTheme.backgroundColor,
         foregroundColor: currentTheme.primaryColor,
         elevation: 0,
         actions: [

@@ -11,6 +11,7 @@ import '../screens/course_detail_screen.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
+import 'dart:async';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -23,8 +24,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final CourseService _courseService = CourseService();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _featuredCoursesController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _searchFieldKey = GlobalKey(); // 搜索框的key
+  Timer? _autoScrollTimer;
 
   List<Course> _allCourses = [];
   List<Course> _searchResults = [];
@@ -46,14 +49,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _searchController.addListener(() {
       _performSearch(_searchController.text);
     });
+    _setupAutoScroll();
   }
 
   @override
   void dispose() {
     _refreshController.dispose();
     _scrollController.dispose();
+    _featuredCoursesController.dispose();
     _searchController.dispose();
+    _autoScrollTimer?.cancel();
     super.dispose();
+  }
+
+  void _setupAutoScroll() {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (!mounted) return;
+      
+      if (_featuredCoursesController.hasClients) {
+        final maxScrollExtent = _featuredCoursesController.position.maxScrollExtent;
+        final currentPosition = _featuredCoursesController.offset;
+        final targetPosition = currentPosition >= maxScrollExtent ? 0.0 : currentPosition + 280.0;
+        
+        _featuredCoursesController.animateTo(
+          targetPosition,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   Future<void> _loadCourses() async {
@@ -807,6 +831,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         SizedBox(
           height: 200,
           child: ListView.builder(
+            controller: _featuredCoursesController,
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: featuredCourses.length,

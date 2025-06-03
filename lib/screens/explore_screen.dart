@@ -11,7 +11,12 @@ import '../screens/course_detail_screen.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
+
 import 'dart:async';
+
+import '../services/profile_service.dart';
+import '../models/profile_model.dart';
+
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -22,6 +27,7 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final CourseService _courseService = CourseService();
+  final ProfileService _profileService = ProfileService();
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   final ScrollController _scrollController = ScrollController();
   final ScrollController _featuredCoursesController = ScrollController();
@@ -36,6 +42,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   String _searchQuery = '';
   CourseFilter _currentFilter = CourseFilter();
   bool _showFilterPanel = false;
+  UserProfile? _userProfile;
   
   // Pagination
   int _currentPage = 0;
@@ -46,6 +53,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _loadCourses();
+    _loadUserProfile();
     _searchController.addListener(() {
       _performSearch(_searchController.text);
     });
@@ -96,6 +104,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await _profileService.getUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
     }
   }
 
@@ -195,8 +216,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   void _onRefresh() async {
-    await _loadCourses();
-    _refreshController.refreshCompleted();
+    try {
+      await Future.wait([
+        _loadCourses(),
+        _loadUserProfile(), // 同时刷新用户profile
+      ]);
+      _refreshController.refreshCompleted();
+    } catch (e) {
+      _refreshController.refreshFailed();
+    }
   }
 
   void _onLoading() async {
@@ -250,8 +278,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   String _getUserDisplayName() {
+    // 优先使用用户在profile中设置的名字
+    if (_userProfile?.name != null && _userProfile!.name.isNotEmpty) {
+      return _userProfile!.name;
+    }
+    
+    // 其次使用Firebase Auth中的displayName
     final user = FirebaseAuth.instance.currentUser;
-    return user?.displayName ?? user?.email?.split('@')[0] ?? 'Melody';
+    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      return user.displayName!;
+    }
+    
+    // 最后使用邮箱前缀或默认名称
+    return user?.email?.split('@')[0] ?? 'Melody';
   }
 
   @override
@@ -599,65 +638,56 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
           
           // 更多筛选按钮 - 改小
-          Container(
-            decoration: BoxDecoration(
-              color: _showFilterPanel 
-                  ? currentTheme.primaryColor.withOpacity(0.1)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _currentFilter.hasFilters 
-                    ? currentTheme.primaryColor 
-                    : currentTheme.primaryColor.withOpacity(0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Stack(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _showFilterPanel = !_showFilterPanel;
-                    });
-                  },
-                  icon: Icon(
-                    _showFilterPanel ? Icons.expand_less : Icons.tune,
-                    color: _currentFilter.hasFilters 
-                        ? currentTheme.primaryColor 
-                        : currentTheme.primaryColor.withOpacity(0.7),
-                    size: 20,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _showFilterPanel = !_showFilterPanel;
+                  });
+                },
+                icon: Icon(
+                  _showFilterPanel ? Icons.expand_less : Icons.tune,
+                  color: _currentFilter.hasFilters 
+                      ? currentTheme.primaryColor 
+                      : currentTheme.primaryColor.withOpacity(0.7),
+                  size: 20,
                 ),
-                if (_currentFilter.hasFilters)
-                  Positioned(
-                    right: 4,
-                    top: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(6),
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                padding: const EdgeInsets.all(8),
+                tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+                style: IconButton.styleFrom(
+                  backgroundColor: _showFilterPanel 
+                      ? currentTheme.primaryColor.withOpacity(0.1)
+                      : Colors.transparent,
+                ),
+              ),
+              if (_currentFilter.hasFilters)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
+                    child: Text(
+                      '${_currentFilter.activeFiltersCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
                       ),
-                      constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-                      child: Text(
-                        '${_currentFilter.activeFiltersCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ],
       ),

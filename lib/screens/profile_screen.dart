@@ -466,8 +466,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     try {
       _isImagePickerActive = true;
+      
+      // 显示选择照片来源的对话框
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('选择照片来源'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('拍照'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('从相册选择'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+      
+      if (source == null) {
+        print('No source selected');
+        _shouldPreserveScroll = false;
+        return;
+      }
+      
       final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
@@ -525,7 +557,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Photo updated successfully'),
+                content: Text('头像更新成功'),
                 backgroundColor: Colors.green,
                 duration: Duration(seconds: 2),
               ),
@@ -540,7 +572,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _shouldPreserveScroll = false; // Reset on error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating photo: $e')),
+          SnackBar(content: Text('头像更新失败: $e')),
         );
       }
     } finally {

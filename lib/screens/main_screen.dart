@@ -25,13 +25,22 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
   final MessageService _messageService = MessageService();
-  
+  late final PageController _pageController;
   late final List<Widget> _screens;
+
+  // 定义 tabbar 图标映射
+  final Map<int, String> _tabIcons = {
+    0: 'assets/tabbar/explore.jpg',
+    1: 'assets/tabbar/course.jpg',
+    2: 'assets/tabbar/message.jpg',
+    3: 'assets/tabbar/profile.jpg',
+  };
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
     _screens = [
       const ExploreScreen(),
       const LessonsScreen(),
@@ -41,14 +50,35 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _onTabTapped(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
     
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
         children: _screens,
       ),
       bottomNavigationBar: Container(
@@ -69,22 +99,22 @@ class _MainScreenState extends State<MainScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(
-                  icon: Icons.explore,
+                  iconPath: _tabIcons[0]!,
                   label: l10n.explore,
                   index: 0,
                 ),
                 _buildNavItem(
-                  icon: Icons.school,
+                  iconPath: _tabIcons[1]!,
                   label: l10n.lessons,
                   index: 1,
                 ),
                 _buildNavItemWithBadge(
-                  icon: Icons.message,
+                  iconPath: _tabIcons[2]!,
                   label: l10n.messages,
                   index: 2,
                 ),
                 _buildNavItem(
-                  icon: Icons.person,
+                  iconPath: _tabIcons[3]!,
                   label: l10n.profile,
                   index: 3,
                 ),
@@ -97,7 +127,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildNavItem({
-    required IconData icon,
+    required String iconPath,
     required String label,
     required int index,
   }) {
@@ -107,11 +137,7 @@ class _MainScreenState extends State<MainScreen> {
     final unselectedColor = theme.colorScheme.onSurface.withOpacity(0.6);
     
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
+      onTap: () => _onTabTapped(index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -121,10 +147,14 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? primaryColor : unselectedColor,
-              size: 24,
+            Container(
+              width: 24,
+              height: 24,
+              child: Image.asset(
+                iconPath,
+                fit: BoxFit.contain,
+                opacity: AlwaysStoppedAnimation(isSelected ? 1.0 : 0.6),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -142,7 +172,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildNavItemWithBadge({
-    required IconData icon,
+    required String iconPath,
     required String label,
     required int index,
   }) {
@@ -153,11 +183,7 @@ class _MainScreenState extends State<MainScreen> {
     final errorColor = theme.colorScheme.error;
     
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
+      onTap: () => _onTabTapped(index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -170,10 +196,14 @@ class _MainScreenState extends State<MainScreen> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(
-                  icon,
-                  color: isSelected ? primaryColor : unselectedColor,
-                  size: 24,
+                Container(
+                  width: 24,
+                  height: 24,
+                  child: Image.asset(
+                    iconPath,
+                    fit: BoxFit.contain,
+                    opacity: AlwaysStoppedAnimation(isSelected ? 1.0 : 0.6),
+                  ),
                 ),
                 StreamBuilder<int>(
                   stream: _messageService.getUnreadCount(),

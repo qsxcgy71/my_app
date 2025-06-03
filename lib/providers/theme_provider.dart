@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/app_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'selected_theme';
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
   late SharedPreferences _prefs;
   AppThemeType _currentTheme = AppThemeType.reduce;  // Default to reduce theme
 
@@ -13,18 +17,85 @@ class ThemeProvider extends ChangeNotifier {
   // Initialize the provider and load saved theme
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    // Load saved theme or use default
-    final savedTheme = _prefs.getString(_themeKey);
-    if (savedTheme != null) {
-      try {
+    await _loadThemeFromFirebase();
+    
+    // 监听用户登录状态变化
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _loadThemeFromFirebase();
+      } else {
+        // 用户登出时，使用默认主题
+        _currentTheme = AppThemeType.reduce;
+        notifyListeners();
+      }
+    });
+  }
+
+  // 从 Firebase 加载主题设置
+  Future<void> _loadThemeFromFirebase() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        // 如果用户未登录，使用本地存储的主题
+        final savedTheme = _prefs.getString(_themeKey);
+        if (savedTheme != null) {
+          _currentTheme = AppThemeType.values.firstWhere(
+            (type) => type.toString() == savedTheme,
+            orElse: () => AppThemeType.reduce,
+          );
+          notifyListeners();
+        }
+        return;
+      }
+
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data()!.containsKey('theme')) {
+        final savedTheme = doc.data()!['theme'] as String;
         _currentTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedTheme,
           orElse: () => AppThemeType.reduce,
         );
-      } catch (e) {
-        _currentTheme = AppThemeType.reduce;
+        // 同步到本地存储，以便在离线时使用
+        await _prefs.setString(_themeKey, _currentTheme.toString());
+        notifyListeners();
+      } else {
+        // 如果用户文档不存在或没有主题设置，使用本地存储的主题
+        final savedTheme = _prefs.getString(_themeKey);
+        if (savedTheme != null) {
+          _currentTheme = AppThemeType.values.firstWhere(
+            (type) => type.toString() == savedTheme,
+            orElse: () => AppThemeType.reduce,
+          );
+          // 将本地主题同步到 Firebase
+          await _saveThemeToFirebase(_currentTheme);
+          notifyListeners();
+        }
       }
-      notifyListeners();
+    } catch (e) {
+      print('Error loading theme from Firebase: $e');
+      // 发生错误时，尝试使用本地存储的主题
+      final savedTheme = _prefs.getString(_themeKey);
+      if (savedTheme != null) {
+        _currentTheme = AppThemeType.values.firstWhere(
+          (type) => type.toString() == savedTheme,
+          orElse: () => AppThemeType.reduce,
+        );
+        notifyListeners();
+      }
+    }
+  }
+
+  // 保存主题设置到 Firebase
+  Future<void> _saveThemeToFirebase(AppThemeType theme) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).set({
+          'theme': theme.toString(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      print('Error saving theme to Firebase: $e');
     }
   }
 
@@ -108,10 +179,14 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setTheme(AppThemeType theme) async {
     if (_currentTheme != theme) {
       _currentTheme = theme;
-      // Notify listeners before saving to ensure immediate UI update
+      // 立即通知监听器以更新 UI
       notifyListeners();
-      // Save theme preference
+      
+      // 保存到本地存储
       await _prefs.setString(_themeKey, theme.toString());
+      
+      // 保存到 Firebase
+      await _saveThemeToFirebase(theme);
     }
   }
 } 

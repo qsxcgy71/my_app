@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../l10n/app_localizations.dart';
 import '../styles/app_text_styles.dart';
 import '../services/auth_service.dart';
 import '../widgets/keyboard_dismisser.dart';
@@ -17,7 +18,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  void _showMessage(String message, {bool isError = false}) {
+  void _showMessage(String message, bool isError) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -32,9 +33,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 
   Future<void> _resetPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
+
     if (email.isEmpty) {
-      _showMessage('Please enter your email address', isError: true);
+      _showMessage(l10n.pleaseEnterEmail, true);
       return;
     }
 
@@ -42,14 +45,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     try {
       await _authService.resetPassword(email);
       if (mounted) {
-        _showMessage(
-          'Password reset email has been sent. Please check your email.',
-          isError: false,
-        );
+        _showMessage(l10n.resetPasswordSuccess, false);
         Navigator.pop(context);
       }
     } on FirebaseAuthException catch (e) {
-      _showMessage(e.message ?? 'Failed to send reset email', isError: true);
+      _showMessage(e.message ?? l10n.resetPasswordFailed, true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -59,10 +59,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return KeyboardDismissibleScaffold(
       appBar: AppBar(
         title: Text(
-          'Reset Password',
+          l10n.forgetPasswordTitle,
           style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
         ),
       ),
@@ -77,12 +79,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Reset Password',
+                      l10n.forgetPasswordTitle,
                       style: AppTextStyles.titleLarge,
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Enter your email address and we\'ll send you instructions to reset your password.',
+                      l10n.forgetPasswordDescription,
                       style: AppTextStyles.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -90,7 +92,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: l10n.email,
                         labelStyle: AppTextStyles.bodyMedium,
                         prefixIcon: const Icon(Icons.email),
                       ),
@@ -101,7 +103,20 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     const SizedBox(height: 24),
                     AntiSpamButton(
                       onPressed: _isLoading ? null : _resetPassword,
-                      child: Text('Send Reset Link', style: AppTextStyles.button.copyWith(color: Colors.white)),
+                      child: Text(l10n.resetPassword, style: AppTextStyles.button.copyWith(color: Colors.white)),
+                    ),
+                    const SizedBox(height: 16),
+                    AntiSpamWrapper(
+                      onTap: () => Navigator.pop(context),
+                      child: TextButton(
+                        onPressed: null, // 由 AntiSpamWrapper 处理
+                        child: Text(
+                          l10n.backToLogin,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

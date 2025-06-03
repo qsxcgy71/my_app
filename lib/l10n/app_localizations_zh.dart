@@ -459,4 +459,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String daysAgo(int days) {
     return '$days天前';
   }
+
+  @override
+  String get createAccount => '创建账号';
+
+  @override
+  String get signUpTitle => '注册';
+
+  @override
+  String get confirmPassword => '确认密码';
+
+  @override
+  String get alreadyHaveAccount => '已有账号？';
+
+  @override
+  String get signIn => '登录';
+
+  @override
+  String get pleaseEnterAllFields => '请填写所有字段';
+
+  @override
+  String get passwordsDoNotMatch => '两次输入的密码不一致';
+
+  @override
+  String get passwordTooShort => '密码长度至少为6位';
+
+  @override
+  String get registrationFailed => '注册失败';
+
+  @override
+  String get forgetPasswordTitle => '重置密码';
+
+  @override
+  String get forgetPasswordDescription => '请输入您的邮箱地址，我们将向您发送重置密码的链接';
+
+  @override
+  String get resetPassword => '重置密码';
+
+  @override
+  String get resetPasswordSuccess => '重置密码邮件已发送';
+
+  @override
+  String get resetPasswordFailed => '重置密码失败';
+
+  @override
+  String get backToLogin => '返回登录';
+
+  @override
+  String get pleaseEnterEmail => '请输入邮箱地址';
 }

@@ -156,10 +156,7 @@ class MessageService {
         title: '课程完成',
         content: '恭喜！您的孩子已完成《$courseName》课程，可以查看课程总结与作品展示。',
         type: MessageType.general,
-        messageKey: 'class_completed',
-        messageParams: {
-          'courseName': courseName,
-        },
+
         createdAt: DateTime.now(),
         extraData: {
           'courseName': courseName,

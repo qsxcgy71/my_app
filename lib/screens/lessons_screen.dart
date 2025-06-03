@@ -22,8 +22,10 @@ class LessonsScreen extends StatefulWidget {
 
 class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateMixin {
   final _lessonService = LessonService();
-  final _refreshController = RefreshController(initialRefresh: false);
-  final _scrollController = ScrollController();
+  final _enrolledRefreshController = RefreshController(initialRefresh: false);
+  final _completedRefreshController = RefreshController(initialRefresh: false);
+  final _enrolledScrollController = ScrollController();
+  final _completedScrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   
   // Tab controller
@@ -46,9 +48,9 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   DateTime? _selectedDay;
 
   // Pagination
-  int _currentPage = 0;
+  Map<int, int> _currentPages = {0: 0, 1: 0}; // 为每个tab保存独立的页码
   final int _pageSize = 5;
-  bool _hasMoreData = false;
+  Map<int, bool> _hasMoreData = {0: false, 1: false}; // 为每个tab保存独立的加载状态
 
   @override
   void initState() {
@@ -73,8 +75,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     _tabController.addListener(() {
       if (!_isSearchMode) {
         setState(() {
-          _currentPage = 0;
-          _hasMoreData = _getCurrentLessons().length > _pageSize;
+          _hasMoreData[_tabController.index] = _getCurrentLessons().length > (_currentPages[_tabController.index]! + 1) * _pageSize;
         });
       }
     });
@@ -87,7 +88,10 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   @override
   void dispose() {
     _tabController.dispose();
-    _scrollController.dispose();
+    _enrolledRefreshController.dispose();
+    _completedRefreshController.dispose();
+    _enrolledScrollController.dispose();
+    _completedScrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -99,8 +103,8 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         _searchController.clear();
         _searchQuery = '';
         _searchResults.clear();
-        _currentPage = 0;
-        _hasMoreData = _getCurrentLessons().length > _pageSize;
+        _currentPages = {0: 0, 1: 0};
+        _hasMoreData = {0: false, 1: false};
       }
     });
   }
@@ -139,8 +143,11 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         setState(() {
           _enrolledLessons = enrolled;
           _completedLessons = completed;
-          _currentPage = 0;
-          _hasMoreData = _getCurrentLessons().length > _pageSize;
+          _currentPages = {0: 0, 1: 0}; // 重置页码
+          _hasMoreData = {
+            0: enrolled.length > _pageSize,
+            1: completed.length > _pageSize,
+          };
         });
       }
     } catch (e) {
@@ -187,18 +194,27 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   List<Lesson> _getPaginatedLessons() {
     final lessons = _getCurrentLessons();
     if (_isSearchMode && _searchQuery.isNotEmpty) {
-      return lessons; // 搜索结果不分页，显示所有结果
+      return lessons;
     }
-    final endIndex = (_currentPage + 1) * _pageSize;
+    final currentPage = _currentPages[_tabController.index] ?? 0;
+    final endIndex = (currentPage + 1) * _pageSize;
     return lessons.take(endIndex).toList();
   }
 
   void _onRefresh() async {
     try {
       await _loadLessons();
-      _refreshController.refreshCompleted();
+      if (_tabController.index == 0) {
+        _enrolledRefreshController.refreshCompleted();
+      } else {
+        _completedRefreshController.refreshCompleted();
+      }
     } catch (e) {
-      _refreshController.refreshFailed();
+      if (_tabController.index == 0) {
+        _enrolledRefreshController.refreshFailed();
+      } else {
+        _completedRefreshController.refreshFailed();
+      }
     }
   }
 
@@ -207,24 +223,37 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
       await Future.delayed(const Duration(milliseconds: 500));
       
       final currentLessons = _getCurrentLessons();
-      final startIndex = (_currentPage + 1) * _pageSize;
+      final currentPage = _currentPages[_tabController.index] ?? 0;
+      final startIndex = (currentPage + 1) * _pageSize;
       
       if (startIndex >= currentLessons.length) {
-        _refreshController.loadNoData();
+        if (_tabController.index == 0) {
+          _enrolledRefreshController.loadNoData();
+        } else {
+          _completedRefreshController.loadNoData();
+        }
         setState(() {
-          _hasMoreData = false;
+          _hasMoreData[_tabController.index] = false;
         });
         return;
       }
 
       setState(() {
-        _currentPage++;
-        _hasMoreData = (_currentPage + 1) * _pageSize < currentLessons.length;
+        _currentPages[_tabController.index] = currentPage + 1;
+        _hasMoreData[_tabController.index] = (currentPage + 2) * _pageSize < currentLessons.length;
       });
 
-      _refreshController.loadComplete();
+      if (_tabController.index == 0) {
+        _enrolledRefreshController.loadComplete();
+      } else {
+        _completedRefreshController.loadComplete();
+      }
     } catch (e) {
-      _refreshController.loadFailed();
+      if (_tabController.index == 0) {
+        _enrolledRefreshController.loadFailed();
+      } else {
+        _completedRefreshController.loadFailed();
+      }
     }
   }
 
@@ -403,57 +432,113 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             Expanded(
               child: _isSearchMode
                   ? _buildSearchResults(l10n)
-                  : SmartRefresher(
-                      controller: _refreshController,
-                      enablePullDown: true,
-                      enablePullUp: !_isSearchMode && _hasMoreData,
-                      onRefresh: _onRefresh,
-                      onLoading: _onLoading,
-                      header: WaterDropHeader(
-                        complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-                        failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-                      ),
-                      footer: CustomFooter(
-                        builder: (BuildContext context, LoadStatus? mode) {
-                          Widget body;
-                          if (mode == null || mode == LoadStatus.idle) {
-                            body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                          } else if (mode == LoadStatus.loading) {
-                            body = Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                                const SizedBox(width: 8),
-                                Text("Loading...", style: AppTextStyles.bodyMedium),
-                              ],
-                            );
-                          } else if (mode == LoadStatus.failed) {
-                            body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-                          } else if (mode == LoadStatus.canLoading) {
-                            body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
-                          } else {
-                            body = Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                                const SizedBox(width: 4),
-                                Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                              ],
-                            );
-                          }
-                          return Container(
-                            height: 55.0,
-                            child: Center(child: body),
-                          );
-                        },
-                      ),
-                      child: _tabController.index == 0
-                          ? _buildLessonsList(_enrolledLessons, l10n)
-                          : _buildLessonsList(_completedLessons, l10n),
+                  : TabBarView(
+                      controller: _tabController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        // 已报名课程列表
+                        SmartRefresher(
+                          controller: _enrolledRefreshController,
+                          enablePullDown: true,
+                          enablePullUp: !_isSearchMode && _hasMoreData[0]!,
+                          onRefresh: _onRefresh,
+                          onLoading: _onLoading,
+                          header: WaterDropHeader(
+                            complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+                            failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+                          ),
+                          footer: CustomFooter(
+                            builder: (BuildContext context, LoadStatus? mode) {
+                              Widget body;
+                              if (mode == null || mode == LoadStatus.idle) {
+                                body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                              } else if (mode == LoadStatus.loading) {
+                                body = Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text("Loading...", style: AppTextStyles.bodyMedium),
+                                  ],
+                                );
+                              } else if (mode == LoadStatus.failed) {
+                                body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+                              } else if (mode == LoadStatus.canLoading) {
+                                body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+                              } else {
+                                body = Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                                    const SizedBox(width: 4),
+                                    Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                                  ],
+                                );
+                              }
+                              return Container(
+                                height: 55.0,
+                                child: Center(child: body),
+                              );
+                            },
+                          ),
+                          child: _buildLessonsList(_enrolledLessons, l10n),
+                        ),
+                        // 已完成课程列表
+                        SmartRefresher(
+                          controller: _completedRefreshController,
+                          enablePullDown: true,
+                          enablePullUp: !_isSearchMode && _hasMoreData[1]!,
+                          onRefresh: _onRefresh,
+                          onLoading: _onLoading,
+                          header: WaterDropHeader(
+                            complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+                            failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+                          ),
+                          footer: CustomFooter(
+                            builder: (BuildContext context, LoadStatus? mode) {
+                              Widget body;
+                              if (mode == null || mode == LoadStatus.idle) {
+                                body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+                              } else if (mode == LoadStatus.loading) {
+                                body = Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text("Loading...", style: AppTextStyles.bodyMedium),
+                                  ],
+                                );
+                              } else if (mode == LoadStatus.failed) {
+                                body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+                              } else if (mode == LoadStatus.canLoading) {
+                                body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+                              } else {
+                                body = Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                                    const SizedBox(width: 4),
+                                    Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                                  ],
+                                );
+                              }
+                              return Container(
+                                height: 55.0,
+                                child: Center(child: body),
+                              );
+                            },
+                          ),
+                          child: _buildLessonsList(_completedLessons, l10n),
+                        ),
+                      ],
                     ),
             ),
           ],
@@ -485,19 +570,18 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
       );
     }
 
-    final paginatedLessons = _getPaginatedLessons();
-
     return ListView.builder(
+      controller: _tabController.index == 0 ? _enrolledScrollController : _completedScrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: paginatedLessons.length,
+      itemCount: _getPaginatedLessons().length,
       itemBuilder: (context, index) {
-        final lesson = paginatedLessons[index];
-        return _buildLessonCard(lesson);
+        final lesson = _getPaginatedLessons()[index];
+        return _buildLessonCard(lesson, l10n);
       },
     );
   }
 
-  Widget _buildLessonCard(Lesson lesson) {
+  Widget _buildLessonCard(Lesson lesson, AppLocalizations l10n) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -761,7 +845,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
         // Search results list
         Expanded(
           child: ListView.builder(
-            controller: _scrollController,
+            controller: _enrolledScrollController,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _searchResults.length,
             itemBuilder: (context, index) {

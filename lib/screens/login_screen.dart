@@ -11,6 +11,7 @@ import '../services/language_service.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'loading_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -72,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 0)),
+      MaterialPageRoute(builder: (context) => const LoadingScreen()),
     );
   }
 
@@ -364,12 +365,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.g_mobiledata),
+                          const Icon(Icons.g_mobiledata, size: 24),
                           const SizedBox(width: 8),
-                          Text(
-                            l10n.continueWithGoogle,
-                            style: AppTextStyles.button.copyWith(
-                              color: Theme.of(context).primaryColor,
+                          Flexible(
+                            child: Text(
+                              l10n.continueWithGoogle,
+                              style: AppTextStyles.button.copyWith(
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],

@@ -672,6 +672,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: AppTextStyles.titleLarge.copyWith(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                 ),

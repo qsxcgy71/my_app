@@ -205,6 +205,22 @@
         "type": "int"
       }
     }
-  }
+  },
+  "createAccount": "Create Account",
+  "signUpTitle": "Sign Up",
+  "confirmPassword": "Confirm Password",
+  "alreadyHaveAccount": "Already have an account?",
+  "signIn": "Sign in",
+  "pleaseEnterAllFields": "Please fill in all fields",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordTooShort": "Password must be at least 6 characters long",
+  "registrationFailed": "Registration failed",
 
+  "forgetPasswordTitle": "Reset Password",
+  "forgetPasswordDescription": "Enter your email address and we'll send you instructions to reset your password",
+  "resetPassword": "Reset Password",
+  "resetPasswordSuccess": "Password reset email has been sent",
+  "resetPasswordFailed": "Failed to send reset email",
+  "backToLogin": "Back to Login",
+  "pleaseEnterEmail": "Please enter your email address"
 } 

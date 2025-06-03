@@ -462,4 +462,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(int days) {
     return '$days days ago';
   }
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get signUpTitle => 'Sign Up';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get pleaseEnterAllFields => 'Please fill in all fields';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters long';
+
+  @override
+  String get registrationFailed => 'Registration failed';
+
+  @override
+  String get forgetPasswordTitle => 'Reset Password';
+
+  @override
+  String get forgetPasswordDescription =>
+      'Enter your email address and we\'ll send you instructions to reset your password';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get resetPasswordSuccess => 'Password reset email has been sent';
+
+  @override
+  String get resetPasswordFailed => 'Failed to send reset email';
+
+  @override
+  String get backToLogin => 'Back to Login';
+
+  @override
+  String get pleaseEnterEmail => 'Please enter your email address';
 }

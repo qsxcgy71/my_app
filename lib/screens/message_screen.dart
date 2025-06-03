@@ -119,7 +119,14 @@ class _MessageScreenState extends State<MessageScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text(l10n.messages, style: AppTextStyles.titleLarge),
+            Text(
+              l10n.messages,
+              style: AppTextStyles.titleLarge.copyWith(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
             const SizedBox(width: 8),
             StreamBuilder<int>(
               stream: _messageService.getUnreadCount(),

@@ -410,9 +410,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // 搜索框 - 筛选按钮在内部
+          // 搜索框 - 简化设计，移除内部筛选按钮
           Container(
-            key: _searchFieldKey, // 添加key用于排除键盘隐藏
+            key: _searchFieldKey,
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -440,18 +440,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       decoration: InputDecoration(
                         hintText: l10n.searchAllCourses,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                         prefixIcon: Container(
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.all(8),
                           child: Icon(
                             Icons.search,
                             color: currentTheme.primaryColor.withOpacity(0.5),
-                            size: 24,
+                            size: 18,
                           ),
                         ),
                         prefixIconConstraints: const BoxConstraints(
-                          minWidth: 56,
-                          minHeight: 56,
+                          minWidth: 40,
+                          minHeight: 40,
                         ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -471,78 +471,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
                 
-                // 筛选按钮 - 放在搜索框内部
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _showFilterPanel = !_showFilterPanel;
-                          });
-                        },
-                        icon: Icon(
-                          _showFilterPanel ? Icons.filter_list_off : Icons.tune,
-                          color: _currentFilter.hasFilters 
-                              ? currentTheme.primaryColor 
-                              : currentTheme.primaryColor.withOpacity(0.6),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
-                        ),
-                      ),
-                      if (_currentFilter.hasFilters)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                            child: Text(
-                              '${_currentFilter.activeFiltersCount}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                
                 // 搜索确认按钮
                 Container(
-                  margin: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.all(4),
                   child: AntiSpamButton(
                     onPressed: _performSearchAndCollapse,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: currentTheme.primaryColor,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       elevation: 0,
-                      minimumSize: const Size(80, 48),
+                      minimumSize: const Size(65, 34),
                     ),
                     child: Text(
                       l10n.search, 
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)
                     ),
                   ),
                 ),
               ],
             ),
           ),
+          
+          const SizedBox(height: 8),
+          
+          // 筛选条件区域 - 新设计
+          _buildQuickFiltersSection(l10n, currentTheme),
           
           // 活动筛选条件显示 (如果有的话)
           if (_currentFilter.hasFilters) ...[
@@ -551,7 +508,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               children: [
                 Expanded(child: _buildActiveFiltersChips(l10n, currentTheme)),
                 const SizedBox(width: 8),
-                // 清除筛选按钮 - 移到筛选条件旁边
+                // 清除筛选按钮
                 TextButton.icon(
                   onPressed: _clearAllFilters,
                   icon: Icon(Icons.clear_all, size: 16, color: Colors.grey[600]),
@@ -572,130 +529,186 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // 活动筛选条件显示
-  Widget _buildActiveFiltersChips(AppLocalizations l10n, dynamic currentTheme) {
-    List<Widget> chips = [];
-    
-    if (_currentFilter.ageRanges.isNotEmpty) {
-      for (final ageRange in _currentFilter.ageRanges) {
-        chips.add(_buildActiveFilterChip(
-          '${ageRange.minAge}-${ageRange.maxAge}岁',
-          currentTheme,
-          onRemove: () {
-            setState(() {
-              final newAgeRanges = List<AgeRange>.from(_currentFilter.ageRanges);
-              newAgeRanges.remove(ageRange);
-              _currentFilter = _currentFilter.copyWith(ageRanges: newAgeRanges);
-              _updateSearchResults();
-            });
-          },
-        ));
-      }
-    }
-    
-    if (_currentFilter.courseTypes.isNotEmpty) {
-      for (final type in _currentFilter.courseTypes) {
-        chips.add(_buildActiveFilterChip(
-          type,
-          currentTheme,
-          onRemove: () {
-            setState(() {
-              final newTypes = List<String>.from(_currentFilter.courseTypes);
-              newTypes.remove(type);
-              _currentFilter = _currentFilter.copyWith(courseTypes: newTypes);
-              _updateSearchResults();
-            });
-          },
-        ));
-      }
-    }
-    
-    if (_currentFilter.difficulties.isNotEmpty) {
-      for (final difficulty in _currentFilter.difficulties) {
-        chips.add(_buildActiveFilterChip(
-          difficulty,
-          currentTheme,
-          onRemove: () {
-            setState(() {
-              final newDifficulties = List<String>.from(_currentFilter.difficulties);
-              newDifficulties.remove(difficulty);
-              _currentFilter = _currentFilter.copyWith(difficulties: newDifficulties);
-              _updateSearchResults();
-            });
-          },
-        ));
-      }
-    }
-    
-    if (_currentFilter.onlineOnly) {
-      chips.add(_buildActiveFilterChip(
-        l10n.onlineCoursesOnly,
-        currentTheme,
-        onRemove: () {
-          setState(() {
-            _currentFilter = _currentFilter.copyWith(onlineOnly: false);
-            _updateSearchResults();
-          });
-        },
-      ));
-    }
-    
-    if (chips.isEmpty) return const SizedBox.shrink();
-    
-    return Container(
-      width: double.infinity,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: chips,
+  // 快速筛选条件区域
+  Widget _buildQuickFiltersSection(AppLocalizations l10n, dynamic currentTheme) {
+    // 预设的快速筛选条件 - 只保留3个最常用的
+    final quickFilters = [
+      {
+        'label': '艺术创作',
+        'type': 'courseType',
+        'value': '艺术创作',
+        'isSelected': _currentFilter.courseTypes.contains('艺术创作'),
+      },
+      {
+        'label': '4-6岁',
+        'type': 'ageRange',
+        'value': const AgeRange(minAge: 4, maxAge: 6, displayName: '4-6岁'),
+        'isSelected': _currentFilter.ageRanges.contains(const AgeRange(minAge: 4, maxAge: 6, displayName: '4-6岁')),
+      },
+      {
+        'label': '在线课程',
+        'type': 'online',
+        'value': true,
+        'isSelected': _currentFilter.onlineOnly,
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          // 筛选条件chips - 展开占用空间
+          Expanded(
+            child: Row(
+              children: quickFilters.map((filter) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: _buildQuickFilterChip(
+                    label: filter['label'] as String,
+                    isSelected: filter['isSelected'] as bool,
+                    onTap: () => _handleQuickFilterTap(filter),
+                    currentTheme: currentTheme,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          
+          // 更多筛选按钮 - 改小
+          Container(
+            decoration: BoxDecoration(
+              color: _showFilterPanel 
+                  ? currentTheme.primaryColor.withOpacity(0.1)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _currentFilter.hasFilters 
+                    ? currentTheme.primaryColor 
+                    : currentTheme.primaryColor.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Stack(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showFilterPanel = !_showFilterPanel;
+                    });
+                  },
+                  icon: Icon(
+                    _showFilterPanel ? Icons.expand_less : Icons.tune,
+                    color: _currentFilter.hasFilters 
+                        ? currentTheme.primaryColor 
+                        : currentTheme.primaryColor.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+                ),
+                if (_currentFilter.hasFilters)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
+                      child: Text(
+                        '${_currentFilter.activeFiltersCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActiveFilterChip(String label, dynamic currentTheme, {VoidCallback? onRemove}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: currentTheme.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: currentTheme.primaryColor.withOpacity(0.3),
-          width: 1,
+  // 快速筛选chip
+  Widget _buildQuickFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required dynamic currentTheme,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? currentTheme.primaryColor.withOpacity(0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[700],
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: currentTheme.primaryColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (onRemove != null) ...[
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.only(left: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.transparent,
-                ),
-                child: Icon(
-                  Icons.close,
-                  size: 14,
-                  color: currentTheme.primaryColor,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
+  }
+
+  // 处理快速筛选点击
+  void _handleQuickFilterTap(Map<String, dynamic> filter) {
+    final type = filter['type'] as String;
+    final value = filter['value'];
+    final isSelected = filter['isSelected'] as bool;
+
+    switch (type) {
+      case 'courseType':
+        final newTypes = List<String>.from(_currentFilter.courseTypes);
+        if (isSelected) {
+          newTypes.remove(value);
+        } else {
+          newTypes.add(value);
+        }
+        _applyFilter(_currentFilter.copyWith(courseTypes: newTypes));
+        break;
+        
+      case 'ageRange':
+        final ageRange = value as AgeRange;
+        final newAgeRanges = List<AgeRange>.from(_currentFilter.ageRanges);
+        if (isSelected) {
+          newAgeRanges.remove(ageRange);
+        } else {
+          newAgeRanges.add(ageRange);
+        }
+        _applyFilter(_currentFilter.copyWith(ageRanges: newAgeRanges));
+        break;
+        
+      case 'online':
+        _applyFilter(_currentFilter.copyWith(onlineOnly: !isSelected));
+        break;
+    }
   }
 
   Widget _buildSearchResults(AppLocalizations l10n, dynamic currentTheme) {
@@ -1289,6 +1302,131 @@ class _ExploreScreenState extends State<ExploreScreen> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActiveFiltersChips(AppLocalizations l10n, dynamic currentTheme) {
+    List<Widget> chips = [];
+    
+    if (_currentFilter.ageRanges.isNotEmpty) {
+      for (final ageRange in _currentFilter.ageRanges) {
+        chips.add(_buildActiveFilterChip(
+          '${ageRange.minAge}-${ageRange.maxAge}岁',
+          currentTheme,
+          onRemove: () {
+            setState(() {
+              final newAgeRanges = List<AgeRange>.from(_currentFilter.ageRanges);
+              newAgeRanges.remove(ageRange);
+              _currentFilter = _currentFilter.copyWith(ageRanges: newAgeRanges);
+              _updateSearchResults();
+            });
+          },
+        ));
+      }
+    }
+    
+    if (_currentFilter.courseTypes.isNotEmpty) {
+      for (final type in _currentFilter.courseTypes) {
+        chips.add(_buildActiveFilterChip(
+          type,
+          currentTheme,
+          onRemove: () {
+            setState(() {
+              final newTypes = List<String>.from(_currentFilter.courseTypes);
+              newTypes.remove(type);
+              _currentFilter = _currentFilter.copyWith(courseTypes: newTypes);
+              _updateSearchResults();
+            });
+          },
+        ));
+      }
+    }
+    
+    if (_currentFilter.difficulties.isNotEmpty) {
+      for (final difficulty in _currentFilter.difficulties) {
+        chips.add(_buildActiveFilterChip(
+          difficulty,
+          currentTheme,
+          onRemove: () {
+            setState(() {
+              final newDifficulties = List<String>.from(_currentFilter.difficulties);
+              newDifficulties.remove(difficulty);
+              _currentFilter = _currentFilter.copyWith(difficulties: newDifficulties);
+              _updateSearchResults();
+            });
+          },
+        ));
+      }
+    }
+    
+    if (_currentFilter.onlineOnly) {
+      chips.add(_buildActiveFilterChip(
+        l10n.onlineCoursesOnly,
+        currentTheme,
+        onRemove: () {
+          setState(() {
+            _currentFilter = _currentFilter.copyWith(onlineOnly: false);
+            _updateSearchResults();
+          });
+        },
+      ));
+    }
+    
+    if (chips.isEmpty) return const SizedBox.shrink();
+    
+    return Container(
+      width: double.infinity,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: chips,
+      ),
+    );
+  }
+
+  Widget _buildActiveFilterChip(String label, dynamic currentTheme, {VoidCallback? onRemove}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: currentTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: currentTheme.primaryColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: currentTheme.primaryColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (onRemove != null) ...[
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.transparent,
+                ),
+                child: Icon(
+                  Icons.close,
+                  size: 14,
+                  color: currentTheme.primaryColor,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

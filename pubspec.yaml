@@ -96,6 +96,10 @@ flutter:
   assets:
     - assets/app_icon/app_icon_1.png
     - assets/photos/default_avatar.png
+    - assets/tabbar/explore.jpg
+    - assets/tabbar/course.jpg
+    - assets/tabbar/message.jpg
+    - assets/tabbar/profile.jpg
     - assets/theme_icon/theme_reduce.png
     - assets/theme_icon/theme_tepid.png
     - assets/theme_icon/theme_defence.png

@@ -352,16 +352,16 @@ class _MessageScreenState extends State<MessageScreen> {
         final l10n = AppLocalizations.of(context)!;
         return await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: Text(l10n.confirmDelete),
             content: Text(l10n.confirmDeleteMessage),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: Text(l10n.cancel),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
                 child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
               ),
             ],

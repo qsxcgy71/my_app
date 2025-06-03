@@ -12,6 +12,47 @@ import 'lesson_detail_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
+import '../models/course_filter.dart';
+
+// 响应式布局助手
+class ResponsiveHelper {
+  static bool isSmallScreen(BuildContext context) => 
+      MediaQuery.of(context).size.height < 600;
+  
+  static bool isVerySmallScreen(BuildContext context) => 
+      MediaQuery.of(context).size.height < 500;
+  
+  static double getFilterPanelMaxHeight(BuildContext context) =>
+      MediaQuery.of(context).size.height * (isSmallScreen(context) ? 0.20 : 0.35);
+  
+  static EdgeInsets getResponsivePadding(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmall = screenHeight < 600;
+    return EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: isSmall ? 4 : 8,
+    );
+  }
+  
+  static double getResponsiveSpacing(BuildContext context) {
+    return isSmallScreen(context) ? 6 : 10;
+  }
+  
+  // 新增：获取Tab栏的间距 - 进一步缩小
+  static double getTabBarSpacing(BuildContext context) {
+    return isSmallScreen(context) ? 3 : 5;
+  }
+  
+  // 新增：获取搜索区域的间距 - 大幅缩小
+  static double getSearchSectionSpacing(BuildContext context) {
+    return isSmallScreen(context) ? 3 : 5;
+  }
+  
+  // 新增：筛选面板内部间距
+  static double getFilterPanelInternalSpacing(BuildContext context) {
+    return isSmallScreen(context) ? 6 : 8;
+  }
+}
 
 class LessonsScreen extends StatefulWidget {
   const LessonsScreen({super.key});
@@ -34,11 +75,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   // Data
   List<Lesson> _enrolledLessons = [];
   List<Lesson> _completedLessons = [];
-  List<Lesson> _searchResults = [];
+  List<Lesson> _enrolledSearchResults = [];
+  List<Lesson> _completedSearchResults = [];
   
-  // Search
+  // Search and Filter
   bool _isSearchMode = false;
   String _searchQuery = '';
+  CourseFilter _currentFilter = CourseFilter();
+  bool _showFilterPanel = false;
 
   // Calendar
   bool _isCalendarVisible = false;
@@ -56,38 +100,36 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _selectedDay = _focusedDay;
     
+    // 初始化动画控制器
     _calendarAnimationController = AnimationController(
-      vsync: this,
       duration: const Duration(milliseconds: 300),
+      vsync: this,
     );
-    _calendarAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
+    _calendarAnimation = CurvedAnimation(
       parent: _calendarAnimationController,
       curve: Curves.easeInOut,
-    ));
+    );
     
     _loadLessons();
     
-    _tabController.addListener(() {
-      if (!_isSearchMode) {
-        setState(() {
-          _hasMoreData[_tabController.index] = _getCurrentLessons().length > (_currentPages[_tabController.index]! + 1) * _pageSize;
-        });
-      }
-    });
-
+    // 搜索监听器
     _searchController.addListener(() {
       _performSearch(_searchController.text);
+    });
+    
+    // 监听tab切换，分别管理不同列表的滚动位置
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
     });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _calendarAnimationController.dispose();
     _enrolledRefreshController.dispose();
     _completedRefreshController.dispose();
     _enrolledScrollController.dispose();
@@ -96,41 +138,159 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     super.dispose();
   }
 
+  void _performSearch(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+      _updateSearchResults();
+    });
+  }
+
+  void _updateSearchResults() {
+    // 如果既没有搜索词也没有筛选条件，保持搜索模式但显示空状态
+    if (_searchQuery.isEmpty && !_currentFilter.hasFilters) {
+      setState(() {
+        _enrolledSearchResults = [];
+        _completedSearchResults = [];
+        // 保持搜索模式但显示提示信息
+      });
+      return;
+    }
+
+    List<Lesson> enrolledResults = List.from(_enrolledLessons);
+    List<Lesson> completedResults = List.from(_completedLessons);
+
+    // 文本搜索
+    if (_searchQuery.isNotEmpty) {
+      enrolledResults = enrolledResults.where((lesson) {
+        return lesson.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               lesson.courseName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               (lesson.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+               (lesson.courseCategory?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      }).toList();
+      
+      completedResults = completedResults.where((lesson) {
+        return lesson.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               lesson.courseName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               (lesson.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+               (lesson.courseCategory?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      }).toList();
+    }
+
+    // 应用过滤器
+    if (_currentFilter.hasFilters) {
+      // 课程类型过滤
+      if (_currentFilter.courseTypes.isNotEmpty) {
+        enrolledResults = enrolledResults.where((lesson) {
+          return _currentFilter.courseTypes.contains(lesson.courseCategory);
+        }).toList();
+        
+        completedResults = completedResults.where((lesson) {
+          return _currentFilter.courseTypes.contains(lesson.courseCategory);
+        }).toList();
+      }
+      
+      // 时间段过滤（基于课程开始时间）
+      if (_currentFilter.timeRanges.isNotEmpty) {
+        enrolledResults = enrolledResults.where((lesson) {
+          final hour = lesson.startTime.hour;
+          return _currentFilter.timeRanges.any((timeRange) {
+            final startHour = int.parse(timeRange.startTime.split(':')[0]);
+            final endHour = int.parse(timeRange.endTime.split(':')[0]);
+            return hour >= startHour && hour < endHour;
+          });
+        }).toList();
+        
+        completedResults = completedResults.where((lesson) {
+          final hour = lesson.startTime.hour;
+          return _currentFilter.timeRanges.any((timeRange) {
+            final startHour = int.parse(timeRange.startTime.split(':')[0]);
+            final endHour = int.parse(timeRange.endTime.split(':')[0]);
+            return hour >= startHour && hour < endHour;
+          });
+        }).toList();
+      }
+    }
+
+    setState(() {
+      _enrolledSearchResults = enrolledResults;
+      _completedSearchResults = completedResults;
+    });
+  }
+
+  void _performSearchAndCollapse() {
+    _updateSearchResults();
+    // 收起键盘
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _showFilterPanel = false;
+    });
+  }
+
   void _toggleSearchMode() {
     setState(() {
       _isSearchMode = !_isSearchMode;
       if (!_isSearchMode) {
         _searchController.clear();
         _searchQuery = '';
-        _searchResults.clear();
-        _currentPages = {0: 0, 1: 0};
-        _hasMoreData = {0: false, 1: false};
+        _enrolledSearchResults = [];
+        _completedSearchResults = [];
+        _currentFilter = CourseFilter();
+        _showFilterPanel = false;
+        // 收起键盘
+        FocusScope.of(context).unfocus();
       }
     });
   }
 
-  void _performSearch(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _searchQuery = '';
-        _searchResults.clear();
-      });
-      return;
-    }
-
+  void _enterSearchMode() {
     setState(() {
-      _searchQuery = query.trim();
+      _isSearchMode = true;
     });
+  }
 
-    try {
-      final results = await _lessonService.searchLessons(query.trim());
-      if (mounted) {
-        setState(() {
-          _searchResults = results;
-        });
-      }
-    } catch (e) {
-      // Handle search error silently
+  void _applyFilter(CourseFilter newFilter) {
+    setState(() {
+      _currentFilter = newFilter;
+    });
+    _updateSearchResults();
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _currentFilter = CourseFilter();
+      _searchController.clear();
+      _searchQuery = '';
+      _showFilterPanel = false;
+    });
+    _updateSearchResults();
+  }
+
+  void _handleQuickFilterTap(Map<String, dynamic> filter) {
+    final type = filter['type'] as String;
+    final value = filter['value'];
+    final isSelected = filter['isSelected'] as bool;
+
+    switch (type) {
+      case 'courseType':
+        final newTypes = List<String>.from(_currentFilter.courseTypes);
+        if (isSelected) {
+          newTypes.remove(value);
+        } else {
+          newTypes.add(value);
+        }
+        _applyFilter(_currentFilter.copyWith(courseTypes: newTypes));
+        break;
+        
+      case 'timeRange':
+        final timeRange = value as TimeRange;
+        final newTimeRanges = List<TimeRange>.from(_currentFilter.timeRanges);
+        if (isSelected) {
+          newTimeRanges.remove(timeRange);
+        } else {
+          newTimeRanges.add(timeRange);
+        }
+        _applyFilter(_currentFilter.copyWith(timeRanges: newTimeRanges));
+        break;
     }
   }
 
@@ -185,15 +345,15 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   }
 
   List<Lesson> _getCurrentLessons() {
-    if (_isSearchMode && _searchQuery.isNotEmpty) {
-      return _searchResults;
+    if (_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)) {
+      return _tabController.index == 0 ? _enrolledSearchResults : _completedSearchResults;
     }
     return _tabController.index == 0 ? _enrolledLessons : _completedLessons;
   }
 
   List<Lesson> _getPaginatedLessons() {
     final lessons = _getCurrentLessons();
-    if (_isSearchMode && _searchQuery.isNotEmpty) {
+    if (_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)) {
       return lessons;
     }
     final currentPage = _currentPages[_tabController.index] ?? 0;
@@ -265,304 +425,613 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     
     return KeyboardDismisser(
       child: Scaffold(
-        backgroundColor: currentTheme.primaryColor.withOpacity(0.05),
+        backgroundColor: currentTheme.backgroundColor,
         appBar: AppBar(
-          backgroundColor: currentTheme.primaryColor.withOpacity(0.1),
+          backgroundColor: currentTheme.backgroundColor,
           elevation: 0,
-          title: Text(
-            _isSearchMode ? l10n.searchLessons : l10n.myLessons,
+          title: _isSearchMode ? _buildSearchBar(l10n, currentTheme) : Text(
+            l10n.myLessons,
             style: AppTextStyles.titleLarge.copyWith(
               color: currentTheme.primaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
-          actions: [
-            if (_isSearchMode) ...[
-              AntiSpamWrapper(
-                onTap: _toggleSearchMode,
-                child: TextButton(
-                  onPressed: null, // 由 AntiSpamWrapper 处理
-                  child: Text(
-                    l10n.cancel,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: currentTheme.primaryColor.withOpacity(0.8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+          actions: _isSearchMode ? [
+            // 搜索模式下显示取消按钮
+            TextButton(
+              onPressed: _toggleSearchMode,
+              child: Text(
+                '取消',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: currentTheme.primaryColor,
                 ),
               ),
-            ] else ...[
-              AntiSpamWrapper(
-                onTap: _toggleSearchMode,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.search,
-                    color: currentTheme.primaryColor,
-                  ),
-                  onPressed: null, // 由 AntiSpamWrapper 处理
-                ),
+            ),
+          ] : [
+            // 正常模式下显示搜索图标和其他按钮
+            IconButton(
+              icon: Icon(
+                Icons.search,
+                color: currentTheme.primaryColor,
               ),
-              const ThemeSelector(),
-              AntiSpamWrapper(
-                onTap: _createSampleLessons,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.add_circle,
-                    color: currentTheme.primaryColor,
-                  ),
-                  onPressed: null, // 由 AntiSpamWrapper 处理
+              onPressed: _enterSearchMode,
+            ),
+            const ThemeSelector(),
+            AntiSpamWrapper(
+              onTap: _createSampleLessons,
+              child: IconButton(
+                icon: Icon(
+                  Icons.add_circle,
+                  color: currentTheme.primaryColor,
                 ),
+                onPressed: null, // 由 AntiSpamWrapper 处理
               ),
-            ],
+            ),
           ],
         ),
-        body: Column(
-          children: [
-            // Search Bar (only visible in search mode)
-            if (_isSearchMode) ...[
-              Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentTheme.primaryColor.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 搜索和筛选区域 - 紧凑布局
+              if (_isSearchMode) ...[
+                SizedBox(height: ResponsiveHelper.getSearchSectionSpacing(context)),
+                _buildFilterSection(l10n, currentTheme),
+                
+                // 筛选面板 - 使用更紧凑的布局
+                if (_showFilterPanel) ...[
+                  SizedBox(height: ResponsiveHelper.getSearchSectionSpacing(context)),
+                  _buildFilterPanel(l10n, currentTheme),
+                ],
+                
+                SizedBox(height: ResponsiveHelper.getSearchSectionSpacing(context)),
+              ] else
+                SizedBox(height: ResponsiveHelper.getTabBarSpacing(context)),
+              
+              // Tab Bar - 进一步缩小间距
+              _buildLessonsTabBar(l10n, currentTheme),
+              SizedBox(height: ResponsiveHelper.getTabBarSpacing(context)),
+
+              // 可滚动内容区域 - 使用Expanded确保占满剩余空间
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    // 已报名课程列表
+                    _buildTabContent(0, l10n, currentTheme),
+                    // 已完成课程列表
+                    _buildTabContent(1, l10n, currentTheme),
                   ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchCoursePlaceholder,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    prefixIcon: Icon(Icons.search, color: currentTheme.primaryColor.withOpacity(0.6)),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? AntiSpamWrapper(
-                            onTap: () => _searchController.clear(),
-                            child: IconButton(
-                              icon: Icon(Icons.clear, color: currentTheme.primaryColor.withOpacity(0.6)),
-                              onPressed: null, // 由 AntiSpamWrapper 处理
-                            ),
-                          )
-                        : null,
-                    hintStyle: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor.withOpacity(0.6)),
-                  ),
-                  style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Tab Bar (hidden in search mode)
-            if (!_isSearchMode) ...[
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentTheme.primaryColor.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white,
-                        currentTheme.primaryColor.withOpacity(0.05),
-                      ],
-                    ),
+  // 统一的Tab内容构建方法，解决布局溢出问题
+  Widget _buildTabContent(int tabIndex, AppLocalizations l10n, dynamic currentTheme) {
+    final refreshController = tabIndex == 0 ? _enrolledRefreshController : _completedRefreshController;
+    final hasMoreData = _hasMoreData[tabIndex] ?? false;
+
+    return SmartRefresher(
+      controller: refreshController,
+      enablePullDown: true,
+      enablePullUp: !_isSearchMode && hasMoreData,
+      onRefresh: _onRefresh,
+      onLoading: _onLoading,
+      header: WaterDropHeader(
+        complete: Text('Updated!', style: AppTextStyles.bodyMedium),
+        failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+      ),
+      footer: CustomFooter(
+        builder: (BuildContext context, LoadStatus? mode) {
+          Widget body;
+          if (mode == null || mode == LoadStatus.idle) {
+            body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+          } else if (mode == LoadStatus.loading) {
+            body = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 8),
+                Text("Loading...", style: AppTextStyles.bodyMedium),
+              ],
+            );
+          } else if (mode == LoadStatus.failed) {
+            body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+          } else if (mode == LoadStatus.canLoading) {
+            body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+          } else {
+            body = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                const SizedBox(width: 4),
+                Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+              ],
+            );
+          }
+          return SizedBox(
+            height: 55.0,
+            child: Center(child: body),
+          );
+        },
+      ),
+      child: _buildLessonsList(tabIndex, l10n),
+    );
+  }
+
+  // 搜索栏 - 在AppBar中显示，移除搜索按钮
+  Widget _buildSearchBar(AppLocalizations l10n, dynamic currentTheme) {
+    return Container(
+      height: 40,
+      child: TextField(
+        controller: _searchController,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: l10n.searchCoursePlaceholder,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.grey[100],
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          prefixIcon: Icon(
+            Icons.search,
+            color: currentTheme.primaryColor.withOpacity(0.5),
+            size: 20,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: currentTheme.primaryColor.withOpacity(0.5),
+                    size: 20,
                   ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          currentTheme.primaryColor,
-                          currentTheme.secondaryColor,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: currentTheme.primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          hintStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[500]),
+        ),
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: currentTheme.primaryColor,
+        ),
+        onSubmitted: (value) {
+          // 按回车键收起键盘
+          FocusScope.of(context).unfocus();
+        },
+      ),
+    );
+  }
+
+  // 筛选区域 - 仿照探索界面设计，实现真实的筛选功能
+  Widget _buildFilterSection(AppLocalizations l10n, dynamic currentTheme) {
+    // 课程类型筛选
+    final quickFilters = [
+      {
+        'label': '艺术创作',
+        'type': 'courseType',
+        'value': '艺术创作',
+        'isSelected': _currentFilter.courseTypes.contains('艺术创作'),
+      },
+      {
+        'label': '科学探索',
+        'type': 'courseType',
+        'value': '科学探索',
+        'isSelected': _currentFilter.courseTypes.contains('科学探索'),
+      },
+      {
+        'label': '上午时段',
+        'type': 'timeRange',
+        'value': const TimeRange(startTime: '09:00', endTime: '12:00', displayName: '上午时段'),
+        'isSelected': _currentFilter.timeRanges.contains(const TimeRange(startTime: '09:00', endTime: '12:00', displayName: '上午时段')),
+      },
+    ];
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: ResponsiveHelper.isSmallScreen(context) ? 2 : 3,
+      ),
+      child: Row(
+        children: [
+          // 快速筛选按钮
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: quickFilters.map((filter) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: ResponsiveHelper.isSmallScreen(context) ? 6 : 8),
+                    child: _buildQuickFilterChip(
+                      label: filter['label'] as String,
+                      isSelected: filter['isSelected'] as bool,
+                      onTap: () => _handleQuickFilterTap(filter),
+                      currentTheme: currentTheme,
                     ),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: currentTheme.primaryColor.withOpacity(0.6),
-                    labelStyle: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                    unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 15,
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    tabs: [
-                      _buildTab(l10n.enrolledLessons, Icons.schedule, 0),
-                      _buildTab(l10n.completedLessons, Icons.check_circle, 1),
-                    ],
-                  ),
-                ),
+                  );
+                }).toList(),
               ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Lessons List
-            Expanded(
-              child: _isSearchMode
-                  ? _buildSearchResults(l10n)
-                  : TabBarView(
-                      controller: _tabController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        // 已报名课程列表
-                        SmartRefresher(
-                          controller: _enrolledRefreshController,
-                          enablePullDown: true,
-                          enablePullUp: !_isSearchMode && _hasMoreData[0]!,
-                          onRefresh: _onRefresh,
-                          onLoading: _onLoading,
-                          header: WaterDropHeader(
-                            complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-                            failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-                          ),
-                          footer: CustomFooter(
-                            builder: (BuildContext context, LoadStatus? mode) {
-                              Widget body;
-                              if (mode == null || mode == LoadStatus.idle) {
-                                body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                              } else if (mode == LoadStatus.loading) {
-                                body = Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text("Loading...", style: AppTextStyles.bodyMedium),
-                                  ],
-                                );
-                              } else if (mode == LoadStatus.failed) {
-                                body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-                              } else if (mode == LoadStatus.canLoading) {
-                                body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
-                              } else {
-                                body = Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                                    const SizedBox(width: 4),
-                                    Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                                  ],
-                                );
-                              }
-                              return Container(
-                                height: 55.0,
-                                child: Center(child: body),
-                              );
-                            },
-                          ),
-                          child: _buildLessonsList(_enrolledLessons, l10n),
-                        ),
-                        // 已完成课程列表
-                        SmartRefresher(
-                          controller: _completedRefreshController,
-                          enablePullDown: true,
-                          enablePullUp: !_isSearchMode && _hasMoreData[1]!,
-                          onRefresh: _onRefresh,
-                          onLoading: _onLoading,
-                          header: WaterDropHeader(
-                            complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-                            failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-                          ),
-                          footer: CustomFooter(
-                            builder: (BuildContext context, LoadStatus? mode) {
-                              Widget body;
-                              if (mode == null || mode == LoadStatus.idle) {
-                                body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
-                              } else if (mode == LoadStatus.loading) {
-                                body = Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text("Loading...", style: AppTextStyles.bodyMedium),
-                                  ],
-                                );
-                              } else if (mode == LoadStatus.failed) {
-                                body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-                              } else if (mode == LoadStatus.canLoading) {
-                                body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
-                              } else {
-                                body = Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                                    const SizedBox(width: 4),
-                                    Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                                  ],
-                                );
-                              }
-                              return Container(
-                                height: 55.0,
-                                child: Center(child: body),
-                              );
-                            },
-                          ),
-                          child: _buildLessonsList(_completedLessons, l10n),
-                        ),
-                      ],
-                    ),
             ),
+          ),
+          
+          // 更多筛选按钮
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _showFilterPanel = !_showFilterPanel;
+                  });
+                },
+                icon: Icon(
+                  _showFilterPanel ? Icons.expand_less : Icons.tune,
+                  color: _currentFilter.hasFilters 
+                      ? currentTheme.primaryColor 
+                      : currentTheme.primaryColor.withOpacity(0.7),
+                  size: 18,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+                padding: const EdgeInsets.all(6),
+                tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+                style: IconButton.styleFrom(
+                  backgroundColor: _showFilterPanel 
+                      ? currentTheme.primaryColor.withOpacity(0.1)
+                      : Colors.transparent,
+                ),
+              ),
+              if (_currentFilter.hasFilters)
+                Positioned(
+                  right: 3,
+                  top: 3,
+                  child: Container(
+                    padding: const EdgeInsets.all(1.5),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 10, minHeight: 10),
+                    child: Text(
+                      '${_currentFilter.activeFiltersCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 7,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 筛选面板 - 添加响应式设计
+  Widget _buildFilterPanel(AppLocalizations l10n, dynamic currentTheme) {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: ResponsiveHelper.isSmallScreen(context) ? 2 : 3,
+      ),
+      constraints: BoxConstraints(
+        maxHeight: ResponsiveHelper.getFilterPanelMaxHeight(context),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveHelper.getFilterPanelInternalSpacing(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 筛选标题和清除按钮
+              Row(
+                children: [
+                  Text(
+                    '筛选条件',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: currentTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: ResponsiveHelper.isSmallScreen(context) ? 14 : 16,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_currentFilter.hasFilters)
+                    TextButton(
+                      onPressed: _clearAllFilters,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        minimumSize: const Size(0, 24),
+                      ),
+                      child: Text(
+                        '清除全部',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              
+              SizedBox(height: ResponsiveHelper.getFilterPanelInternalSpacing(context)),
+              
+              // 课程类型筛选
+              Text(
+                '课程类型',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 12 : 14,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: CourseTypes.all.map((type) {
+                  final isSelected = _currentFilter.courseTypes.contains(type);
+                  return _buildFilterChip(
+                    label: type,
+                    isSelected: isSelected,
+                    onTap: () {
+                      final newTypes = List<String>.from(_currentFilter.courseTypes);
+                      if (isSelected) {
+                        newTypes.remove(type);
+                      } else {
+                        newTypes.add(type);
+                      }
+                      _applyFilter(_currentFilter.copyWith(courseTypes: newTypes));
+                    },
+                    currentTheme: currentTheme,
+                  );
+                }).toList(),
+              ),
+              
+              SizedBox(height: ResponsiveHelper.getFilterPanelInternalSpacing(context)),
+              
+              // 时间段筛选
+              Text(
+                '时间段',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 12 : 14,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: TimeRange.predefinedRanges.map((timeRange) {
+                  final isSelected = _currentFilter.timeRanges.contains(timeRange);
+                  return _buildFilterChip(
+                    label: timeRange.displayName,
+                    isSelected: isSelected,
+                    onTap: () {
+                      final newTimeRanges = List<TimeRange>.from(_currentFilter.timeRanges);
+                      if (isSelected) {
+                        newTimeRanges.remove(timeRange);
+                      } else {
+                        newTimeRanges.add(timeRange);
+                      }
+                      _applyFilter(_currentFilter.copyWith(timeRanges: newTimeRanges));
+                    },
+                    currentTheme: currentTheme,
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 筛选chip
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required dynamic currentTheme,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveHelper.isSmallScreen(context) ? 8 : 10,
+          vertical: ResponsiveHelper.isSmallScreen(context) ? 4 : 6,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? currentTheme.primaryColor.withOpacity(0.1)
+              : Colors.grey[50],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[700],
+            fontSize: ResponsiveHelper.isSmallScreen(context) ? 11 : 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 快速筛选chip - 仿照探索界面
+  Widget _buildQuickFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required dynamic currentTheme,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveHelper.isSmallScreen(context) ? 8 : 10,
+          vertical: ResponsiveHelper.isSmallScreen(context) ? 3 : 4,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? currentTheme.primaryColor.withOpacity(0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected 
+                ? currentTheme.primaryColor
+                : Colors.grey[700],
+            fontSize: ResponsiveHelper.isSmallScreen(context) ? 10 : 11,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 课程Tab栏 - 保持原有设计
+  Widget _buildLessonsTabBar(AppLocalizations l10n, dynamic currentTheme) {
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: ResponsiveHelper.isSmallScreen(context) ? 1 : 2,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: EdgeInsets.all(ResponsiveHelper.isSmallScreen(context) ? 2 : 3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              currentTheme.primaryColor.withOpacity(0.05),
+            ],
+          ),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          indicator: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                currentTheme.primaryColor,
+                currentTheme.secondaryColor,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: currentTheme.primaryColor.withOpacity(0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          labelColor: Colors.white,
+          unselectedLabelColor: currentTheme.primaryColor.withOpacity(0.6),
+          labelStyle: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: ResponsiveHelper.isSmallScreen(context) ? 13 : 14,
+          ),
+          unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w500,
+            fontSize: ResponsiveHelper.isSmallScreen(context) ? 13 : 14,
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          tabs: [
+            _buildTab(_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)
+                ? '${l10n.enrolledLessons} (${_enrolledSearchResults.length})'
+                : l10n.enrolledLessons, 
+              Icons.schedule, 0),
+            _buildTab(_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)
+                ? '${l10n.completedLessons} (${_completedSearchResults.length})'
+                : l10n.completedLessons, 
+              Icons.check_circle, 1),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLessonsList(List<Lesson> lessons, AppLocalizations l10n) {
-    if (lessons.isEmpty) {
+  Widget _buildLessonsList(int tabIndex, AppLocalizations l10n) {
+    // 如果在搜索模式但没有搜索条件和筛选条件，显示空状态提示
+    if (_isSearchMode && _searchQuery.isEmpty && !_currentFilter.hasFilters) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.school_outlined,
+              Icons.search,
               size: 64,
               color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              _tabController.index == 0 ? l10n.noEnrolledLessons : l10n.noCompletedLessons,
+              '输入关键词或选择筛选条件开始搜索',
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '可以搜索课程名称、内容或类别',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.grey[500],
               ),
             ),
           ],
@@ -570,9 +1039,64 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
       );
     }
 
+    final lessons = _getCurrentLessons();
+    
+    if (lessons.isEmpty) {
+      if (_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)) {
+        // 搜索模式下的空状态
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '没有找到相关课程',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '尝试使用其他关键词或筛选条件',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // 正常模式下的空状态
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.school_outlined,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                tabIndex == 0 ? l10n.noEnrolledLessons : l10n.noCompletedLessons,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
     return ListView.builder(
-      controller: _tabController.index == 0 ? _enrolledScrollController : _completedScrollController,
-      padding: const EdgeInsets.all(16),
+      controller: tabIndex == 0 ? _enrolledScrollController : _completedScrollController,
+      padding: ResponsiveHelper.getResponsivePadding(context),
       itemCount: _getPaginatedLessons().length,
       itemBuilder: (context, index) {
         final lesson = _getPaginatedLessons()[index];
@@ -595,7 +1119,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
           );
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: EdgeInsets.only(bottom: ResponsiveHelper.getResponsiveSpacing(context)),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -613,7 +1137,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               // 课程图片占位符
               Container(
                 width: double.infinity,
-                height: 120,
+                height: ResponsiveHelper.isSmallScreen(context) ? 100 : 120,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -638,7 +1162,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                     ? Center(
                         child: Icon(
                           Icons.school,
-                          size: 36,
+                          size: ResponsiveHelper.isSmallScreen(context) ? 28 : 36,
                           color: Colors.white,
                         ),
                       )
@@ -647,20 +1171,20 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               
               // 课程信息 - 横向布局
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(ResponsiveHelper.isSmallScreen(context) ? 12 : 16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 左侧：日期和时间
                     Container(
-                      width: 85,
+                      width: ResponsiveHelper.isSmallScreen(context) ? 75 : 85,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // 日期
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: ResponsiveHelper.isSmallScreen(context) ? 4 : 6,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -674,7 +1198,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: lesson.isPastLesson ? Colors.green : Colors.orange,
-                                fontSize: 11,
+                                fontSize: ResponsiveHelper.isSmallScreen(context) ? 10 : 11,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -686,7 +1210,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                             lesson.startTimeString,
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.grey[600],
-                              fontSize: 12,
+                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 11 : 12,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -709,7 +1233,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                             style: AppTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
-                              fontSize: 18,
+                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 16 : 18,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -724,6 +1248,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                               color: Colors.grey[700],
                               fontWeight: FontWeight.w500,
                               height: 1.4,
+                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 13 : 14,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -745,234 +1270,28 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     final isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 18,
+              size: ResponsiveHelper.isSmallScreen(context) ? 14 : 16,
               color: isSelected ? Colors.white : Colors.grey[600],
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Flexible(
               child: Text(
                 text,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 12 : 13,
+                ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchResults(AppLocalizations l10n) {
-    if (_searchQuery.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.enterSearchKeywords,
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.canSearchCourses,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.noSearchResults,
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.tryOtherKeywords,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Search results header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            '${l10n.searchResults} (${_searchResults.length})',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        // Search results list
-        Expanded(
-          child: ListView.builder(
-            controller: _enrolledScrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _searchResults.length,
-            itemBuilder: (context, index) {
-              final lesson = _searchResults[index];
-              return _buildSearchResultCard(lesson, l10n);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchResultCard(Lesson lesson, AppLocalizations l10n) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LessonDetailScreen(lesson: lesson),
-            ),
-          );
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 状态标签
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: lesson.isPastLesson 
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    lesson.isPastLesson ? l10n.completed : l10n.enrolled,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: lesson.isPastLesson ? Colors.green : Colors.orange,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // 课程名称（主标题）
-                Text(
-                  lesson.courseName,
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    fontSize: 18,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // 课节标题（内容）
-                Text(
-                  lesson.title,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // 日期和时间信息
-                Row(
-                  children: [
-                    Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        lesson.timeString,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '${lesson.date.year}年${lesson.date.month}月${lesson.date.day}日',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -79,64 +79,77 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        // 禁用用户手动滑动，改为只能通过底部导航栏切换
-        physics: const NeverScrollableScrollPhysics(),
-        children: _screens.map((screen) => AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          child: screen,
-        )).toList(),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  iconPath: _tabIcons[0]!,
-                  label: l10n.explore,
-                  index: 0,
+      body: Stack(
+        children: [
+          PageView(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            physics: const NeverScrollableScrollPhysics(),
+            children: _screens.map((screen) => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+              child: screen,
+            )).toList(),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: EdgeInsets.only(
+                top: 8,
+                bottom: MediaQuery.of(context).padding.bottom + 8,
+              ),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-                _buildNavItem(
-                  iconPath: _tabIcons[1]!,
-                  label: l10n.lessons,
-                  index: 1,
-                ),
-                _buildNavItemWithBadge(
-                  iconPath: _tabIcons[2]!,
-                  label: l10n.messages,
-                  index: 2,
-                ),
-                _buildNavItem(
-                  iconPath: _tabIcons[3]!,
-                  label: l10n.profile,
-                  index: 3,
-                ),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                    iconPath: _tabIcons[0]!,
+                    label: l10n.explore,
+                    index: 0,
+                  ),
+                  _buildNavItem(
+                    iconPath: _tabIcons[1]!,
+                    label: l10n.lessons,
+                    index: 1,
+                  ),
+                  _buildNavItemWithBadge(
+                    iconPath: _tabIcons[2]!,
+                    label: l10n.messages,
+                    index: 2,
+                  ),
+                  _buildNavItem(
+                    iconPath: _tabIcons[3]!,
+                    label: l10n.profile,
+                    index: 3,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
+      extendBody: true,
     );
   }
 

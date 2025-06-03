@@ -6,6 +6,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/lesson_service.dart';
 import 'photo_view_screen.dart';
+import '../widgets/keyboard_dismisser.dart';
+import '../services/media_compression_service.dart';
+import 'dart:io';
+import 'video_player_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   final Lesson lesson;
@@ -23,29 +30,292 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final LessonService _lessonService = LessonService();
   bool _isUploading = false;
 
-  Future<void> _pickAndUploadPhoto() async {
+  // 请求存储权限
+  Future<bool> _requestStoragePermission() async {
+    if (Platform.isAndroid) {
+      final status = await Permission.storage.request();
+      if (status.isDenied) {
+        final manageStatus = await Permission.manageExternalStorage.request();
+        return manageStatus.isGranted;
+      }
+      return status.isGranted;
+    } else if (Platform.isIOS) {
+      final status = await Permission.photos.request();
+      return status.isGranted;
+    }
+    return true;
+  }
+
+  // 下载文件
+  Future<void> _downloadFile(String url, String fileName, String type) async {
+    try {
+      // 请求权限
+      final hasPermission = await _requestStoragePermission();
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('需要存储权限才能下载文件'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 显示下载进度
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text('正在下载$type...'),
+            ],
+          ),
+        ),
+      );
+
+      // 下载文件
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        // 获取下载目录
+        Directory? directory;
+        if (Platform.isAndroid) {
+          directory = await getExternalStorageDirectory();
+          if (directory != null) {
+            // 创建自定义下载目录
+            final customDir = Directory('${directory.path}/MyApp/Downloads');
+            if (!await customDir.exists()) {
+              await customDir.create(recursive: true);
+            }
+            directory = customDir;
+          }
+        } else if (Platform.isIOS) {
+          directory = await getApplicationDocumentsDirectory();
+        }
+
+        if (directory != null) {
+          // 确保文件名有正确的扩展名
+          String finalFileName = fileName;
+          if (type == '照片' && !fileName.toLowerCase().endsWith('.jpg') && !fileName.toLowerCase().endsWith('.png')) {
+            finalFileName = '$fileName.jpg';
+          } else if (type == '视频' && !fileName.toLowerCase().endsWith('.mp4')) {
+            finalFileName = '$fileName.mp4';
+          }
+
+          final file = File('${directory.path}/$finalFileName');
+          await file.writeAsBytes(response.bodyBytes);
+
+          if (mounted) {
+            Navigator.of(context).pop(); // 关闭进度对话框
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$type下载成功：${file.path}'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('下载失败：HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // 关闭进度对话框
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('下载失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 显示媒体选项菜单
+  void _showMediaOptions(String url, String description, String type) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                type == '照片' ? Icons.photo : Icons.videocam,
+                color: Colors.blue,
+              ),
+              title: Text('查看$type'),
+              onTap: () {
+                Navigator.pop(context);
+                if (type == '照片') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PhotoViewScreen(
+                        photos: widget.lesson.photos,
+                        initialIndex: widget.lesson.photos.indexWhere((p) => p.url == url),
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VideoPlayerScreen(
+                        videoUrl: url,
+                        title: description,
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.download,
+                color: Colors.green,
+              ),
+              title: Text('下载$type'),
+              onTap: () {
+                Navigator.pop(context);
+                final fileName = '${widget.lesson.title}_${DateTime.now().millisecondsSinceEpoch}';
+                _downloadFile(url, fileName, type);
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.cancel,
+                color: Colors.grey,
+              ),
+              title: const Text('取消'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadMedia() async {
+    // 显示选择媒体类型的对话框
+    final mediaType = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('选择媒体类型'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('选择照片'),
+                onTap: () => Navigator.of(context).pop('photo'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: const Text('选择视频'),
+                onTap: () => Navigator.of(context).pop('video'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (mediaType == null) return;
+
     final ImagePicker picker = ImagePicker();
     
     try {
-      final XFile? image = await picker.pickImage(
+      XFile? file;
+      
+      if (mediaType == 'photo') {
+        file = await picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1920,
         maxHeight: 1080,
         imageQuality: 85,
       );
+      } else if (mediaType == 'video') {
+        file = await picker.pickVideo(
+          source: ImageSource.gallery,
+          maxDuration: const Duration(minutes: 10), // 限制视频长度
+        );
+      }
 
-      if (image == null) return;
+      if (file == null) return;
 
       setState(() {
         _isUploading = true;
       });
 
-      // 上传照片并更新课程
+      // 使用媒体压缩服务压缩文件
+      final originalFile = File(file.path);
+      String finalPath = file.path;
+      
+      if (MediaCompressionService.isValidMediaFile(originalFile)) {
+        try {
+          dynamic compressedResult;
+          
+          if (mediaType == 'photo') {
+            compressedResult = await MediaCompressionService.smartCompressMedia(
+              originalFile,
+              targetSizeKB: 500,
+              targetSizeMB: 50, // 这个参数对图片无效，但需要提供
+              onProgress: (message) {
+                print('压缩进度: $message');
+              },
+            );
+          } else if (mediaType == 'video') {
+            compressedResult = await MediaCompressionService.smartCompressMedia(
+              originalFile,
+              targetSizeKB: 500, // 这个参数对视频无效，但需要提供
+              targetSizeMB: 20,  // 视频目标大小20MB
+              onProgress: (message) {
+                print('压缩进度: $message');
+              },
+            );
+          }
+          
+          if (compressedResult != null) {
+            if (mediaType == 'photo' && compressedResult is List<int>) {
+              // 图片压缩结果是字节数组，需要保存为临时文件
+              final tempDir = Directory.systemTemp;
+              final tempFile = File('${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg');
+              await tempFile.writeAsBytes(compressedResult);
+              finalPath = tempFile.path;
+            } else if (mediaType == 'video' && compressedResult.path != null) {
+              // 视频压缩结果是MediaInfo对象
+              finalPath = compressedResult.path!;
+              print('视频压缩成功: 原始路径 ${file.path}, 压缩后路径 $finalPath');
+            }
+          }
+        } catch (e) {
+          print('压缩失败，使用原文件: $e');
+          // 如果压缩失败，使用原文件
+        }
+      }
+
+      // 上传媒体文件并更新课程
+      if (mediaType == 'photo') {
       await _lessonService.addLessonPhoto(
         widget.lesson.id,
-        image.path,
+          finalPath,
         description: '课程照片',
       );
+      } else if (mediaType == 'video') {
+        await _lessonService.addLessonVideo(
+          widget.lesson.id,
+          finalPath,
+          description: '课程视频',
+        );
+      }
 
       // 重新获取最新的课程数据
       final updatedLesson = await _lessonService.getLessonById(widget.lesson.id);
@@ -53,13 +323,16 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         setState(() {
           widget.lesson.photos.clear();
           widget.lesson.photos.addAll(updatedLesson.photos);
+          // 更新videos字段
+          widget.lesson.videos.clear();
+          widget.lesson.videos.addAll(updatedLesson.videos);
         });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('上传照片失败: $e'),
+            content: Text('上传${mediaType == 'photo' ? '照片' : '视频'}失败: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -73,7 +346,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     }
   }
 
-  Widget _buildPhotoGrid(BuildContext context) {
+  Widget _buildMediaGrid(BuildContext context) {
     // 如果课程未完成，返回空
     if (!widget.lesson.isPastLesson) {
       return const SizedBox.shrink();
@@ -101,12 +374,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '课程照片',
+                '课程媒体',
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              // 添加照片按钮
+              // 添加媒体按钮
               _isUploading
                 ? const SizedBox(
                     width: 24,
@@ -114,9 +387,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : IconButton(
-                    onPressed: _pickAndUploadPhoto,
+                    onPressed: _pickAndUploadMedia,
                     icon: const Icon(Icons.add_photo_alternate_outlined),
-                    tooltip: '添加照片',
+                    tooltip: '添加照片或视频',
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.blue.withOpacity(0.1),
                       foregroundColor: Colors.blue,
@@ -126,8 +399,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (widget.lesson.photos.isEmpty) ...[
-            // 没有照片时显示提示信息
+          if (widget.lesson.photos.isEmpty && widget.lesson.videos.isEmpty) ...[
+            // 没有媒体时显示提示信息
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 32),
@@ -138,13 +411,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               child: Column(
                 children: [
                   Icon(
-                    Icons.photo_library_outlined,
+                    Icons.perm_media_outlined,
                     size: 48,
                     color: Colors.grey[400],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '暂无照片',
+                    '暂无照片或视频',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: Colors.grey[600],
                       fontWeight: FontWeight.w500,
@@ -153,9 +426,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   if (!_isUploading) ...[
                     const SizedBox(height: 16),
                     TextButton.icon(
-                      onPressed: _pickAndUploadPhoto,
+                      onPressed: _pickAndUploadMedia,
                       icon: const Icon(Icons.add_photo_alternate),
-                      label: const Text('添加照片'),
+                      label: const Text('添加照片或视频'),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.blue,
                         textStyle: AppTextStyles.bodyMedium.copyWith(
@@ -168,16 +441,20 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ),
             ),
           ] else ...[
-            // 有照片时显示水平滚动的照片列表
+            // 有媒体时显示水平滚动的媒体列表
             SizedBox(
               height: 200, // 固定高度
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: widget.lesson.photos.length + 1, // 增加一个用于显示"查看全部"的位置
+                itemCount: widget.lesson.photos.length + widget.lesson.videos.length + 1,
                 itemBuilder: (context, index) {
-                  // 如果是最后一个位置且有更多照片，显示"查看全部"按钮
-                  if (index == widget.lesson.photos.length) {
+                  final totalPhotos = widget.lesson.photos.length;
+                  final totalVideos = widget.lesson.videos.length;
+                  final totalMedia = totalPhotos + totalVideos;
+                  
+                  // 如果是最后一个位置，显示"查看全部"按钮
+                  if (index == totalMedia) {
                     return Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: AspectRatio(
@@ -207,13 +484,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.photo_library_outlined,
+                                  Icons.perm_media_outlined,
                                   size: 32,
                                   color: Colors.grey[600],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '查看全部\n${widget.lesson.photos.length}张',
+                                  '查看全部\n${totalMedia}个',
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.bodySmall.copyWith(
                                     color: Colors.grey[600],
@@ -228,65 +505,172 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     );
                   }
 
+                  // 显示照片
+                  if (index < totalPhotos) {
                   final photo = widget.lesson.photos[index];
                   return Padding(
-                    padding: EdgeInsets.only(
-                      left: index == 0 ? 0 : 8,
-                    ),
+                      padding: const EdgeInsets.only(right: 8),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PhotoViewScreen(
-                                photos: widget.lesson.photos,
-                                initialIndex: index,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Hero(
-                          tag: 'photo_${photo.id}',
+                            _showMediaOptions(photo.url, photo.description, '照片');
+                          },
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: photo.url.startsWith('asset:///')
-                                ? Image.asset(
-                                    photo.url.replaceFirst('asset:///', ''),
-                                    fit: BoxFit.cover,
-                                  )
-                                : CachedNetworkImage(
+                              child: Stack(
+                                children: [
+                                  CachedNetworkImage(
                                     imageUrl: photo.url,
                                     fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
                                     placeholder: (context, url) => Container(
                                       color: Colors.grey[200],
                                       child: const Center(
-                                        child: CircularProgressIndicator(),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
                                       ),
                                     ),
                                     errorWidget: (context, url, error) => Container(
                                       color: Colors.grey[200],
-                                      child: const Icon(Icons.error),
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors.grey[400],
+                                        size: 32,
+                                      ),
                                     ),
                                   ),
+                                  // 下载图标
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.download,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  // 显示视频（如果有）
+                  final videoIndex = index - totalPhotos;
+                  if (videoIndex < widget.lesson.videos.length) {
+                    final video = widget.lesson.videos[videoIndex];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: GestureDetector(
+                          onTap: () {
+                            _showMediaOptions(video.url, video.description, '视频');
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Stack(
+                                children: [
+                                  // 视频缩略图
+                                  if (video.thumbnailUrl != null)
+                                    CachedNetworkImage(
+                                      imageUrl: video.thumbnailUrl!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      placeholder: (context, url) => Container(
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Container(
+                                        color: Colors.grey[200],
+                                        child: Icon(
+                                          Icons.videocam,
+                                          color: Colors.grey[400],
+                                          size: 32,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      color: Colors.grey[200],
+                                      child: Icon(
+                                        Icons.videocam,
+                                        color: Colors.grey[400],
+                                        size: 32,
+                                      ),
+                                    ),
+                                  // 播放按钮覆盖层
+                                  Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Icon(
+                                        Icons.play_arrow,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                  // 下载图标
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.download,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                             ),
                           ),
                         ),
                       ),
                     ),
                   );
+                  }
+                  
+                  return const SizedBox.shrink();
                 },
               ),
             ),
@@ -300,14 +684,19 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    return Scaffold(
+    return KeyboardDismisser(
+      child: Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // 确保键盘被隐藏
+              FocusScope.of(context).unfocus();
+              Navigator.pop(context);
+            },
         ),
         title: Text(
           l10n.lessonDetails,
@@ -373,7 +762,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
             // 照片展示板块（仅在课程完成时显示）
             if (widget.lesson.isPastLesson) ...[
-              _buildPhotoGrid(context),
+                _buildMediaGrid(context),
               const SizedBox(height: 20),
             ],
 
@@ -576,6 +965,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
             const SizedBox(height: 100),
           ],
+          ),
         ),
       ),
     );

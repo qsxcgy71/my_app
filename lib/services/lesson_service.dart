@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../models/lesson_model.dart';
+import 'video_compression_service.dart';
 
 class LessonService {
   final _firestore = FirebaseFirestore.instance;
@@ -369,6 +370,76 @@ class LessonService {
     }
   }
 
+  // 添加课程视频
+  Future<void> addLessonVideo(String lessonId, String localVideoPath, {String? description}) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    try {
+      // 1. 上传视频到Firebase Storage
+      final file = File(localVideoPath);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final videoId = 'lesson_videos/$lessonId/$timestamp';
+      
+      final uploadTask = _storage.ref(videoId).putFile(file);
+      final snapshot = await uploadTask;
+      final videoUrl = await snapshot.ref.getDownloadURL();
+
+      // 2. 生成视频缩略图
+      String? thumbnailUrl;
+      try {
+        final thumbnail = await VideoCompressionService.generateThumbnail(file);
+        if (thumbnail != null) {
+          final thumbnailId = 'lesson_thumbnails/$lessonId/${timestamp}_thumb';
+          final thumbnailUploadTask = _storage.ref(thumbnailId).putFile(thumbnail);
+          final thumbnailSnapshot = await thumbnailUploadTask;
+          thumbnailUrl = await thumbnailSnapshot.ref.getDownloadURL();
+          
+          // 删除本地临时缩略图文件
+          try {
+            await thumbnail.delete();
+          } catch (e) {
+            print('删除临时缩略图文件失败: $e');
+          }
+        }
+      } catch (e) {
+        print('生成视频缩略图失败: $e');
+        // 即使缩略图生成失败，视频仍然可以上传
+      }
+
+      // 3. 获取文件大小和视频信息
+      final fileSize = await file.length();
+      int? duration;
+      
+      try {
+        final videoInfo = await VideoCompressionService.getVideoInfo(file);
+        if (videoInfo?.duration != null) {
+          duration = (videoInfo!.duration! / 1000).round(); // 转换为秒
+        }
+      } catch (e) {
+        print('获取视频信息失败: $e');
+      }
+
+      // 4. 创建视频对象
+      final video = LessonVideo(
+        id: videoId,
+        url: videoUrl,
+        thumbnailUrl: thumbnailUrl,
+        takenAt: DateTime.now(),
+        description: description ?? '课程视频',
+        fileSize: fileSize,
+        duration: duration,
+      );
+
+      // 5. 更新课程文档，添加新视频
+      await _firestore.collection('lessons').doc(lessonId).update({
+        'videos': FieldValue.arrayUnion([video.toMap()]),
+      });
+    } catch (e) {
+      throw Exception('上传视频失败: $e');
+    }
+  }
+
   // 删除课程照片
   Future<void> deleteLessonPhoto(String lessonId, String photoId) async {
     try {
@@ -386,6 +457,26 @@ class LessonService {
       await doc.reference.update({'photos': photos});
     } catch (e) {
       throw Exception('删除照片失败: $e');
+    }
+  }
+
+  // 删除课程视频
+  Future<void> deleteLessonVideo(String lessonId, String videoId) async {
+    try {
+      // 1. 从Storage中删除视频
+      await _storage.ref(videoId).delete();
+
+      // 2. 从课程文档中移除视频记录
+      final doc = await _firestore.collection('lessons').doc(lessonId).get();
+      if (!doc.exists) return;
+
+      final videos = (doc.data()?['videos'] as List? ?? [])
+          .where((video) => video['id'] != videoId)
+          .toList();
+
+      await doc.reference.update({'videos': videos});
+    } catch (e) {
+      throw Exception('删除视频失败: $e');
     }
   }
 } 

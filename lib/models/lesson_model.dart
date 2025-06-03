@@ -13,6 +13,7 @@ class Lesson {
   final bool isCompleted;
   final String? imageUrl; // 课程图片
   final List<LessonPhoto> photos; // 课程照片列表
+  List<LessonVideo> videos; // 课程视频列表 - 改为非final以便修改
 
   Lesson({
     required this.id,
@@ -27,7 +28,8 @@ class Lesson {
     this.isCompleted = false,
     this.imageUrl,
     this.photos = const [],
-  });
+    List<LessonVideo>? videos,
+  }) : videos = videos ?? []; // 提供默认空列表
 
   // Get full DateTime for start time
   DateTime get startDateTime {
@@ -97,6 +99,7 @@ class Lesson {
       'isCompleted': isCompleted,
       'imageUrl': imageUrl,
       'photos': photos.map((photo) => photo.toMap()).toList(),
+      'videos': videos.map((video) => video.toMap()).toList(),
       'userId': '', // This will be set when saving to Firestore
     };
   }
@@ -126,6 +129,7 @@ class Lesson {
       isCompleted: map['isCompleted'] as bool? ?? false,
       imageUrl: map['imageUrl'] as String?,
       photos: (map['photos'] as List<dynamic>?)?.map((photo) => LessonPhoto.fromMap(photo)).toList() ?? [],
+      videos: (map['videos'] as List<dynamic>?)?.map((video) => LessonVideo.fromMap(video)).toList() ?? [],
     );
   }
 
@@ -143,6 +147,7 @@ class Lesson {
     bool? isCompleted,
     String? imageUrl,
     List<LessonPhoto>? photos,
+    List<LessonVideo>? videos,
   }) {
     return Lesson(
       id: id ?? this.id,
@@ -157,6 +162,7 @@ class Lesson {
       isCompleted: isCompleted ?? this.isCompleted,
       imageUrl: imageUrl ?? this.imageUrl,
       photos: photos ?? this.photos,
+      videos: videos ?? this.videos,
     );
   }
 }
@@ -193,6 +199,50 @@ class LessonPhoto {
       thumbnailUrl: map['thumbnailUrl'] as String,
       takenAt: DateTime.parse(map['takenAt'] as String),
       description: map['description'] as String,
+    );
+  }
+}
+
+class LessonVideo {
+  final String id;
+  final String url;
+  final String? thumbnailUrl;
+  final DateTime takenAt;
+  final String description;
+  final int? duration; // 视频时长（秒）
+  final int? fileSize; // 文件大小（字节）
+
+  LessonVideo({
+    required this.id,
+    required this.url,
+    this.thumbnailUrl,
+    required this.takenAt,
+    required this.description,
+    this.duration,
+    this.fileSize,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'url': url,
+      'thumbnailUrl': thumbnailUrl,
+      'takenAt': takenAt.toIso8601String(),
+      'description': description,
+      'duration': duration,
+      'fileSize': fileSize,
+    };
+  }
+
+  factory LessonVideo.fromMap(Map<String, dynamic> map) {
+    return LessonVideo(
+      id: map['id'] as String,
+      url: map['url'] as String,
+      thumbnailUrl: map['thumbnailUrl'] as String?,
+      takenAt: DateTime.parse(map['takenAt'] as String),
+      description: map['description'] as String,
+      duration: map['duration'] as int?,
+      fileSize: map['fileSize'] as int?,
     );
   }
 } 

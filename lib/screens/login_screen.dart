@@ -365,15 +365,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.g_mobiledata, size: 24),
+                          const Icon(Icons.g_mobiledata),
                           const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              l10n.continueWithGoogle,
-                              style: AppTextStyles.button.copyWith(
-                                color: Theme.of(context).primaryColor,
-                              ),
-                              textAlign: TextAlign.center,
+                          Text(
+                            l10n.continueWithGoogle,
+                            style: AppTextStyles.button.copyWith(
+                              color: Theme.of(context).primaryColor,
                             ),
                           ),
                         ],

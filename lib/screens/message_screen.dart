@@ -157,174 +157,107 @@ class _MessageScreenState extends State<MessageScreen> {
         foregroundColor: currentTheme.primaryColor,
         elevation: 0,
         actions: [
-          StreamBuilder<int>(
-            stream: _messageService.getUnreadCount(),
-            builder: (context, snapshot) {
-              final unreadCount = snapshot.data ?? 0;
-              return PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: currentTheme.primaryColor),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'mark_all_read':
-                      if (unreadCount > 0) _markAllAsRead();
-                      break;
-                    case 'create_sample':
-                      _createSampleMessages();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'mark_all_read',
-                    enabled: unreadCount > 0,
-                    child: Row(
-                      children: [
-                        Icon(Icons.done_all, 
-                             color: unreadCount > 0 ? currentTheme.primaryColor : Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.markAllAsRead,
-                          style: TextStyle(
-                            color: unreadCount > 0 ? Colors.black87 : Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'create_sample',
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_comment, color: currentTheme.primaryColor),
-                        const SizedBox(width: 8),
-                        Text(l10n.createSampleMessages),
-                      ],
-                    ),
-                  ),
-                ],
-              );
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implement search
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              // TODO: Implement more options
             },
           ),
         ],
       ),
-      body: StreamBuilder<List<Message>>(
-        stream: _messageService.getMessages(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        child: StreamBuilder<List<Message>>(
+          stream: _messageService.getMessages(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.loadMessagesFailed,
-                    style: AppTextStyles.bodyLarge.copyWith(color: Colors.red[700]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${snapshot.error}',
-                    style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.loadMessagesFailed,
+                      style: AppTextStyles.bodyLarge.copyWith(color: Colors.red[700]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          final messages = snapshot.data ?? [];
+            final messages = snapshot.data ?? [];
 
-          if (messages.isEmpty) {
-            return _buildEmptyState(l10n, currentTheme);
-          }
+            if (messages.isEmpty) {
+              return _buildEmptyState(l10n, currentTheme);
+            }
 
-          return SmartRefresher(
-            controller: _refreshController,
-            enablePullDown: true,
-            enablePullUp: false,
-            onRefresh: _onRefresh,
-            header: WaterDropHeader(
-              complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-              failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
-            ),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
+            return ListView.separated(
               itemCount: messages.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemBuilder: (context, index) {
-                return _buildMessageCard(messages[index], currentTheme);
+                final message = messages[index];
+                return _buildMessageItem(message, l10n, currentTheme);
               },
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState(AppLocalizations l10n, dynamic currentTheme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  currentTheme.primaryColor.withOpacity(0.1),
-                  currentTheme.secondaryColor.withOpacity(0.1),
-                ],
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.message_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.noMessages,
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: Colors.grey[600],
               ),
             ),
-            child: Icon(
-              Icons.mail_outline,
-              size: 48,
-              color: currentTheme.primaryColor.withOpacity(0.6),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.noMessages,
-            style: AppTextStyles.titleMedium.copyWith(
-              color: currentTheme.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.yourMessagesWillAppearHere,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _createSampleMessages,
-            icon: const Icon(Icons.add, size: 20),
-            label: Text(l10n.createSampleMessages),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: currentTheme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 8),
+            Text(
+              l10n.yourMessagesWillAppearHere,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.grey[500],
               ),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMessageCard(Message message, dynamic currentTheme) {
+  Widget _buildMessageItem(Message message, AppLocalizations l10n, dynamic currentTheme) {
     final isUnread = !message.isRead;
-    final l10n = AppLocalizations.of(context)!;
 
     final currentLanguage = Localizations.localeOf(context).languageCode;
     
@@ -419,9 +352,7 @@ class _MessageScreenState extends State<MessageScreen> {
                           children: [
                             Expanded(
                               child: Text(
-
-                                message.title, // 直接使用message.title
-
+                                localizedTitle,
                                 style: AppTextStyles.titleSmall.copyWith(
                                   fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                                   color: isUnread ? Colors.black87 : Colors.grey[700],
@@ -457,9 +388,7 @@ class _MessageScreenState extends State<MessageScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-
-                message.content, // 直接使用message.content
-
+                localizedContent,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: isUnread ? Colors.black87 : Colors.grey[600],
                   fontWeight: isUnread ? FontWeight.w500 : FontWeight.normal,
@@ -481,9 +410,7 @@ class _MessageScreenState extends State<MessageScreen> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-
                           '${l10n.courseInfo}: ${message.extraData!['courseName'] ?? ''}',
-
                           style: AppTextStyles.bodySmall.copyWith(
                             color: Colors.grey[600],
                           ),

@@ -13,6 +13,7 @@ import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
 
 import 'dart:async';
+import 'dart:math';
 
 import '../services/profile_service.dart';
 import '../models/profile_model.dart';
@@ -834,6 +835,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: _searchResults.length,
           itemBuilder: (context, index) {
+            if (index >= _searchResults.length) return null;
             return _buildCourseCard(_searchResults[index], currentTheme);
           },
         ),
@@ -842,7 +844,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildFeaturedCourses(AppLocalizations l10n, dynamic currentTheme) {
-    final featuredCourses = _allCourses.take(3).toList();
+    // 使用 sublist 替代 take，并确保不会越界
+    final featuredCourses = _allCourses.sublist(0, min(3, _allCourses.length));
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -880,7 +883,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   Widget _buildAllCourses(AppLocalizations l10n, dynamic currentTheme) {
     final endIndex = (_currentPage + 1) * _pageSize;
-    final paginatedCourses = _allCourses.take(endIndex).toList();
+    // 使用 sublist 替代 take，并确保 endIndex 不会超出列表长度
+    final paginatedCourses = _allCourses.sublist(0, endIndex.clamp(0, _allCourses.length));
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -62,11 +62,14 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onTabTapped(int index) {
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (index == _currentIndex) return;
+    
+    setState(() {
+      _currentIndex = index;
+    });
+    
+    // 所有页面切换都使用直接跳转
+    _pageController.jumpToPage(index);
   }
 
   @override
@@ -79,7 +82,18 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: _screens,
+        // 禁用用户手动滑动，改为只能通过底部导航栏切换
+        physics: const NeverScrollableScrollPhysics(),
+        children: _screens.map((screen) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          child: screen,
+        )).toList(),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

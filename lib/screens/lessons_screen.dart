@@ -358,7 +358,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     }
     final currentPage = _currentPages[_tabController.index] ?? 0;
     final endIndex = (currentPage + 1) * _pageSize;
-    return lessons.take(endIndex).toList();
+    return lessons.sublist(0, endIndex.clamp(0, lessons.length));
   }
 
   void _onRefresh() async {
@@ -1011,96 +1011,75 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
   Widget _buildLessonsList(int tabIndex, AppLocalizations l10n) {
     // 如果在搜索模式但没有搜索条件和筛选条件，显示空状态提示
     if (_isSearchMode && _searchQuery.isEmpty && !_currentFilter.hasFilters) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '输入关键词或选择筛选条件开始搜索',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '可以搜索课程名称、内容或类别',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final lessons = _getCurrentLessons();
-    
-    if (lessons.isEmpty) {
-      if (_isSearchMode && (_searchQuery.isNotEmpty || _currentFilter.hasFilters)) {
-        // 搜索模式下的空状态
-        return Center(
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.search_off,
+                Icons.search,
                 size: 64,
                 color: Colors.grey[400],
               ),
               const SizedBox(height: 16),
               Text(
-                '没有找到相关课程',
+                '输入关键词或选择筛选条件开始搜索',
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[600],
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '尝试使用其他关键词或筛选条件',
+                '可以搜索课程名称、内容或类别',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: Colors.grey[500],
                 ),
               ),
             ],
           ),
-        );
-      } else {
-        // 正常模式下的空状态
-        return Center(
+        ),
+      );
+    }
+
+    final lessons = _getCurrentLessons();
+    
+    // 如果没有课程，显示空状态
+    if (lessons.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.school_outlined,
+                tabIndex == 0 ? Icons.schedule : Icons.check_circle,
                 size: 64,
                 color: Colors.grey[400],
               ),
               const SizedBox(height: 16),
               Text(
-                tabIndex == 0 ? l10n.noEnrolledLessons : l10n.noCompletedLessons,
+                tabIndex == 0 ? '暂无进行中的课程' : '暂无已完成的课程',
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[600],
                 ),
               ),
             ],
           ),
-        );
-      }
+        ),
+      );
     }
 
     return ListView.builder(
       controller: tabIndex == 0 ? _enrolledScrollController : _completedScrollController,
-      padding: ResponsiveHelper.getResponsivePadding(context),
+      padding: ResponsiveHelper.getResponsivePadding(context).copyWith(
+        bottom: MediaQuery.of(context).padding.bottom + 80, // 添加底部内边距，确保内容不被遮挡
+      ),
       itemCount: _getPaginatedLessons().length,
       itemBuilder: (context, index) {
-        final lesson = _getPaginatedLessons()[index];
-        return _buildLessonCard(lesson, l10n);
+        final paginatedLessons = _getPaginatedLessons();
+        if (index >= paginatedLessons.length) return null;
+        return _buildLessonCard(paginatedLessons[index], l10n);
       },
     );
   }

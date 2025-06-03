@@ -79,6 +79,7 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           PageView(

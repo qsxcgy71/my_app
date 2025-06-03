@@ -123,6 +123,10 @@ class MessageService {
             ? '课程《${lesson.title}》即将在15分钟后结束，请做好接送准备。'
             : '课程《${lesson.title}》即将在15分钟后开始，请及时参加。',
         type: isEndReminder ? MessageType.classEnd : MessageType.classReminder,
+        messageKey: isEndReminder ? 'class_ending_soon' : 'class_starting_soon',
+        messageParams: {
+          'courseName': lesson.courseName ?? lesson.title,
+        },
         createdAt: DateTime.now(),
         lessonId: lesson.id,
         extraData: {
@@ -152,6 +156,7 @@ class MessageService {
         title: '课程完成',
         content: '恭喜！您的孩子已完成《$courseName》课程，可以查看课程总结与作品展示。',
         type: MessageType.general,
+
         createdAt: DateTime.now(),
         extraData: {
           'courseName': courseName,
@@ -206,30 +211,49 @@ class MessageService {
     if (_currentUserId == null) return;
 
     final sampleMessages = [
-      {
-        'title': '欢迎使用Kids Profile！',
-        'content': '感谢您选择我们的儿童教育平台，让我们一起为孩子创造美好的学习体验。',
-        'type': MessageType.system,
-      },
-      {
-        'title': '课程提醒',
-        'content': '您为孩子预订的《动物世界探索》课程将在明天下午2:00开始，请准时参加。',
-        'type': MessageType.classReminder,
-      },
-      {
-        'title': '课程完成',
-        'content': '恭喜！您的孩子已完成《创意绘画基础》课程，可以查看课程总结和作品展示。',
-        'type': MessageType.general,
-      },
+      Message(
+        id: '',
+        title: '欢迎使用Kids Profile！',
+        content: '感谢您选择我们的儿童教育平台，让我们一起为孩子创造美好的学习体验。',
+        type: MessageType.system,
+        messageKey: 'welcome',
+        createdAt: DateTime.now(),
+      ),
+      Message(
+        id: '',
+        title: '课程提醒',
+        content: '您为孩子预订的《动物世界探索》课程将在明天下午2:00开始，请准时参加。',
+        type: MessageType.classReminder,
+        messageKey: 'class_reminder',
+        messageParams: {
+          'courseName': '动物世界探索',
+        },
+        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+        extraData: {
+          'courseName': '动物世界探索',
+        },
+      ),
+      Message(
+        id: '',
+        title: '课程完成',
+        content: '恭喜！您的孩子已完成《创意绘画基础》课程，可以查看课程总结和作品展示。',
+        type: MessageType.general,
+        messageKey: 'class_completed',
+        messageParams: {
+          'courseName': '创意绘画基础',
+        },
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        extraData: {
+          'courseName': '创意绘画基础',
+        },
+      ),
     ];
 
     try {
-      for (final messageData in sampleMessages) {
-        await createMessage(
-          title: messageData['title'] as String,
-          content: messageData['content'] as String,
-          type: messageData['type'] as MessageType,
-        );
+      for (final message in sampleMessages) {
+        final data = message.toMap();
+        data['userId'] = _currentUserId;
+        await _firestore.collection('messages').add(data);
       }
     } catch (e) {
       print('Error creating sample messages: $e');

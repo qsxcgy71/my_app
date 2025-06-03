@@ -12,6 +12,7 @@ class Lesson {
   final DateTime createdAt;
   final bool isCompleted;
   final String? imageUrl; // 课程图片
+  final List<LessonPhoto> photos; // 课程照片列表
 
   Lesson({
     required this.id,
@@ -25,6 +26,7 @@ class Lesson {
     required this.createdAt,
     this.isCompleted = false,
     this.imageUrl,
+    this.photos = const [],
   });
 
   // Get full DateTime for start time
@@ -94,6 +96,7 @@ class Lesson {
       'createdAt': createdAt.toIso8601String(),
       'isCompleted': isCompleted,
       'imageUrl': imageUrl,
+      'photos': photos.map((photo) => photo.toMap()).toList(),
       'userId': '', // This will be set when saving to Firestore
     };
   }
@@ -122,6 +125,7 @@ class Lesson {
           : DateTime.now(),
       isCompleted: map['isCompleted'] as bool? ?? false,
       imageUrl: map['imageUrl'] as String?,
+      photos: (map['photos'] as List<dynamic>?)?.map((photo) => LessonPhoto.fromMap(photo)).toList() ?? [],
     );
   }
 
@@ -138,6 +142,7 @@ class Lesson {
     DateTime? createdAt,
     bool? isCompleted,
     String? imageUrl,
+    List<LessonPhoto>? photos,
   }) {
     return Lesson(
       id: id ?? this.id,
@@ -151,6 +156,43 @@ class Lesson {
       createdAt: createdAt ?? this.createdAt,
       isCompleted: isCompleted ?? this.isCompleted,
       imageUrl: imageUrl ?? this.imageUrl,
+      photos: photos ?? this.photos,
+    );
+  }
+}
+
+class LessonPhoto {
+  final String id;
+  final String url;
+  final String thumbnailUrl;
+  final DateTime takenAt;
+  final String description;
+
+  LessonPhoto({
+    required this.id,
+    required this.url,
+    required this.thumbnailUrl,
+    required this.takenAt,
+    required this.description,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'url': url,
+      'thumbnailUrl': thumbnailUrl,
+      'takenAt': takenAt.toIso8601String(),
+      'description': description,
+    };
+  }
+
+  factory LessonPhoto.fromMap(Map<String, dynamic> map) {
+    return LessonPhoto(
+      id: map['id'] as String,
+      url: map['url'] as String,
+      thumbnailUrl: map['thumbnailUrl'] as String,
+      takenAt: DateTime.parse(map['takenAt'] as String),
+      description: map['description'] as String,
     );
   }
 } 

@@ -5,102 +5,103 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/app_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  static const String _themeKey = 'selected_theme';
+  static const String _deviceThemeKey = 'device_theme';
+  static const String _accountThemeKey = 'account_theme';
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   late SharedPreferences _prefs;
-  AppThemeType _currentTheme = AppThemeType.reduce;  // Default to reduce theme
+  
+  // 设备主题（用于未登录状态，固定为comfort主题）
+  AppThemeType _deviceTheme = AppThemeType.comfort;
+  // 账号主题（用于登录状态）
+  AppThemeType _accountTheme = AppThemeType.comfort;
+  // 是否使用账号主题
+  bool _useAccountTheme = false;
 
-  AppThemeType get currentTheme => _currentTheme;
-  AppThemeData get currentThemeData => AppThemeData.themeData[_currentTheme]!;
+  // 获取当前应该使用的主题
+  AppThemeType get currentTheme => _useAccountTheme ? _accountTheme : AppThemeType.comfort;
+  AppThemeData get currentThemeData => AppThemeData.themeData[currentTheme]!;
 
-  // Initialize the provider and load saved theme
+  // 初始化提供者并加载保存的主题
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    await _loadThemeFromFirebase();
+    
+    // 检查当前是否有登录用户
+    final user = _auth.currentUser;
+    _useAccountTheme = user != null;
+    
+    if (_useAccountTheme) {
+      await _loadAccountTheme();
+    }
     
     // 监听用户登录状态变化
-    _auth.authStateChanges().listen((User? user) {
+    _auth.authStateChanges().listen((User? user) async {
+      _useAccountTheme = user != null;
       if (user != null) {
-        _loadThemeFromFirebase();
-      } else {
-        // 用户登出时，使用默认主题
-        _currentTheme = AppThemeType.reduce;
-        notifyListeners();
+        await _loadAccountTheme();
       }
+      notifyListeners();
     });
   }
 
-  // 从 Firebase 加载主题设置
-  Future<void> _loadThemeFromFirebase() async {
+  // 从 Firebase 加载账号主题设置
+  Future<void> _loadAccountTheme() async {
     try {
       final user = _auth.currentUser;
-      if (user == null) {
-        // 如果用户未登录，使用本地存储的主题
-        final savedTheme = _prefs.getString(_themeKey);
-        if (savedTheme != null) {
-          _currentTheme = AppThemeType.values.firstWhere(
-            (type) => type.toString() == savedTheme,
-            orElse: () => AppThemeType.reduce,
-          );
-          notifyListeners();
-        }
-        return;
-      }
+      if (user == null) return;
 
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists && doc.data()!.containsKey('theme')) {
         final savedTheme = doc.data()!['theme'] as String;
-        _currentTheme = AppThemeType.values.firstWhere(
+        _accountTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedTheme,
-          orElse: () => AppThemeType.reduce,
+          orElse: () => AppThemeType.comfort,
         );
-        // 同步到本地存储，以便在离线时使用
-        await _prefs.setString(_themeKey, _currentTheme.toString());
+        // 保存到本地缓存
+        await _prefs.setString(_accountThemeKey, _accountTheme.toString());
         notifyListeners();
       } else {
-        // 如果用户文档不存在或没有主题设置，使用本地存储的主题
-        final savedTheme = _prefs.getString(_themeKey);
-        if (savedTheme != null) {
-          _currentTheme = AppThemeType.values.firstWhere(
-            (type) => type.toString() == savedTheme,
-            orElse: () => AppThemeType.reduce,
-          );
-          // 将本地主题同步到 Firebase
-          await _saveThemeToFirebase(_currentTheme);
-          notifyListeners();
-        }
+        // 如果用户文档不存在或没有主题设置，使用comfort主题作为初始账号主题
+        _accountTheme = AppThemeType.comfort;
+        await _saveAccountTheme(_accountTheme);
       }
     } catch (e) {
       print('Error loading theme from Firebase: $e');
-      // 发生错误时，尝试使用本地存储的主题
-      final savedTheme = _prefs.getString(_themeKey);
-      if (savedTheme != null) {
-        _currentTheme = AppThemeType.values.firstWhere(
-          (type) => type.toString() == savedTheme,
-          orElse: () => AppThemeType.reduce,
+      // 发生错误时，尝试使用本地缓存的账号主题
+      final savedAccountTheme = _prefs.getString(_accountThemeKey);
+      if (savedAccountTheme != null) {
+        _accountTheme = AppThemeType.values.firstWhere(
+          (type) => type.toString() == savedAccountTheme,
+          orElse: () => AppThemeType.comfort,
         );
         notifyListeners();
       }
     }
   }
 
-  // 保存主题设置到 Firebase
-  Future<void> _saveThemeToFirebase(AppThemeType theme) async {
+  // 保存账号主题设置到 Firebase
+  Future<void> _saveAccountTheme(AppThemeType theme) async {
     try {
       final user = _auth.currentUser;
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
           'theme': theme.toString(),
         }, SetOptions(merge: true));
+        await _prefs.setString(_accountThemeKey, theme.toString());
       }
     } catch (e) {
       print('Error saving theme to Firebase: $e');
     }
   }
 
+  // 保存设备主题到本地存储
+  Future<void> _saveDeviceTheme(AppThemeType theme) async {
+    // 未登录状态不允许更改主题
+    return;
+  }
+
   ThemeData get themeData {
-    final themeData = AppThemeData.themeData[_currentTheme]!;
+    final themeData = AppThemeData.themeData[currentTheme]!;
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
@@ -135,12 +136,6 @@ class ThemeProvider extends ChangeNotifier {
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
-        //focusedBorder: OutlineInputBorder(
-        //  borderRadius: BorderRadius.circular(30),
-        //  borderSide: BorderSide(
-        //      color: themeData.primaryColor,
-        //  ),
-        //),
       ),
       textTheme: TextTheme(
         titleLarge: TextStyle(color: themeData.primaryColor),
@@ -176,17 +171,39 @@ class ThemeProvider extends ChangeNotifier {
     );
   }
 
+  // 设置主题
   Future<void> setTheme(AppThemeType theme) async {
-    if (_currentTheme != theme) {
-      _currentTheme = theme;
-      // 立即通知监听器以更新 UI
-      notifyListeners();
-      
-      // 保存到本地存储
-      await _prefs.setString(_themeKey, theme.toString());
-      
-      // 保存到 Firebase
-      await _saveThemeToFirebase(theme);
+    if (_useAccountTheme) {
+      // 如果是登录状态，更新账号主题
+      if (_accountTheme != theme) {
+        _accountTheme = theme;
+        notifyListeners();
+        await _saveAccountTheme(theme);
+      }
     }
+    // 未登录状态不允许更改主题
+  }
+
+  // 强制使用设备主题（用于登录页面等）
+  void useDeviceTheme() {
+    if (_useAccountTheme) {
+      _useAccountTheme = false;
+      notifyListeners();
+    }
+  }
+
+  // 强制使用账号主题（用于主页面等）
+  void useAccountTheme() {
+    final user = _auth.currentUser;
+    if (user != null && !_useAccountTheme) {
+      _useAccountTheme = true;
+      notifyListeners();
+    }
+  }
+
+  // 保存当前主题为设备主题
+  Future<void> saveCurrentThemeAsDeviceTheme() async {
+    // 未登录状态不允许更改主题，所以这个方法不再需要
+    return;
   }
 } 

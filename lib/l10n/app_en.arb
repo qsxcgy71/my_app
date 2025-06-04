@@ -222,5 +222,9 @@
   "resetPasswordSuccess": "Password reset email has been sent",
   "resetPasswordFailed": "Failed to send reset email",
   "backToLogin": "Back to Login",
-  "pleaseEnterEmail": "Please enter your email address"
+  "pleaseEnterEmail": "Please enter your email address",
+  "emailLogin": "Login with Email",
+  "googleLogin": "Login with Google",
+  "phoneLogin": "Login with Phone",
+  "noAccount": "Don't have an account? Sign up"
 } 

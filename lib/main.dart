@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
 import 'firebase/firebase_options.dart';
-import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/loading_screen.dart';
 import 'providers/theme_provider.dart';

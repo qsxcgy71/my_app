@@ -12,7 +12,7 @@ class AuthWrapper extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ThemeProvider>(context, listen: false).useDeviceTheme();
     });
-
+        
     return const LoginOptionsScreen();
   }
 } 

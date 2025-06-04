@@ -511,4 +511,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseEnterEmail => 'Please enter your email address';
+
+  @override
+  String get emailLogin => 'Login with Email';
+
+  @override
+  String get googleLogin => 'Login with Google';
+
+  @override
+  String get phoneLogin => 'Login with Phone';
+
+  @override
+  String get noAccount => 'Don\'t have an account? Sign up';
 }

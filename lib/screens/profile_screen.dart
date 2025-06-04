@@ -11,9 +11,11 @@ import '../styles/app_text_styles.dart';
 import '../services/profile_service.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
-import 'login_screen.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
+import '../widgets/auth_wrapper.dart';
+import 'loading_screen.dart';
+import '../providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -992,6 +994,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // 使用Provider获取AuthService
       final authService = Provider.of<AuthService>(context, listen: false);
       
+      // 先导航到LoadingScreen
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoadingScreen()),
+          (route) => false,
+        );
+      }
+      
       // 执行退出登录
       await authService.signOut();
       
@@ -1009,6 +1019,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else if (e.toString().contains('Sign out incomplete')) {
         errorMessage = '退出登录不完整，建议重启应用';
       }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     } finally {
       // 确保移除加载overlay
       if (isLoadingDialogShown && loadingOverlay != null) {
@@ -1017,33 +1033,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           print('Profile: Loading overlay removed');
         } catch (e) {
           print('Profile: Error removing overlay: $e');
-        }
-      }
-      
-      // 等待确保UI清理完成
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      // 强制导航到登录界面（无论成功还是失败）
-      if (mounted) {
-        print('Profile: Navigating to login screen...');
-        try {
-          // 清除所有路由并导航到登录页面
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/login',
-            (route) => false,
-          );
-          print('Profile: Navigation completed');
-        } catch (e) {
-          print('Profile: Navigation error: $e, trying alternative...');
-          // 如果导航失败，尝试替代方法
-          try {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
-          } catch (e2) {
-            print('Profile: Alternative navigation error: $e2');
-          }
         }
       }
     }

@@ -1,9 +1,9 @@
 {
   "@@locale": "zh",
-  "appTitle": "Kids Profile",
+  "appTitle": "儿童档案",
   "welcomeBack": "欢迎回来",
-  "signInToContinue": "登录您的账户以继续",
-  "email": "邮箱",
+  "signInToContinue": "请登录您的账户以继续",
+  "email": "电子邮箱",
   "password": "密码",
   "login": "登录",
   "phone": "手机",
@@ -12,7 +12,7 @@
   "sendCode": "发送验证码",
   "smsCode": "短信验证码",
   "verifyAndLogin": "验证并登录",
-  "continueWithGoogle": "使用 Google 登录",
+  "continueWithGoogle": "使用Google账号继续",
   "dontHaveAccount": "还没有账户？",
   "signUp": "注册",
   "forgotPassword": "忘记密码？",
@@ -223,5 +223,9 @@
   "resetPasswordSuccess": "重置密码邮件已发送",
   "resetPasswordFailed": "重置密码失败",
   "backToLogin": "返回登录",
-  "pleaseEnterEmail": "请输入邮箱地址"
+  "pleaseEnterEmail": "请输入邮箱地址",
+  "emailLogin": "使用电邮登入",
+  "googleLogin": "使用Google登入",
+  "phoneLogin": "使用电话登入",
+  "noAccount": "还没有帐户？注册"
 } 

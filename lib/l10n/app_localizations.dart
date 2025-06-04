@@ -1069,6 +1069,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter your email address'**
   String get pleaseEnterEmail;
+
+  /// No description provided for @emailLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Email'**
+  String get emailLogin;
+
+  /// No description provided for @googleLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Google'**
+  String get googleLogin;
+
+  /// No description provided for @phoneLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Phone'**
+  String get phoneLogin;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Sign up'**
+  String get noAccount;
 }
 
 class _AppLocalizationsDelegate

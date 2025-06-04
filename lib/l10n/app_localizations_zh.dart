@@ -9,16 +9,16 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Kids Profile';
+  String get appTitle => '儿童档案';
 
   @override
   String get welcomeBack => '欢迎回来';
 
   @override
-  String get signInToContinue => '登录您的账户以继续';
+  String get signInToContinue => '请登录您的账户以继续';
 
   @override
-  String get email => '邮箱';
+  String get email => '电子邮箱';
 
   @override
   String get password => '密码';
@@ -45,7 +45,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get verifyAndLogin => '验证并登录';
 
   @override
-  String get continueWithGoogle => '使用 Google 登录';
+  String get continueWithGoogle => '使用Google账号继续';
 
   @override
   String get dontHaveAccount => '还没有账户？';
@@ -507,4 +507,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pleaseEnterEmail => '请输入邮箱地址';
+
+  @override
+  String get emailLogin => '使用电邮登入';
+
+  @override
+  String get googleLogin => '使用Google登入';
+
+  @override
+  String get phoneLogin => '使用电话登入';
+
+  @override
+  String get noAccount => '还没有帐户？注册';
 }

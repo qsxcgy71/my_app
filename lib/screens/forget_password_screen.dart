@@ -101,7 +101,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                         fontSize: 16,
                         fontFamily: 'GenSenRounded',
                         fontWeight: FontWeight.w500,
-                      ),
+      ),
                     ),
                   ),
                 ),
@@ -172,8 +172,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             image: AssetImage('assets/login/BG_01_ipad@2x.png'),
             fit: BoxFit.cover,
             opacity: 0.5,
-          ),
         ),
+      ),
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
@@ -183,12 +183,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                 ),
                 child: IntrinsicHeight(
                   child: SafeArea(
-                    child: Padding(
+              child: Padding(
                       padding: const EdgeInsets.all(32.0),
-                      child: Column(
+                child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                  children: [
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -206,25 +206,25 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                                   ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
                             '请输入您的邮箱地址，我们将向您发送重置密码的链接',
                             style: TextStyle(
                               fontSize: 16,
                               color: colorScheme.secondary.withOpacity(0.7),
                               fontFamily: 'GenSenRounded',
                             ),
-                          ),
+                    ),
                           const SizedBox(height: 32),
                           TextFormField(
-                            controller: _emailController,
+                      controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             style: TextStyle(
                               color: colorScheme.secondary,
                               fontFamily: 'GenSenRounded',
                             ),
-                            decoration: InputDecoration(
+                      decoration: InputDecoration(
                               labelText: '电子邮箱',
                               labelStyle: TextStyle(
                                 color: colorScheme.secondary.withOpacity(0.7),
@@ -250,7 +250,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                                   width: 2,
                                 ),
                                 borderRadius: BorderRadius.circular(12),
-                              ),
+                      ),
                               focusedErrorBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: theme.colorScheme.error.withOpacity(0.7),
@@ -268,13 +268,13 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.9),
                             ),
-                          ),
+                    ),
                           const SizedBox(height: 32),
                           Container(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _resetPassword,
+                      onPressed: _isLoading ? null : _resetPassword,
                               style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(Colors.transparent),
                                 foregroundColor: MaterialStateProperty.all(Colors.white),
@@ -324,15 +324,15 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                                             fontFamily: 'GenSenRounded',
                                           ),
                                         ),
-                                ),
-                              ),
-                            ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
+              ),
+            ),
+          ),
               ),
             );
           },

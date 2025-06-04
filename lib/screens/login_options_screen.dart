@@ -181,6 +181,10 @@ class LoginOptionsScreen extends StatelessWidget {
                     ),
                   );
                 },
+                style: ButtonStyle(
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  splashFactory: NoSplash.splashFactory,
+                ),
                 child: RichText(
                   text: TextSpan(
                     children: [

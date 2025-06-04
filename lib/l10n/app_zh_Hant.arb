@@ -1,0 +1,160 @@
+{
+  "@@locale": "zh_Hant",
+  "appTitle": "兒童檔案",
+  "welcomeBack": "歡迎回來",
+  "signInToContinue": "請登錄您的賬戶以繼續",
+  "email": "電子郵箱",
+  "password": "密碼",
+  "login": "登錄",
+  "phone": "手機",
+  "phoneNumber": "手機號碼",
+  "enterPhoneNumber": "請輸入手機號碼",
+  "sendCode": "發送驗證碼",
+  "smsCode": "簡訊驗證碼",
+  "verifyAndLogin": "驗證並登錄",
+  "continueWithGoogle": "使用Google賬號繼續",
+  "dontHaveAccount": "還沒有賬戶？",
+  "signUp": "註冊",
+  "forgotPassword": "忘記密碼？",
+  "pleaseEnterEmailAndPassword": "請輸入郵箱和密碼",
+  "pleaseEnterPhoneNumber": "請輸入手機號碼",
+  "pleaseEnterVerificationCode": "請輸入驗證碼",
+  "loginFailed": "登錄失敗",
+  "language": "語言",
+  "chinese": "中文",
+  "english": "English",
+  "selectLanguage": "選擇語言",
+  
+  "explore": "探索",
+  "lessons": "課程",
+  "messages": "訊息",
+  "profile": "會員",
+  
+  "myLessons": "我的課程",
+  "searchLessons": "搜索課程",
+  "enrolledLessons": "已報名",
+  "completedLessons": "已完成",
+  "noEnrolledLessons": "暫無已報名課程",
+  "noCompletedLessons": "暫無已完成課程",
+  "searchCoursePlaceholder": "搜索課程名稱、類別或描述...",
+  "cancel": "取消",
+  "searchResults": "搜索結果",
+  "noSearchResults": "暫無相關課程",
+  "tryOtherKeywords": "試試其他關鍵詞",
+  "enterSearchKeywords": "請輸入搜索關鍵詞",
+  "canSearchCourses": "可以搜索課程名稱、類別或描述",
+  "enrolled": "已報名",
+  "completed": "已完成",
+  
+  "exploreComingSoon": "探索功能即將上線",
+  "messagesComingSoon": "訊息功能即將上線",
+  
+  "lessonDetails": "課程詳情",
+  "courseInfo": "課程資訊",
+  "courseIntroduction": "課程介紹",
+  "startTime": "開始時間",
+  "endTime": "結束時間",
+  "courseDate": "課程日期",
+  "courseStatus": "課程狀態",
+  "courseCategory": "課程類別",
+  
+  "welcomeBackUser": "歡迎回來，{userName}！",
+  "@welcomeBackUser": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "logout": "登出",
+  "confirmLogout": "確認登出",
+  "logoutMessage": "確定要登出嗎？",
+  "logoutSuccess": "已成功登出",
+  "logoutFailed": "登出失敗",
+  "hello": "您好",
+  "emailOrPhone": "電子郵箱或手機",
+  "signInWithGoogle": "使用Google登入",
+  "welcome": "歡迎，{name}",
+  "@welcome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comingSoon": "即將推出",
+  "searchAllCourses": "搜索所有課程",
+  "popularCourses": "熱門課程",
+  "featuredCourses": "精選課程",
+  "allCourses": "所有課程",
+  "courseDetails": "課程詳情",
+  "instructor": "講師",
+  "totalLessons": "{count} 堂課",
+  "@totalLessons": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration": "時長",
+  "rating": "評分",
+  "enrolledStudents": "已報名學生",
+  "courseCatalog": "課程目錄",
+  "preview": "預覽",
+  "enroll": "立即報名",
+  "goodMorning": "早安",
+  "goodAfternoon": "午安",
+  "goodEvening": "晚安",
+  "profileLogoutSuccess": "登出成功",
+  "profileLogoutFailed": "登出失敗",
+  
+  "selectTheme": "選擇主題",
+  "themeOceanBlue": "海洋藍",
+  "themeMysteryPurple": "神秘紫",
+  "themeForestGreen": "森林綠",
+  "themeVibrantOrange": "活力橙",
+  "themePassionRed": "熱情紅",
+  "themeRomanticPink": "浪漫粉",
+  "themeTealGreen": "青綠色",
+  "themeIndigoBlue": "靛藍色",
+  "themeEarthBrown": "大地棕",
+  "themeElegantGrey": "優雅灰",
+  "themeFreshCyan": "清新青",
+  "themeGoldenAmber": "金琥珀",
+
+  "themeReduce": "冷卻",
+  "themeTepid": "暖和",
+  "themeDefence": "防禦",
+
+  "daysAgo": "{days} 天前",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "createAccount": "創建賬戶",
+  "signUpTitle": "註冊",
+  "confirmPassword": "確認密碼",
+  "alreadyHaveAccount": "已有賬戶？",
+  "signIn": "登入",
+  "pleaseEnterAllFields": "請填寫所有欄位",
+  "passwordsDoNotMatch": "密碼不匹配",
+  "passwordTooShort": "密碼至少需要6個字符",
+  "registrationFailed": "註冊失敗",
+
+  "forgetPasswordTitle": "重置密碼",
+  "forgetPasswordDescription": "輸入您的電子郵箱，我們將發送重置密碼的說明",
+  "resetPassword": "重置密碼",
+  "resetPasswordSuccess": "重置密碼郵件已發送",
+  "resetPasswordFailed": "發送重置郵件失敗",
+  "backToLogin": "返回登入",
+  "pleaseEnterEmail": "請輸入您的電子郵箱",
+  "emailLogin": "使用郵箱登入",
+  "googleLogin": "使用Google登入",
+  "phoneLogin": "使用手機登入",
+  "noAccount": "還沒有賬戶？註冊"
+} 

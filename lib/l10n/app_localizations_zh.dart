@@ -303,22 +303,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeGoldenAmber => '金秋黄';
 
   @override
-  String get themeReduce => '降溫主題';
+  String get themeReduce => '降温主題';
 
   @override
   String get themeTepid => '暖和主題';
 
   @override
-  String get themeDefence => '護衛主題';
+  String get themeDefence => '护卫主題';
 
   @override
-  String get themeDreams => '美夢主題';
+  String get themeDreams => '美梦主題';
 
   @override
   String get themeEnergize => '活力主題';
 
   @override
-  String get themeJoyful => '喜悅主題';
+  String get themeJoyful => '喜悦主題';
 
   @override
   String get themeFresh => '清新主題';
@@ -330,13 +330,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeAgile => '敏捷主題';
 
   @override
-  String get themeMelody => '甜聲主題';
+  String get themeMelody => '甜声主題';
 
   @override
   String get themeRespire => '呼吸主題';
 
   @override
-  String get themeComfort => '舒暢主題';
+  String get themeComfort => '舒畅主題';
 
   @override
   String get filterConditions => '筛选条件';
@@ -1072,13 +1072,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get themeGoldenAmber => '金琥珀';
 
   @override
-  String get themeReduce => '冷卻';
+  String get themeReduce => '降溫主題';
 
   @override
-  String get themeTepid => '暖和';
+  String get themeTepid => '暖和主題';
 
   @override
-  String get themeDefence => '防禦';
+  String get themeDefence => '護衛主題';
+
+  @override
+  String get themeDreams => '美夢主題';
+
+  @override
+  String get themeEnergize => '活力主題';
+
+  @override
+  String get themeJoyful => '喜悅主題';
+
+  @override
+  String get themeFresh => '清新主題';
+
+  @override
+  String get themePeaceful => '安定主題';
+
+  @override
+  String get themeAgile => '敏捷主題';
+
+  @override
+  String get themeMelody => '甜聲主題';
+
+  @override
+  String get themeRespire => '呼吸主題';
+
+  @override
+  String get themeComfort => '舒暢主題';
 
   @override
   String get filterConditions => '篩選條件';

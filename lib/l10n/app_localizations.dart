@@ -570,19 +570,19 @@ abstract class AppLocalizations {
   /// No description provided for @goodMorning.
   ///
   /// In en, this message translates to:
-  /// **'Good Morning'**
+  /// **'Morning'**
   String get goodMorning;
 
   /// No description provided for @goodAfternoon.
   ///
   /// In en, this message translates to:
-  /// **'Good Afternoon'**
+  /// **'Afternoon'**
   String get goodAfternoon;
 
   /// No description provided for @goodEvening.
   ///
   /// In en, this message translates to:
-  /// **'Good Evening'**
+  /// **'Evening'**
   String get goodEvening;
 
   /// No description provided for @profileLogoutSuccess.

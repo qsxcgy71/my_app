@@ -16,6 +16,7 @@ import '../widgets/anti_spam_button.dart';
 import '../widgets/auth_wrapper.dart';
 import 'loading_screen.dart';
 import '../providers/theme_provider.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -727,14 +728,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
-                    onPressed: () => _showLogoutConfirmation(context, l10n),
-                    icon: const Icon(Icons.logout),
-                    tooltip: l10n.logout,
-                    color: Colors.red,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.settings),
+                    tooltip: l10n.selectTheme,
+                    color: Theme.of(context).primaryColor,
                     iconSize: 24,
                     padding: const EdgeInsets.all(12),
                     constraints: const BoxConstraints(
@@ -925,51 +931,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _showLogoutConfirmation(BuildContext context, AppLocalizations l10n) async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(l10n.confirmLogout, style: AppTextStyles.titleLarge),
-          content: Text(
-            l10n.logoutMessage,
-            style: AppTextStyles.bodyMedium,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text(l10n.logout, style: AppTextStyles.bodyMedium),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && mounted) {
-      // 先导航到 loading 页面
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoadingScreen()),
-        (route) => false,
-      );
-      
-      // 执行登出操作
-      await _authService.signOut();
-      
-      // 登出后延迟一小段时间再导航到登录选项页面，给用户一个视觉反馈
-      if (mounted) {
-        await Future.delayed(const Duration(milliseconds: 800));
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          (route) => false,
-        );
-      }
-    }
   }
 }

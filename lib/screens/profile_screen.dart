@@ -45,6 +45,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double _savedScrollPosition = 0.0;
   bool _shouldPreserveScroll = false;
 
+  // Helper method to calculate safe bottom padding for navigation bar
+  double _getBottomSafeAreaHeight(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    // 导航栏高度约50，只需要稍微高一点点，所以减少buffer空间
+    return 50 + mediaQuery.padding.bottom + 10; 
+  }
+
   @override
   void initState() {
     super.initState();
@@ -633,273 +640,280 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SmartRefresher(
-      enablePullDown: true,
-      enablePullUp: _hasMoreChildren,
-      header: WaterDropHeader(
-        complete: Text(
-          'Profile Updated!',
-          style: AppTextStyles.bodyMedium,
+    return SafeArea(
+      bottom: false, // 不在底部添加SafeArea，我们手动处理
+      child: SmartRefresher(
+        enablePullDown: true,
+        enablePullUp: _hasMoreChildren,
+        header: WaterDropHeader(
+          complete: Text(
+            'Profile Updated!',
+            style: AppTextStyles.bodyMedium,
+          ),
+          failed: Text(
+            'Update Failed',
+            style: AppTextStyles.bodyMedium,
+          ),
         ),
-        failed: Text(
-          'Update Failed',
-          style: AppTextStyles.bodyMedium,
+        footer: CustomFooter(
+          builder: (BuildContext context, LoadStatus? mode) {
+            Widget body;
+            if (mode == null) {
+              body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
+            } else if (mode == LoadStatus.idle) {
+              body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
+            } else if (mode == LoadStatus.loading) {
+              body = Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                  Text("Loading more children...", style: AppTextStyles.bodyMedium),
+                ],
+              );
+            } else if (mode == LoadStatus.failed) {
+              body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+            } else if (mode == LoadStatus.canLoading) {
+              body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
+            } else {
+              body = Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, size: 16, color: Colors.green),
+                  const SizedBox(width: 4),
+                  Text("All children loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                ],
+              );
+            }
+            return Container(
+              height: 55.0,
+              child: Center(child: body),
+            );
+          },
         ),
-      ),
-      footer: CustomFooter(
-        builder: (BuildContext context, LoadStatus? mode) {
-          Widget body;
-          if (mode == null) {
-            body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
-          } else if (mode == LoadStatus.idle) {
-            body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
-          } else if (mode == LoadStatus.loading) {
-            body = Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 8),
-                Text("Loading more children...", style: AppTextStyles.bodyMedium),
-              ],
-            );
-          } else if (mode == LoadStatus.failed) {
-            body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-          } else if (mode == LoadStatus.canLoading) {
-            body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
-          } else {
-            body = Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green),
-                const SizedBox(width: 4),
-                Text("All children loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-              ],
-            );
-          }
-          return Container(
-            height: 55.0,
-            child: Center(child: body),
-          );
-        },
-      ),
-      controller: _refreshController,
-      onRefresh: _onRefresh,
-      onLoading: _onLoadingMoreChildren,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        controller: _scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题和登出按钮区域
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.profile,
-                    style: AppTextStyles.titleLarge.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    onPressed: () => _showLogoutConfirmation(context, l10n),
-                    icon: const Icon(Icons.logout),
-                    tooltip: l10n.logout,
-                    color: Colors.red,
-                    iconSize: 24,
-                    padding: const EdgeInsets.all(12),
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (_userProfile == null)
-              Center(
-                child: ElevatedButton(
-                  onPressed: _showEditProfileDialog,
-                  child: Text('Create Profile', style: AppTextStyles.button),
-                ),
-              )
-            else ...[
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
-                      Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
-                    ],
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _showEditProfileDialog(_userProfile),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+        controller: _refreshController,
+        onRefresh: _onRefresh,
+        onLoading: _onLoadingMoreChildren,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            // 底部padding = 导航栏高度 + 额外空间
+            // 导航栏包含：内容区域(约64) + 顶部padding(8) + 底部padding(8 + 系统底部安全区域)
+            // 添加额外的20像素作为缓冲空间
+            bottom: _getBottomSafeAreaHeight(context),
+          ),
+          controller: _scrollController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题和登出按钮区域
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'Children (${_userProfile!.children.length} total)',
-                    style: AppTextStyles.titleLarge.copyWith(fontSize: 20),
+                  Expanded(
+                    child: Text(
+                      l10n.profile,
+                      style: AppTextStyles.titleLarge.copyWith(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                   ),
-                  Row(
-                    children: [
-                      // Test button - remove in production
-                      IconButton(
-                        icon: const Icon(Icons.science, color: Colors.orange),
-                        tooltip: 'Add Test Data',
-                        onPressed: _addTestChildren,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () => _showLogoutConfirmation(context, l10n),
+                      icon: const Icon(Icons.logout),
+                      tooltip: l10n.logout,
+                      color: Colors.red,
+                      iconSize: 24,
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: _showAddChildDialog,
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              if (_userProfile!.children.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Showing ${_getPaginatedChildren().length} of ${_userProfile!.children.length}',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (_hasMoreChildren)
-                        Text(
-                          'Scroll down for more',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Theme.of(context).primaryColor,
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                    ],
+              const SizedBox(height: 20),
+              if (_userProfile == null)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _showEditProfileDialog,
+                    child: Text('Create Profile', style: AppTextStyles.button),
+                  ),
+                )
+              else ...[
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
+                        Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
+                      ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => _showEditProfileDialog(_userProfile),
+                    ),
                   ),
                 ),
-              const SizedBox(height: 8),
-              ..._getPaginatedChildren().map((child) => Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Column(
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Children (${_userProfile!.children.length} total)',
+                      style: AppTextStyles.titleLarge.copyWith(fontSize: 20),
+                    ),
+                    Row(
                       children: [
-                        ListTile(
-                          leading: GestureDetector(
-                            onTap: () => _pickImage(child),
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.grey[200],
-                              child: child.photoUrl != null
-                                  ? ClipOval(
-                                      child: CachedNetworkImage(
-                                        imageUrl: child.photoUrl!,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                        cacheManager: null,
-                                        maxHeightDiskCache: 1024,
-                                        maxWidthDiskCache: 1024,
-                                        memCacheHeight: 1024,
-                                        memCacheWidth: 1024,
-                                        errorListener: (error) {
-                                          print('CachedNetworkImage error: $error');
-                                        },
-                                        useOldImageOnUrlChange: true,
-                                        placeholder: (context, url) => const Padding(
-                                          padding: EdgeInsets.all(8.0),
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) {
-                                          print('Error loading image: $url, Error: $error');
-                                          return Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              const Icon(Icons.error),
-                                              Positioned(
-                                                bottom: 0,
-                                                child: IconButton(
-                                                  iconSize: 16,
-                                                  icon: const Icon(Icons.refresh),
-                                                  onPressed: () {
-                                                    CachedNetworkImage.evictFromCache(url);
-                                                    setState(() {});
-                                                  },
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                        imageBuilder: (context, imageProvider) => Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            image: DecorationImage(
-                                              image: imageProvider,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : const Icon(Icons.add_a_photo),
-                            ),
-                          ),
-                          title: Text(child.name, style: AppTextStyles.bodyLarge),
-                          subtitle: child.birthDate != null
-                              ? Text(
-                                  'Birth Date: ${child.birthDate.toString().split(' ')[0]}',
-                                  style: AppTextStyles.bodyMedium,
-                                )
-                              : null,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showAddChildDialog(child),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () => _deleteChild(child.id),
-                              ),
-                            ],
-                          ),
+                        // Test button - remove in production
+                        IconButton(
+                          icon: const Icon(Icons.science, color: Colors.orange),
+                          tooltip: 'Add Test Data',
+                          onPressed: _addTestChildren,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _showAddChildDialog,
                         ),
                       ],
                     ),
-                  )),
-              // Add spacing at bottom to ensure proper pull-up loading
-              const SizedBox(height: 20),
+                  ],
+                ),
+                if (_userProfile!.children.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Showing ${_getPaginatedChildren().length} of ${_userProfile!.children.length}',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                        if (_hasMoreChildren)
+                          Text(
+                            'Scroll down for more',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                ..._getPaginatedChildren().map((child) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: GestureDetector(
+                          onTap: () => _pickImage(child),
+                          child: CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.grey[200],
+                            child: child.photoUrl != null
+                                ? ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: child.photoUrl!,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      cacheManager: null,
+                                      maxHeightDiskCache: 1024,
+                                      maxWidthDiskCache: 1024,
+                                      memCacheHeight: 1024,
+                                      memCacheWidth: 1024,
+                                      errorListener: (error) {
+                                        print('CachedNetworkImage error: $error');
+                                      },
+                                      useOldImageOnUrlChange: true,
+                                      placeholder: (context, url) => const Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) {
+                                        print('Error loading image: $url, Error: $error');
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            const Icon(Icons.error),
+                                            Positioned(
+                                              bottom: 0,
+                                              child: IconButton(
+                                                iconSize: 16,
+                                                icon: const Icon(Icons.refresh),
+                                                onPressed: () {
+                                                  CachedNetworkImage.evictFromCache(url);
+                                                  setState(() {});
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.add_a_photo),
+                          ),
+                        ),
+                        title: Text(child.name, style: AppTextStyles.bodyLarge),
+                        subtitle: child.birthDate != null
+                            ? Text(
+                                'Birth Date: ${child.birthDate.toString().split(' ')[0]}',
+                                style: AppTextStyles.bodyMedium,
+                              )
+                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _showAddChildDialog(child),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _deleteChild(child.id),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+                // Add spacing at bottom to ensure proper pull-up loading
+                const SizedBox(height: 20),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

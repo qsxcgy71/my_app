@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/keyboard_dismisser.dart';
-import '../widgets/anti_spam_button.dart';
 import '../models/app_theme.dart';
 import '../providers/theme_provider.dart';
 import 'loading_screen.dart';
@@ -303,10 +302,10 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                Container(
+                                SizedBox(
                                   width: double.infinity,
                                   height: 50,
-                                  child: AntiSpamButton(
+                                  child: ElevatedButton(
                                     onPressed: _isLoading ? null : _handleEmailLogin,
                                     style: ButtonStyle(
                                       backgroundColor: MaterialStateProperty.all(Colors.transparent),
@@ -348,7 +347,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                 ),
                                               )
-                                            : Text(
+                                            : const Text(
                                                 '登录',
                                                 style: TextStyle(
                                                   fontSize: 16,

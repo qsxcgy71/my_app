@@ -114,70 +114,181 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
+            // 顶部拖拽指示器
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // 标题栏
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
                   Text(
                     '选择国家/地区',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.secondary,
+                      color: currentThemeData.primaryColor,
                       fontFamily: 'GenSenRounded',
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: Icon(Icons.close, color: colorScheme.secondary),
-                    onPressed: () => Navigator.pop(context),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: currentThemeData.backgroundColor,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: currentThemeData.primaryColor,
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(),
+            // 分隔线
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    currentThemeData.secondaryColor.withOpacity(0.3),
+                    currentThemeData.primaryColor.withOpacity(0.3),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 国家列表
             Expanded(
-              child: ListView.builder(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 itemCount: _countryCodes.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final country = _countryCodes[index];
-                  return ListTile(
-                    leading: Text(
-                      country.flag,
-                      style: const TextStyle(fontSize: 24),
+                  final isSelected = _selectedCountry.code == country.code;
+                  
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                          ? currentThemeData.primaryColor.withOpacity(0.1)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected 
+                            ? currentThemeData.primaryColor.withOpacity(0.3)
+                            : Colors.grey.withOpacity(0.2),
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentThemeData.primaryColor.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    title: Text(
-                      country.name,
-                      style: TextStyle(
-                        color: colorScheme.secondary,
-                        fontFamily: 'GenSenRounded',
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          setState(() => _selectedCountry = country);
+                          Navigator.pop(context);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              // 国旗
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: currentThemeData.backgroundColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    country.flag,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // 国家信息
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      country.name,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: currentThemeData.primaryColor,
+                                        fontFamily: 'GenSenRounded',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${country.code} • ${country.lengthDescription}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: currentThemeData.secondaryColor.withOpacity(0.8),
+                                        fontFamily: 'GenSenRounded',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 选中指示器
+                              if (isSelected)
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: currentThemeData.primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    trailing: Text(
-                      country.lengthDescription,
-                      style: TextStyle(
-                        color: colorScheme.secondary,
-                        fontFamily: 'GenSenRounded',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() => _selectedCountry = country);
-                      Navigator.pop(context);
-                    },
                   );
                 },
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

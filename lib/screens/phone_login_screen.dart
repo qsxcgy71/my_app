@@ -258,7 +258,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${country.code} • ${country.lengthDescription}',
+                                      '${country.code} • ${country.getLengthDescription(context)}',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: currentThemeData.secondaryColor.withOpacity(0.8),

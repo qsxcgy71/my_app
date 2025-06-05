@@ -36,9 +36,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   
-  // Pagination variables for children list - increased to fill ~2 screens
+  // Pagination variables for children list
   int _currentChildrenPage = 0;
-  final int _childrenPageSize = 12; // Show 12 children per page (about 2 screens)
+  final int _childrenPageSize = 12; // Show 12 children per page
   bool _hasMoreChildren = false;
   
   // Scroll position preservation
@@ -643,7 +643,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-
     return SmartRefresher(
       enablePullDown: true,
       enablePullUp: _hasMoreChildren,
@@ -685,7 +684,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             body = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green),
+                const Icon(Icons.check_circle, size: 16, color: Colors.green),
                 const SizedBox(width: 4),
                 Text(l10n.allChildrenLoaded, style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
               ],
@@ -701,12 +700,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onRefresh: _onRefresh,
       onLoading: _onLoadingMoreChildren,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 46,
+          bottom: _getBottomSafeAreaHeight(context),
+        ),
         controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 标题和登出按钮区域
+            // Profile section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -742,6 +746,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 20),
+            
+            // Profile card or create profile button
             if (_userProfile == null)
               Center(
                 child: ElevatedButton(
@@ -764,55 +770,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () => _showEditProfileDialog(_userProfile),
-
                   ),
-                  const SizedBox(width: 8),
-                  Text("Loading more children...", style: AppTextStyles.bodyMedium),
-                ],
-              );
-            } else if (mode == LoadStatus.failed) {
-              body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
-            } else if (mode == LoadStatus.canLoading) {
-              body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
-            } else {
-              body = Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, size: 16, color: Colors.green),
-                  const SizedBox(width: 4),
-                  Text("All children loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
-                ],
-              );
-            }
-            return Container(
-              height: 55.0,
-              child: Center(child: body),
-            );
-          },
-        ),
-        controller: _refreshController,
-        onRefresh: _onRefresh,
-        onLoading: _onLoadingMoreChildren,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            // 底部padding = 导航栏高度 + 额外空间
-            // 导航栏包含：内容区域(约64) + 顶部padding(8) + 底部padding(8 + 系统底部安全区域)
-            // 添加额外的20像素作为缓冲空间
-            bottom: _getBottomSafeAreaHeight(context),
-          ),
-          controller: _scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 标题和登出按钮区域
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Children section header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-
                   Text(
                     l10n.children(_userProfile!.children.length.toString()),
                     style: AppTextStyles.titleLarge.copyWith(
@@ -822,340 +789,171 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   Row(
                     children: [
-                      // Test button - remove in production
                       IconButton(
                         icon: const Icon(Icons.science, color: Colors.orange),
                         tooltip: 'Add Test Data',
                         onPressed: _addTestChildren,
-
                       ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () => _showLogoutConfirmation(context, l10n),
-                      icon: const Icon(Icons.logout),
-                      tooltip: l10n.logout,
-                      color: Colors.red,
-                      iconSize: 24,
-                      padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: _showAddChildDialog,
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
-
-              if (_userProfile!.children.isNotEmpty)
+              
+              if (_userProfile!.children.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        l10n.showingXofY(
-                          _getPaginatedChildren().length.toString(),
-                          _userProfile!.children.length.toString(),
-                        ),
+                        'Showing ${_getPaginatedChildren().length} of ${_userProfile!.children.length}',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: Colors.grey[600],
                           fontSize: 12,
-
+                        ),
+                      ),
+                      if (_hasMoreChildren)
+                        Text(
+                          'Scroll down for more',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                
+                ..._getPaginatedChildren().map((child) => Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: GestureDetector(
+                      onTap: () => _pickImage(child),
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.grey[200],
+                        child: child.photoUrl != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: child.photoUrl!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  maxHeightDiskCache: 1024,
+                                  maxWidthDiskCache: 1024,
+                                  memCacheHeight: 1024,
+                                  memCacheWidth: 1024,
+                                  errorListener: (error) {
+                                    print('CachedNetworkImage error: $error');
+                                  },
+                                  useOldImageOnUrlChange: true,
+                                  placeholder: (context, url) => const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) {
+                                    print('Error loading image: $url, Error: $error');
+                                    return Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        const Icon(Icons.error),
+                                        Positioned(
+                                          bottom: 0,
+                                          child: IconButton(
+                                            iconSize: 16,
+                                            icon: const Icon(Icons.refresh),
+                                            onPressed: () {
+                                              CachedNetworkImage.evictFromCache(url);
+                                              setState(() {});
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.add_a_photo),
+                      ),
+                    ),
+                    title: Text(child.name, style: AppTextStyles.bodyLarge),
+                    subtitle: Text(
+                      child.birthDate != null 
+                        ? l10n.birthDate(child.birthDate.toString().split(' ')[0])
+                        : l10n.birthDate(l10n.unknown),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _showAddChildDialog(child),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: _showAddChildDialog,
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _deleteChild(child.id),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                if (_userProfile!.children.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-
-                          'Showing ${_getPaginatedChildren().length} of ${_userProfile!.children.length}',
-
-                          l10n.scrollDownForMore,
-
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                        if (_hasMoreChildren)
-                          Text(
-                            'Scroll down for more',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Theme.of(context).primaryColor,
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
                       ],
                     ),
                   ),
-                const SizedBox(height: 8),
-                ..._getPaginatedChildren().map((child) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: GestureDetector(
-                          onTap: () => _pickImage(child),
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundColor: Colors.grey[200],
-                            child: child.photoUrl != null
-                                ? ClipOval(
-                                    child: CachedNetworkImage(
-                                      imageUrl: child.photoUrl!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      cacheManager: null,
-                                      maxHeightDiskCache: 1024,
-                                      maxWidthDiskCache: 1024,
-                                      memCacheHeight: 1024,
-                                      memCacheWidth: 1024,
-                                      errorListener: (error) {
-                                        print('CachedNetworkImage error: $error');
-                                      },
-                                      useOldImageOnUrlChange: true,
-                                      placeholder: (context, url) => const Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                      errorWidget: (context, url, error) {
-                                        print('Error loading image: $url, Error: $error');
-                                        return Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            const Icon(Icons.error),
-                                            Positioned(
-                                              bottom: 0,
-                                              child: IconButton(
-                                                iconSize: 16,
-                                                icon: const Icon(Icons.refresh),
-                                                onPressed: () {
-                                                  CachedNetworkImage.evictFromCache(url);
-                                                  setState(() {});
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                      imageBuilder: (context, imageProvider) => Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-
-                                    )
-                                  : const Icon(Icons.add_a_photo),
-                            ),
-                          ),
-                          title: Text(child.name, style: AppTextStyles.bodyLarge),
-                          subtitle: Text(
-                            child.birthDate != null 
-                              ? l10n.birthDate(child.birthDate.toString().split(' ')[0])
-                              : l10n.birthDate(l10n.unknown),
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showAddChildDialog(child),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () => _deleteChild(child.id),
-                              ),
-                            ],
-
-                          ),
-                        ),
-                        title: Text(child.name, style: AppTextStyles.bodyLarge),
-                        subtitle: child.birthDate != null
-                            ? Text(
-                                'Birth Date: ${child.birthDate.toString().split(' ')[0]}',
-                                style: AppTextStyles.bodyMedium,
-                              )
-                            : null,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _showAddChildDialog(child),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () => _deleteChild(child.id),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )),
-                // Add spacing at bottom to ensure proper pull-up loading
-                const SizedBox(height: 20),
+                )),
               ],
+              
+              // Add spacing at bottom to ensure proper pull-up loading
+              const SizedBox(height: 20),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   Future<void> _showLogoutConfirmation(BuildContext context, AppLocalizations l10n) async {
-    final confirmed = await showDialog<bool>(
+    final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          l10n.confirmLogout,
-          style: AppTextStyles.titleLarge.copyWith(
-            fontWeight: FontWeight.w700,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(l10n.confirmLogout, style: AppTextStyles.titleLarge),
+          content: Text(
+            l10n.logoutMessage,
+            style: AppTextStyles.bodyMedium,
           ),
-        ),
-        content: Text(
-          l10n.logoutMessage,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              l10n.cancel,
-              style: AppTextStyles.button.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
             ),
-          ),
-          AntiSpamButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(l10n.logout, style: AppTextStyles.bodyMedium),
             ),
-            child: Text(
-              l10n.logout,
-              style: AppTextStyles.button.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
-      await _performLogout(context, l10n);
-    }
-  }
-
-  Future<void> _performLogout(BuildContext context, AppLocalizations l10n) async {
-    bool isLoadingDialogShown = false;
-    OverlayEntry? loadingOverlay;
-    
-    try {
-      print('Profile: Starting logout process...');
-      
-      // 使用Overlay显示加载状态，避免对话框context问题
-      if (mounted) {
-        loadingOverlay = OverlayEntry(
-          builder: (context) => Material(
-            color: Colors.black54,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(width: 16),
-                    Text('正在退出登录...'),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-        Overlay.of(context).insert(loadingOverlay!);
-        isLoadingDialogShown = true;
-      }
-
-      // 等待一小段时间确保UI显示
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // 使用Provider获取AuthService
-      final authService = Provider.of<AuthService>(context, listen: false);
-      
-      // 先导航到LoadingScreen
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoadingScreen()),
-          (route) => false,
-        );
-      }
-      
-      // 执行退出登录
-      await authService.signOut();
-      
-      print('Profile: Logout completed successfully');
-      
-    } catch (e) {
-      print('Profile: Logout error: $e');
-      
-      // 根据错误类型显示不同的错误信息
-      String errorMessage = l10n.profileLogoutFailed;
-      if (e.toString().contains('Google signOut: false')) {
-        errorMessage = '退出Google账号失败，请重试';
-      } else if (e.toString().contains('Firebase signOut: false')) {
-        errorMessage = '退出Firebase失败，请重试';
-      } else if (e.toString().contains('Sign out incomplete')) {
-        errorMessage = '退出登录不完整，建议重启应用';
-      }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      }
-    } finally {
-      // 确保移除加载overlay
-      if (isLoadingDialogShown && loadingOverlay != null) {
-        try {
-          loadingOverlay!.remove();
-          print('Profile: Loading overlay removed');
-        } catch (e) {
-          print('Profile: Error removing overlay: $e');
-        }
-      }
+      await _authService.signOut();
     }
   }
 }

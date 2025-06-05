@@ -130,13 +130,15 @@ class LessonService {
   // 添加新课程
   Future<Lesson> addLesson({
     required String title,
-    required DateTime date,
-    required TimeOfDay startTime,
-    required TimeOfDay endTime,
     String? description,
+    required String courseId,
     required String courseName,
     String? courseCategory,
     String? imageUrl,
+    String? instructor,
+    required DateTime date,
+    required DateTime startTimeDateTime,
+    required DateTime endTimeDateTime,
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -149,10 +151,12 @@ class LessonService {
       courseName: courseName.trim(),
       courseCategory: courseCategory?.trim().isEmpty == true ? null : courseCategory?.trim(),
       date: date,
-      startTime: startTime,
-      endTime: endTime,
-      createdAt: DateTime.now(),
+      startTime: TimeOfDay.fromDateTime(startTimeDateTime),
+      endTime: TimeOfDay.fromDateTime(endTimeDateTime),
+      instructor: instructor?.trim().isEmpty == true ? null : instructor?.trim(),
+      isCompleted: false,
       imageUrl: imageUrl?.trim().isEmpty == true ? null : imageUrl?.trim(),
+      createdAt: DateTime.now(),
     );
 
     final lessonData = lesson.toMap();
@@ -169,14 +173,16 @@ class LessonService {
   Future<void> updateLesson({
     required String lessonId,
     required String title,
-    required DateTime date,
-    required TimeOfDay startTime,
-    required TimeOfDay endTime,
     String? description,
+    required String courseId,
     required String courseName,
     String? courseCategory,
     String? imageUrl,
-    required DateTime createdAt,
+    String? instructor,
+    required DateTime date,
+    required DateTime startTimeDateTime,
+    required DateTime endTimeDateTime,
+    required bool isCompleted,
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -189,10 +195,12 @@ class LessonService {
       courseName: courseName.trim(),
       courseCategory: courseCategory?.trim().isEmpty == true ? null : courseCategory?.trim(),
       date: date,
-      startTime: startTime,
-      endTime: endTime,
-      createdAt: createdAt,
+      startTime: TimeOfDay.fromDateTime(startTimeDateTime),
+      endTime: TimeOfDay.fromDateTime(endTimeDateTime),
+      instructor: instructor?.trim().isEmpty == true ? null : instructor?.trim(),
+      isCompleted: isCompleted,
       imageUrl: imageUrl?.trim().isEmpty == true ? null : imageUrl?.trim(),
+      createdAt: DateTime.now(),
     );
 
     final lessonData = lesson.toMap();
@@ -262,9 +270,7 @@ class LessonService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    final now = DateTime.now();
     final sampleLessons = [
-      // 已报读课程（未来的课程）
       Lesson(
         id: '',
         title: '动物时钟:认识时间和分钟',
@@ -365,6 +371,7 @@ class LessonService {
         print('Error creating sample lesson: $e');
       }
     }
+    await batch.commit();
   }
 
   // 根据ID获取课程

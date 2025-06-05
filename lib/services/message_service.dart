@@ -612,4 +612,14 @@ $summary
       rethrow;
     }
   }
+
+  // 新增：添加消息方法
+  Future<void> addMessage(Message message) async {
+    if (_currentUserId == null) {
+      throw Exception('用户未登录');
+    }
+    final data = message.toMap();
+    data['userId'] = _currentUserId;
+    await _firestore.collection('messages').add(data);
+  }
 } 

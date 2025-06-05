@@ -381,23 +381,32 @@ class Message {
     };
   }
 
-  factory Message.fromMap(Map<String, dynamic> map) {
+  factory Message.fromMap(Map<String, dynamic> data, String id) {
+    DateTime parsedCreatedAt;
+    if (data['createdAt'] is Timestamp) {
+      parsedCreatedAt = (data['createdAt'] as Timestamp).toDate();
+    } else if (data['createdAt'] is String) {
+      parsedCreatedAt = DateTime.parse(data['createdAt'] as String);
+    } else {
+      parsedCreatedAt = DateTime.now(); // Fallback
+    }
+
     return Message(
-      id: map['id'] as String? ?? '',
-      title: map['title'] as String,
-      content: map['content'] as String,
+      id: id,
+      title: data['title'] ?? '',
+      content: data['content'] ?? '',
       type: MessageType.values.firstWhere(
-        (e) => e.toString().split('.').last == map['type'],
+        (e) => e.toString() == 'MessageType.${data['type']}',
         orElse: () => MessageType.general,
       ),
-      createdAt: DateTime.parse(map['createdAt'] as String).toLocal(),
-      isRead: map['isRead'] as bool? ?? false,
-      lessonId: map['lessonId'] as String?,
-      imageUrl: map['imageUrl'] as String?,
-      extraData: map['extraData'] as Map<String, dynamic>?,
-      messageKey: map['messageKey'] as String?,
-      messageParams: map['messageParams'] != null
-          ? Map<String, String>.from(map['messageParams'])
+      createdAt: parsedCreatedAt,
+      isRead: data['isRead'] ?? false,
+      lessonId: data['lessonId'] as String?,
+      imageUrl: data['imageUrl'] as String?,
+      extraData: data['extraData'] is Map ? Map<String, dynamic>.from(data['extraData']) : null,
+      messageKey: data['messageKey'] as String?,
+      messageParams: data['messageParams'] != null
+          ? Map<String, String>.from(data['messageParams'])
           : null,
     );
   }

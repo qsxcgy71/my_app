@@ -251,13 +251,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enroll => 'Enroll Now';
 
   @override
-  String get goodMorning => 'Good Morning';
+  String get goodMorning => 'Morning';
 
   @override
-  String get goodAfternoon => 'Good Afternoon';
+  String get goodAfternoon => 'Afternoon';
 
   @override
-  String get goodEvening => 'Good Evening';
+  String get goodEvening => 'Evening';
 
   @override
   String get profileLogoutSuccess => 'Logout successful';

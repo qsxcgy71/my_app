@@ -103,9 +103,9 @@
   "courseCatalog": "Course Catalog",
   "preview": "Preview",
   "enroll": "Enroll Now",
-  "goodMorning": "Good Morning",
-  "goodAfternoon": "Good Afternoon",
-  "goodEvening": "Good Evening",
+  "goodMorning": "Morning",
+  "goodAfternoon": "Afternoon",
+  "goodEvening": "Evening",
   "profileLogoutSuccess": "Logout successful",
   "profileLogoutFailed": "Logout failed",
   

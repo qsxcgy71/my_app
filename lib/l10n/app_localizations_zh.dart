@@ -1473,4 +1473,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get verificationCode => '驗證碼';
+
+  @override
+  String get cantonese => '粵語';
 }

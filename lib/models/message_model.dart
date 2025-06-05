@@ -1,11 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum MessageType {
-  classReminder, // 上课提醒
-  classEnd,      // 下课提醒
-  general,       // 普通消息
-  system,        // 系统消息
-  enrollment,    // 报名成功
+  general,
+  enrollment,
+  
+  // 1. 认证与账户管理消息
+  welcome,           // 注册成功/欢迎消息
+  passwordReset,     // 密码重置确认
+  profileUpdate,     // 资料更新通知
+  accountBinding,    // 第三方账号绑定/解绑
+  
+  // 2. 课程与学习消息
+  courseEnrollment,  // 课程报名成功（重命名原有的enrollment）
+  courseReminder,    // 课程即将开始提醒
+  courseEndingSoon,  // 课程即将结束提醒
+  courseCompleted,   // 课程完成通知
+  courseUpdated,     // 课程内容更新
+  courseRecommendation, // 新课程推荐
+  
+  // 3. 孩子档案管理消息
+  childAdded,        // 添加孩子成功
+  childUpdated,      // 孩子档案更新
+  childDeleted,      // 孩子档案删除确认
+  
+  // 4. 系统与维护消息
+  appUpdate,         // 应用版本更新
+  systemMaintenance, // 系统维护通知
+  policyUpdate,      // 服务条款/隐私政策更新
 }
 
 class Message {
@@ -87,37 +108,225 @@ class Message {
     }
   }
 
-  // 获取消息类型图标
-  String get typeIcon {
+  // 获取消息类型图标路径
+  String get typeIconPath {
     switch (type) {
-      case MessageType.classReminder:
-        return '🔔';
-      case MessageType.classEnd:
-        return '🏁';
+      // 1. 认证与账户管理消息
+      case MessageType.welcome:
+      case MessageType.passwordReset:
+      case MessageType.profileUpdate:
+      case MessageType.accountBinding:
+        return 'assets/messages/account_ico.svg';
+        
+      // 2. 课程与学习消息
+      case MessageType.courseEnrollment:
+      case MessageType.courseReminder:
+      case MessageType.courseEndingSoon:
+      case MessageType.courseCompleted:
+      case MessageType.courseUpdated:
+      case MessageType.courseRecommendation:
+        return 'assets/messages/course_ico.svg';
+        
+      // 3. 孩子档案管理消息
+      case MessageType.childAdded:
+      case MessageType.childUpdated:
+      case MessageType.childDeleted:
+        return 'assets/messages/kids_ico.svg';
+        
+      // 4. 系统与维护消息
+      case MessageType.appUpdate:
+      case MessageType.systemMaintenance:
+      case MessageType.policyUpdate:
+        return 'assets/messages/system_ico.svg';
+        
+      // 默认消息类型
       case MessageType.general:
-        return '💬';
-      case MessageType.system:
-        return '⚙️';
-      case MessageType.enrollment:
-        return '🎉';
+      case MessageType.enrollment: // 保持向后兼容
+      default:
+        return 'assets/messages/course_ico.svg';
     }
   }
 
-  // 获取消息类型颜色
-  String get typeColor {
+  // 获取消息类型主颜色
+  String get typePrimaryColor {
     switch (type) {
-      case MessageType.classReminder:
-        return '#FF9800'; // 橙色
-      case MessageType.classEnd:
-        return '#4CAF50'; // 绿色
+      // 1. 认证与账户管理消息 - 蓝色系
+      case MessageType.welcome:
+      case MessageType.passwordReset:
+      case MessageType.profileUpdate:
+      case MessageType.accountBinding:
+        return '#3355B2';
+        
+      // 2. 课程与学习消息 - 绿色系
+      case MessageType.courseEnrollment:
+      case MessageType.courseReminder:
+      case MessageType.courseEndingSoon:
+      case MessageType.courseCompleted:
+      case MessageType.courseUpdated:
+      case MessageType.courseRecommendation:
+        return '#5F7930';
+        
+      // 3. 孩子档案管理消息 - 橙色系
+      case MessageType.childAdded:
+      case MessageType.childUpdated:
+      case MessageType.childDeleted:
+        return '#F88400';
+        
+      // 4. 系统与维护消息 - 红色系
+      case MessageType.appUpdate:
+      case MessageType.systemMaintenance:
+      case MessageType.policyUpdate:
+        return '#E84155';
+        
+      // 默认消息类型
       case MessageType.general:
-        return '#2196F3'; // 蓝色
-      case MessageType.system:
-        return '#9E9E9E'; // 灰色
-      case MessageType.enrollment:
-        return '#E91E63'; // 粉色
+      case MessageType.enrollment: // 保持向后兼容
+      default:
+        return '#5F7930'; // 默认使用课程绿色
     }
   }
+
+  // 获取消息类型背景颜色
+  String get typeBackgroundColor {
+    switch (type) {
+      // 1. 认证与账户管理消息 - 蓝色背景
+      case MessageType.welcome:
+      case MessageType.passwordReset:
+      case MessageType.profileUpdate:
+      case MessageType.accountBinding:
+        return '#D6E9F4';
+        
+      // 2. 课程与学习消息 - 绿色背景
+      case MessageType.courseEnrollment:
+      case MessageType.courseReminder:
+      case MessageType.courseEndingSoon:
+      case MessageType.courseCompleted:
+      case MessageType.courseUpdated:
+      case MessageType.courseRecommendation:
+        return '#ECF2D2';
+        
+      // 3. 孩子档案管理消息 - 橙色背景
+      case MessageType.childAdded:
+      case MessageType.childUpdated:
+      case MessageType.childDeleted:
+        return '#FFF3D9';
+        
+      // 4. 系统与维护消息 - 红色背景
+      case MessageType.appUpdate:
+      case MessageType.systemMaintenance:
+      case MessageType.policyUpdate:
+        return '#FFE4E4';
+        
+      // 默认消息类型
+      case MessageType.general:
+      case MessageType.enrollment: // 保持向后兼容
+      default:
+        return '#ECF2D2'; // 默认使用课程绿色背景
+    }
+  }
+
+  // 获取消息分类名称
+  String getMessageCategoryName(String languageCode) {
+    switch (type) {
+      // 1. 认证与账户管理消息
+      case MessageType.welcome:
+      case MessageType.passwordReset:
+      case MessageType.profileUpdate:
+      case MessageType.accountBinding:
+        return languageCode == 'zh' ? '认证与帐户管理讯息' : 
+               languageCode == 'en' ? 'Authentication & Account Management' : 
+               '認證與帳戶管理訊息'; // 繁体中文
+        
+      // 2. 课程与学习消息
+      case MessageType.courseEnrollment:
+      case MessageType.courseReminder:
+      case MessageType.courseEndingSoon:
+      case MessageType.courseCompleted:
+      case MessageType.courseUpdated:
+      case MessageType.courseRecommendation:
+        return languageCode == 'zh' ? '课程与学习讯息' : 
+               languageCode == 'en' ? 'Course & Learning Messages' : 
+               '課程與學習訊息'; // 繁体中文
+        
+      // 3. 孩子档案管理消息
+      case MessageType.childAdded:
+      case MessageType.childUpdated:
+      case MessageType.childDeleted:
+        return languageCode == 'zh' ? '孩子档案管理讯息' : 
+               languageCode == 'en' ? 'Child Profile Management' : 
+               '孩子檔案管理訊息'; // 繁体中文
+        
+      // 4. 系统与维护消息
+      case MessageType.appUpdate:
+      case MessageType.systemMaintenance:
+      case MessageType.policyUpdate:
+        return languageCode == 'zh' ? '系统与维护讯息' : 
+               languageCode == 'en' ? 'System & Maintenance Messages' : 
+               '系統與維護訊息'; // 繁体中文
+        
+      // 默认消息类型
+      case MessageType.general:
+      case MessageType.enrollment: // 保持向后兼容
+      default:
+        return languageCode == 'zh' ? '一般讯息' : 
+               languageCode == 'en' ? 'General Messages' : 
+               '一般訊息'; // 繁体中文
+    }
+  }
+
+  // 获取消息类型图标 (保留用于向后兼容)
+  String get typeIcon {
+    switch (type) {
+      // 认证与账户管理
+      case MessageType.welcome:
+        return '👋';
+      case MessageType.passwordReset:
+        return '🔐';
+      case MessageType.profileUpdate:
+        return '👤';
+      case MessageType.accountBinding:
+        return '🔗';
+        
+      // 课程与学习
+      case MessageType.courseEnrollment:
+      case MessageType.enrollment: // 向后兼容
+        return '🎉';
+      case MessageType.courseReminder:
+        return '🔔';
+      case MessageType.courseEndingSoon:
+        return '⏰';
+      case MessageType.courseCompleted:
+        return '🏆';
+      case MessageType.courseUpdated:
+        return '📝';
+      case MessageType.courseRecommendation:
+        return '💡';
+        
+      // 孩子档案管理
+      case MessageType.childAdded:
+        return '👶';
+      case MessageType.childUpdated:
+        return '✏️';
+      case MessageType.childDeleted:
+        return '🗑️';
+        
+      // 系统与维护
+      case MessageType.appUpdate:
+        return '📱';
+      case MessageType.systemMaintenance:
+        return '⚙️';
+      case MessageType.policyUpdate:
+        return '📋';
+        
+      // 默认
+      case MessageType.general:
+      default:
+        return '💬';
+    }
+  }
+
+  // 获取消息类型颜色 (保留用于向后兼容，使用新的主颜色)
+  String get typeColor => typePrimaryColor;
 
   // 格式化时间显示
   String getFormattedTime(String locale) {

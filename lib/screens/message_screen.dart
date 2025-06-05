@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
 import '../models/message_model.dart';
@@ -163,11 +164,20 @@ class _MessageScreenState extends State<MessageScreen> {
               // TODO: Implement search
             },
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Implement more options
+            onSelected: (value) {
+              if (value == 'create_samples') {
+                _createSampleMessages();
+              }
             },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'create_samples',
+                child: Text(l10n.createSampleMessages),
+              ),
+              // 这里可以添加更多选项
+            ],
           ),
         ],
       ),
@@ -210,8 +220,8 @@ class _MessageScreenState extends State<MessageScreen> {
 
             return ListView.separated(
               itemCount: messages.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               itemBuilder: (context, index) {
                 final message = messages[index];
                 return _buildMessageItem(message, l10n, currentTheme);
@@ -250,6 +260,20 @@ class _MessageScreenState extends State<MessageScreen> {
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _createSampleMessages,
+              icon: const Icon(Icons.add_box_outlined),
+              label: const Text('创建示例消息'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: currentTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -258,12 +282,18 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Widget _buildMessageItem(Message message, AppLocalizations l10n, dynamic currentTheme) {
     final isUnread = !message.isRead;
-
     final currentLanguage = Localizations.localeOf(context).languageCode;
     
     // 获取本地化的标题和内容
     final localizedTitle = message.getLocalizedTitle(currentLanguage);
     final localizedContent = message.getLocalizedContent(currentLanguage);
+    
+    // 获取消息分类名称
+    final categoryName = message.getMessageCategoryName(currentLanguage);
+    
+    // 解析颜色值
+    final primaryColor = Color(int.parse(message.typePrimaryColor.substring(1), radix: 16) + 0xFF000000);
+    final backgroundColor = Color(int.parse(message.typeBackgroundColor.substring(1), radix: 16) + 0xFF000000);
 
     return Dismissible(
       key: Key(message.id),
@@ -273,7 +303,7 @@ class _MessageScreenState extends State<MessageScreen> {
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(
           Icons.delete,
@@ -311,134 +341,216 @@ class _MessageScreenState extends State<MessageScreen> {
           }
         },
         child: Container(
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: isUnread 
-                ? Border.all(color: currentTheme.primaryColor.withOpacity(0.3), width: 2)
-                : null,
+            color: isUnread ? Colors.white : Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            // 移除边框变化，使用背景色区分已读/未读
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
+                color: Colors.black.withOpacity(isUnread ? 0.08 : 0.03),
+                blurRadius: isUnread ? 8 : 4,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  // 消息类型图标
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _getTypeColor(message.type).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      message.typeIcon,
-                      style: const TextStyle(fontSize: 20),
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 消息图标（小图标）
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isUnread ? backgroundColor.withOpacity(0.8) : backgroundColor.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                localizedTitle,
-                                style: AppTextStyles.titleSmall.copyWith(
-                                  fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                                  color: isUnread ? Colors.black87 : Colors.grey[700],
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                  child: SvgPicture.asset(
+                    message.typeIconPath,
+                    colorFilter: ColorFilter.mode(
+                      isUnread ? primaryColor : primaryColor.withOpacity(0.6),
+                      BlendMode.srcIn,
+                    ),
+                    placeholderBuilder: (context) => Icon(
+                      _getFallbackIcon(message.type),
+                      color: isUnread ? primaryColor : primaryColor.withOpacity(0.6),
+                      size: 20,
+                    ),
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        _getFallbackIcon(message.type),
+                        color: isUnread ? primaryColor : primaryColor.withOpacity(0.6),
+                        size: 20,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // 消息内容区域
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 标题和时间行
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              localizedTitle,
+                              style: TextStyle(
+                                fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
+                                color: isUnread ? Colors.black87 : Colors.grey[600],
+                                fontSize: 15,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            if (isUnread) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            message.getFormattedTime(currentLanguage),
+                            style: TextStyle(
+                              color: isUnread ? Colors.grey[500] : Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      // 消息内容
+                      Text(
+                        localizedContent,
+                        style: TextStyle(
+                          color: isUnread ? Colors.black54 : Colors.grey[500],
+                          fontSize: 13,
+                          height: 1.3,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          message.getFormattedTime(currentLanguage),
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: Colors.grey[500],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      // 额外信息（如果有）
+                      if (message.extraData != null && message.extraData!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _getExtraDataText(message, l10n),
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                localizedContent,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: isUnread ? Colors.black87 : Colors.grey[600],
-                  fontWeight: isUnread ? FontWeight.w500 : FontWeight.normal,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (message.extraData != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          '${l10n.courseInfo}: ${message.extraData!['courseName'] ?? ''}',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
+                
+                // 未读标识
+                if (isUnread)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(left: 8, top: 4),
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+  
+  String _getExtraDataText(Message message, AppLocalizations l10n) {
+    final extraData = message.extraData!;
+    
+    if (extraData['courseName'] != null) {
+      return '${l10n.courseInfo}: ${extraData['courseName']}';
+    } else if (extraData['childName'] != null) {
+      return '相关孩子: ${extraData['childName']}';
+    } else if (extraData['version'] != null) {
+      return '版本: ${extraData['version']}';
+    } else if (extraData['updateType'] != null) {
+      return '更新类型: ${extraData['updateType']}';
+    }
+    
+    return '详细信息可用';
+  }
 
   Color _getTypeColor(MessageType type) {
+    // 创建临时消息对象以获取颜色
+    final tempMessage = Message(
+      id: '',
+      title: '',
+      content: '',
+      type: type,
+      createdAt: DateTime.now(),
+    );
+    
+    return Color(int.parse(tempMessage.typePrimaryColor.substring(1), radix: 16) + 0xFF000000);
+  }
+
+  IconData _getFallbackIcon(MessageType type) {
     switch (type) {
-      case MessageType.classReminder:
-        return Colors.orange;
-      case MessageType.classEnd:
-        return Colors.green;
+      // 1. 认证与账户管理消息
+      case MessageType.welcome:
+        return Icons.person_add;
+      case MessageType.passwordReset:
+        return Icons.lock_reset;
+      case MessageType.profileUpdate:
+        return Icons.person;
+      case MessageType.accountBinding:
+        return Icons.link;
+        
+      // 2. 课程与学习消息
+      case MessageType.courseEnrollment:
+      case MessageType.enrollment: // 向后兼容
+        return Icons.school;
+      case MessageType.courseReminder:
+        return Icons.notifications;
+      case MessageType.courseEndingSoon:
+        return Icons.schedule;
+      case MessageType.courseCompleted:
+        return Icons.task_alt;
+      case MessageType.courseUpdated:
+        return Icons.update;
+      case MessageType.courseRecommendation:
+        return Icons.recommend;
+        
+      // 3. 孩子档案管理消息
+      case MessageType.childAdded:
+        return Icons.child_care;
+      case MessageType.childUpdated:
+        return Icons.edit;
+      case MessageType.childDeleted:
+        return Icons.delete;
+        
+      // 4. 系统与维护消息
+      case MessageType.appUpdate:
+        return Icons.system_update;
+      case MessageType.systemMaintenance:
+        return Icons.build;
+      case MessageType.policyUpdate:
+        return Icons.policy;
+        
+      // 默认
       case MessageType.general:
-        return Colors.blue;
-      case MessageType.system:
-        return Colors.grey;
-      case MessageType.enrollment:
-        return Colors.pink;
+      default:
+        return Icons.message;
     }
   }
 } 

@@ -8,11 +8,13 @@ import '../models/course_model.dart';
 import '../models/profile_model.dart';
 import '../models/message_model.dart';
 import 'video_compression_service.dart';
+import 'message_service.dart';
 
 class LessonService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   final _storage = FirebaseStorage.instance;
+  final _messageService = MessageService();
 
   // 获取已报读的课程（未来的课程）
   Future<List<Lesson>> getEnrolledLessons() async {
@@ -577,9 +579,7 @@ class LessonService {
         });
         
         // 为新报名的孩子发送通知
-        for (final child in newChildren) {
-          await _sendEnrollmentMessage(course, child);
-        }
+        await _messageService.sendCourseEnrollmentMessage(course, newChildren);
       } else {
         // 如果课程记录不存在，创建新的课程记录
         final enrolledChildren = children.map((child) => EnrolledChild(
@@ -614,9 +614,7 @@ class LessonService {
             .add(lesson.toMap());
 
         // 为每个孩子发送报名成功消息
-        for (final child in children) {
-          await _sendEnrollmentMessage(course, child);
-        }
+        await _messageService.sendCourseEnrollmentMessage(course, children);
       }
       
     } catch (e) {
@@ -708,34 +706,6 @@ class LessonService {
     } catch (e) {
       print('Error getting enrolled children: $e');
       return [];
-    }
-  }
-
-  // 发送报名成功消息
-  Future<void> _sendEnrollmentMessage(Course course, ChildInfo child) async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return;
-
-    try {
-      final message = Message(
-        id: '',
-        title: '报名成功',
-        content: '恭喜！${child.name}已成功报名课程《${course.title}》。',
-        type: MessageType.enrollment,
-        createdAt: DateTime.now(),
-        extraData: {
-          'courseId': course.id,
-          'courseName': course.title,
-          'childId': child.id,
-          'childName': child.name,
-        },
-      );
-
-      final data = message.toMap();
-      data['userId'] = userId;
-      await _firestore.collection('messages').add(data);
-    } catch (e) {
-      print('Error sending enrollment message: $e');
     }
   }
 

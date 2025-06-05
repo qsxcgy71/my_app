@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 
 import '../models/course_model.dart';
 import '../models/profile_model.dart';
 import '../services/lesson_service.dart';
 import '../services/profile_service.dart';
+import '../services/payment_service.dart';
+import '../services/message_service.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/theme_provider.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final Course course;
@@ -474,17 +478,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           .where((child) => _selectedChildIds.contains(child.id))
           .toList();
 
-      await _lessonService.enrollCourse(widget.course, selectedChildren);
-      
-      if (mounted) {
-        Navigator.pop(context); // 关闭弹窗
+      // 集成支付流程
+      final paymentService = PaymentService();
+      final paymentSuccess = await paymentService.processCoursePayment(
+        course: widget.course,
+        selectedChildren: selectedChildren,
+        context: context,
+      );
+
+      if (paymentSuccess) {
+        // 支付成功后进行实际的课程报名
+        await _lessonService.enrollCourse(widget.course, selectedChildren);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('成功为${selectedChildren.length}个孩子报名课程《${widget.course.title}》！'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // 发送课程报名成功消息
+        final messageService = MessageService();
+        await messageService.sendCourseEnrollmentMessage(widget.course, selectedChildren);
+        
+        if (mounted) {
+          Navigator.pop(context); // 关闭弹窗
+          
+          // 显示成功提示（支付对话框已经显示过，这里不再重复显示）
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -747,10 +761,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: Text(
-                          course.description,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            height: 1.6,
-                            color: Colors.grey[700],
+                        course.description,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          height: 1.6,
+                          color: Colors.grey[700],
                           ),
                         ),
                       ),
@@ -796,25 +810,107 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _showEnrollChildrenDialog();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: [
+                      // 价格显示
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: course.price == 0 ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: course.price == 0 ? Colors.green : Colors.blue,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  course.price == 0 ? '免费课程' : '课程价格',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Text(
+                                      course.price == 0 ? '¥0' : '¥${course.price.toStringAsFixed(0)}',
+                                      style: AppTextStyles.titleLarge.copyWith(
+                                        color: course.price == 0 ? Colors.green : Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 24,
+                                      ),
+                                    ),
+                                    if (course.price == 0) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'FREE',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                            if (course.price == 0)
+                              Icon(Icons.school, color: Colors.green, size: 32)
+                            else
+                              Icon(Icons.payment, color: Colors.blue, size: 32),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      l10n.enroll,
-                      style: AppTextStyles.button.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 16),
+                      
+                      // 报名按钮
+                      ElevatedButton(
+                        onPressed: () {
+                          _showEnrollChildrenDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: course.price == 0 ? Colors.green : Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              course.price == 0 ? Icons.school : Icons.shopping_cart,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              course.price == 0 ? '立即报名（免费）' : '立即购买并报名',
+                              style: AppTextStyles.button.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 

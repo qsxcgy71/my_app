@@ -75,6 +75,9 @@ dependencies:
   path_provider: ^2.1.1
   permission_handler: ^11.0.1
   
+  # Stripe payment integration
+  flutter_stripe: ^10.1.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -104,6 +107,7 @@ flutter:
     - assets/tabbar/
     - assets/login/
     - assets/theme_icon/
+    - assets/messages/
     - assets/photos/default_avatar.png
     - assets/theme_wellcome/pattern.png
     - assets/theme_wellcome/theme_reduce_hero.png

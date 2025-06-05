@@ -282,5 +282,7 @@
       "length": {}
     }
   },
-  "verificationCode": "驗證碼"
+  "verificationCode": "驗證碼",
+  
+  "cantonese": "粵語"
 } 

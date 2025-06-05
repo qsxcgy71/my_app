@@ -953,7 +953,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirmed == true && mounted) {
+      // 先导航到 loading 页面
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoadingScreen()),
+        (route) => false,
+      );
+      
+      // 执行登出操作
       await _authService.signOut();
+      
+      // 登出后延迟一小段时间再导航到登录选项页面，给用户一个视觉反馈
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false,
+        );
+      }
     }
   }
 }

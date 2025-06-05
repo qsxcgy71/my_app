@@ -5,11 +5,16 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../models/lesson_model.dart';
 import 'video_compression_service.dart';
+import '../models/course_model.dart';
+import '../models/profile_model.dart';
+import '../services/message_service.dart';
+import '../models/message_model.dart';
 
 class LessonService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   final _storage = FirebaseStorage.instance;
+  final MessageService _messageService = MessageService();
 
   // 获取已报读的课程（未来的课程）
   Future<List<Lesson>> getEnrolledLessons() async {
@@ -20,8 +25,9 @@ class LessonService {
       final now = DateTime.now();
       
       final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
           .collection('lessons')
-          .where('userId', isEqualTo: userId)
           .get();
 
       final lessons = <Lesson>[];
@@ -30,13 +36,10 @@ class LessonService {
         final data = doc.data();
         
         try {
-          final lesson = Lesson.fromMap({
-            ...data,
-            'id': doc.id,
-          });
+          final lesson = Lesson.fromMap(data, doc.id);
 
           // 只包含未来的课程（已报读但未上）
-          if (lesson.endDateTime.isAfter(now)) {
+          if (!lesson.isCompleted && lesson.endDateTime.isAfter(now)) {
             lessons.add(lesson);
           }
         } catch (e) {
@@ -62,8 +65,9 @@ class LessonService {
       final now = DateTime.now();
       
       final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
           .collection('lessons')
-          .where('userId', isEqualTo: userId)
           .get();
 
       final lessons = <Lesson>[];
@@ -72,13 +76,10 @@ class LessonService {
         final data = doc.data();
         
         try {
-          final lesson = Lesson.fromMap({
-            ...data,
-            'id': doc.id,
-          });
+          final lesson = Lesson.fromMap(data, doc.id);
 
           // 只包含过去的课程（已完成）
-          if (lesson.endDateTime.isBefore(now)) {
+          if (lesson.isCompleted || lesson.endDateTime.isBefore(now)) {
             lessons.add(lesson);
           }
         } catch (e) {
@@ -102,8 +103,9 @@ class LessonService {
 
     try {
       final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
           .collection('lessons')
-          .where('userId', isEqualTo: userId)
           .get();
 
       final lessons = <Lesson>[];
@@ -112,10 +114,7 @@ class LessonService {
         final data = doc.data();
         
         try {
-          final lesson = Lesson.fromMap({
-            ...data,
-            'id': doc.id,
-          });
+          final lesson = Lesson.fromMap(data, doc.id);
           lessons.add(lesson);
         } catch (e) {
           continue;
@@ -131,13 +130,15 @@ class LessonService {
   // 添加新课程
   Future<Lesson> addLesson({
     required String title,
-    required DateTime date,
-    required TimeOfDay startTime,
-    required TimeOfDay endTime,
     String? description,
+    required String courseId,
     required String courseName,
     String? courseCategory,
     String? imageUrl,
+    String? instructor,
+    required DateTime date,
+    required DateTime startTimeDateTime,
+    required DateTime endTimeDateTime,
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -146,19 +147,21 @@ class LessonService {
       id: '',
       title: title.trim(),
       description: description?.trim().isEmpty == true ? null : description?.trim(),
+      courseId: courseId,
       courseName: courseName.trim(),
       courseCategory: courseCategory?.trim().isEmpty == true ? null : courseCategory?.trim(),
       date: date,
-      startTime: startTime,
-      endTime: endTime,
-      createdAt: DateTime.now(),
+      startTime: TimeOfDay.fromDateTime(startTimeDateTime),
+      endTime: TimeOfDay.fromDateTime(endTimeDateTime),
+      instructor: instructor?.trim().isEmpty == true ? null : instructor?.trim(),
+      isCompleted: false,
       imageUrl: imageUrl?.trim().isEmpty == true ? null : imageUrl?.trim(),
+      createdAt: DateTime.now(),
     );
 
     final lessonData = lesson.toMap();
-    lessonData['userId'] = userId;
     
-    final docRef = await _firestore.collection('lessons').add(lessonData);
+    final docRef = await _firestore.collection('users').doc(userId).collection('lessons').add(lessonData);
     return lesson.copyWith(id: docRef.id);
   }
 
@@ -166,14 +169,16 @@ class LessonService {
   Future<void> updateLesson({
     required String lessonId,
     required String title,
-    required DateTime date,
-    required TimeOfDay startTime,
-    required TimeOfDay endTime,
     String? description,
+    required String courseId,
     required String courseName,
     String? courseCategory,
     String? imageUrl,
-    required DateTime createdAt,
+    String? instructor,
+    required DateTime date,
+    required DateTime startTimeDateTime,
+    required DateTime endTimeDateTime,
+    required bool isCompleted,
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -182,24 +187,29 @@ class LessonService {
       id: lessonId,
       title: title.trim(),
       description: description?.trim().isEmpty == true ? null : description?.trim(),
+      courseId: courseId,
       courseName: courseName.trim(),
       courseCategory: courseCategory?.trim().isEmpty == true ? null : courseCategory?.trim(),
       date: date,
-      startTime: startTime,
-      endTime: endTime,
-      createdAt: createdAt,
+      startTime: TimeOfDay.fromDateTime(startTimeDateTime),
+      endTime: TimeOfDay.fromDateTime(endTimeDateTime),
+      instructor: instructor?.trim().isEmpty == true ? null : instructor?.trim(),
+      isCompleted: isCompleted,
       imageUrl: imageUrl?.trim().isEmpty == true ? null : imageUrl?.trim(),
+      createdAt: DateTime.now(),
     );
 
     final lessonData = lesson.toMap();
-    lessonData['userId'] = userId;
     
-    await _firestore.collection('lessons').doc(lessonId).update(lessonData);
+    await _firestore.collection('users').doc(userId).collection('lessons').doc(lessonId).update(lessonData);
   }
 
   // 删除课程
   Future<void> deleteLesson(String lessonId) async {
-    await _firestore.collection('lessons').doc(lessonId).delete();
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    await _firestore.collection('users').doc(userId).collection('lessons').doc(lessonId).delete();
   }
 
   // 标记课程为已完成
@@ -227,99 +237,60 @@ class LessonService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    final now = DateTime.now();
     final sampleLessons = [
-      // 已报读课程（未来的课程）
       Lesson(
-        id: '',
-        title: '动物时钟:认识时间和分钟',
-        description: '通过有趣的动物主题学习时间概念，认识时钟和分钟的关系。',
-        courseName: '生活小侦探',
-        courseCategory: '生活小探',
-        date: now.add(const Duration(days: 1)),
-        startTime: const TimeOfDay(hour: 10, minute: 0),
-        endTime: const TimeOfDay(hour: 11, minute: 0),
-        createdAt: now,
+        id: 'lesson_1_sample',
+        courseId: 'course_id_1',
+        title: '儿童绘画基础',
+        courseName: '儿童绘画基础',
+        courseCategory: '艺术创作',
+        date: DateTime.now().add(const Duration(days: 1)),
+        startTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 1))),
+        endTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 1, hours: 1))),
+        instructor: '王老师',
+        isCompleted: false,
+        description: '学习基础绘画技巧，激发儿童艺术天赋。',
+        imageUrl: 'https://placehold.co/600x400/add8e6/000000.png?text=Painting',
+        createdAt: DateTime.now(),
       ),
       Lesson(
-        id: '',
-        title: '植物的秘密',
-        description: '观察植物的生长过程，了解植物的基本结构和需求。',
-        courseName: '生活小侦探',
-        courseCategory: '生活小探',
-        date: now.add(const Duration(days: 3)),
-        startTime: const TimeOfDay(hour: 14, minute: 30),
-        endTime: const TimeOfDay(hour: 15, minute: 30),
-        createdAt: now,
+        id: 'lesson_2_sample',
+        courseId: 'course_id_2',
+        title: '趣味科学实验',
+        courseName: '趣味科学实验',
+        courseCategory: '科学探索',
+        date: DateTime.now().add(const Duration(days: 3)),
+        startTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 3))),
+        endTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 3, hours: 1, minutes: 30))),
+        instructor: '李老师',
+        isCompleted: false,
+        description: '通过有趣的实验，培养孩子的科学思维。',
+        imageUrl: 'https://placehold.co/600x400/90ee90/000000.png?text=Science',
+        createdAt: DateTime.now(),
       ),
       Lesson(
-        id: '',
-        title: '数字游戏大挑战',
-        description: '通过趣味游戏学习数字认知和基础运算。',
-        courseName: '数学启蒙乐园',
-        courseCategory: '数学启蒙',
-        date: now.add(const Duration(days: 5)),
-        startTime: const TimeOfDay(hour: 9, minute: 0),
-        endTime: const TimeOfDay(hour: 10, minute: 0),
-        createdAt: now,
-      ),
-      Lesson(
-        id: '',
-        title: '英语故事时间',
-        description: '通过有趣的英语故事培养语言兴趣和听力理解能力。',
-        courseName: '快乐英语启蒙',
-        courseCategory: '语言学习',
-        date: now.add(const Duration(days: 7)),
-        startTime: const TimeOfDay(hour: 16, minute: 0),
-        endTime: const TimeOfDay(hour: 17, minute: 0),
-        createdAt: now,
-      ),
-      
-      // 已完成课程（过去的课程）
-      Lesson(
-        id: '',
-        title: '水彩画基础技巧',
-        description: '学习基本的水彩画技巧，发挥想象力创作艺术作品。',
-        courseName: '艺术创意工坊',
-        courseCategory: '艺术创意',
-        date: now.subtract(const Duration(days: 2)),
-        startTime: const TimeOfDay(hour: 15, minute: 0),
-        endTime: const TimeOfDay(hour: 16, minute: 0),
-        createdAt: now.subtract(const Duration(days: 10)),
-      ),
-      Lesson(
-        id: '',
-        title: '乐器认知和节奏感培养',
-        description: '认识不同乐器，通过音乐游戏培养节奏感。',
-        courseName: '音乐启蒙天地',
-        courseCategory: '音乐教育',
-        date: now.subtract(const Duration(days: 5)),
-        startTime: const TimeOfDay(hour: 11, minute: 0),
-        endTime: const TimeOfDay(hour: 12, minute: 0),
-        createdAt: now.subtract(const Duration(days: 12)),
-      ),
-      Lesson(
-        id: '',
-        title: '厨房里的科学',
-        description: '在厨房中探索科学原理，了解食物的变化过程。',
-        courseName: '生活小侦探',
-        courseCategory: '生活小探',
-        date: now.subtract(const Duration(days: 8)),
-        startTime: const TimeOfDay(hour: 10, minute: 30),
-        endTime: const TimeOfDay(hour: 11, minute: 30),
-        createdAt: now.subtract(const Duration(days: 15)),
+        id: 'lesson_3_sample',
+        courseId: 'course_id_3',
+        title: '乐高编程入门',
+        courseName: '乐高编程入门',
+        courseCategory: '编程机器人',
+        date: DateTime.now().subtract(const Duration(days: 5)),
+        startTime: TimeOfDay.fromDateTime(DateTime.now().subtract(const Duration(days: 5))),
+        endTime: TimeOfDay.fromDateTime(DateTime.now().subtract(const Duration(days: 5, hours: 1))),
+        instructor: '张老师',
+        isCompleted: true,
+        description: '学习乐高机器人编程基础，培养逻辑思维。',
+        imageUrl: 'https://placehold.co/600x400/d3d3d3/000000.png?text=Lego',
+        createdAt: DateTime.now(),
       ),
     ];
 
-    for (final lesson in sampleLessons) {
-      try {
-        final lessonData = lesson.toMap();
-        lessonData['userId'] = userId;
-        await _firestore.collection('lessons').add(lessonData);
-      } catch (e) {
-        print('Error creating sample lesson: $e');
-      }
+    final batch = _firestore.batch();
+    for (var lesson in sampleLessons) {
+      final docRef = _firestore.collection('users').doc(userId).collection('lessons').doc(lesson.id);
+      batch.set(docRef, lesson.toMap());
     }
+    await batch.commit();
   }
 
   // 根据ID获取课程
@@ -331,7 +302,7 @@ class LessonService {
       return Lesson.fromMap({
         ...doc.data()!,
         'id': doc.id,
-      });
+      }, doc.id);
     } catch (e) {
       return null;
     }
@@ -478,5 +449,90 @@ class LessonService {
     } catch (e) {
       throw Exception('删除视频失败: $e');
     }
+  }
+
+  // 新增：报名课程方法
+  Future<void> enrollCourse(Course course, List<ChildInfo> children) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('用户未登录');
+    }
+
+    final batch = _firestore.batch();
+    final userLessonsCollection = _firestore.collection('users').doc(user.uid).collection('lessons');
+
+    for (final child in children) {
+      // 创建Lesson对象
+      final lesson = Lesson(
+        id: '${course.id}_${child.id}_${DateTime.now().millisecondsSinceEpoch}',
+        courseId: course.id,
+        title: course.title,
+        courseName: course.title,
+        courseCategory: course.category,
+        date: DateTime.now().add(const Duration(days: 7)),
+        startTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 7))),
+        endTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(days: 7, hours: 1))),
+        instructor: course.instructor,
+        isCompleted: false,
+        imageUrl: course.imageUrls.isNotEmpty ? course.imageUrls.first : null,
+        description: course.description,
+        childId: child.id,
+        childName: child.name,
+        createdAt: DateTime.now(),
+      );
+
+      // 检查是否已经报名过此课程（针对此孩子）
+      final existingLesson = await userLessonsCollection
+          .where('courseId', isEqualTo: course.id)
+          .where('childId', isEqualTo: child.id)
+          .limit(1)
+          .get();
+
+      if (existingLesson.docs.isNotEmpty) {
+        print('课程 ${course.title} 已经为孩子 ${child.name} 报名。跳过。');
+        continue;
+      }
+
+      final docRef = userLessonsCollection.doc(lesson.id);
+      batch.set(docRef, lesson.toMap());
+    }
+
+    await batch.commit();
+    print('课程报名成功，已添加到Firestore。');
+
+    // 发送报名成功消息
+    if (children.isNotEmpty) {
+      String childNames = children.map((c) => c.name).join('、');
+      String messageTitle = '报名成功通知';
+      String messageContent = '您已成功为 $childNames 报名课程《${course.title}》。请留意上课时间！';
+
+      // 创建一个系统消息
+      final message = Message(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: messageTitle,
+        content: messageContent,
+        type: MessageType.system,
+        createdAt: DateTime.now(),
+        isRead: false,
+        extraData: {
+          'courseId': course.id,
+          'courseName': course.title,
+          'childIds': children.map((c) => c.id).toList(),
+          'childNames': children.map((c) => c.name).toList(),
+        },
+      );
+      await _messageService.addMessage(message);
+      print('报名成功消息已发送。');
+    }
+  }
+
+  // 新增：更新课程完成状态的方法
+  Future<void> updateLessonCompletionStatus(String lessonId, bool isCompleted) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    await _firestore.collection('users').doc(userId).collection('lessons').doc(lessonId).update({
+      'isCompleted': isCompleted,
+    });
   }
 } 

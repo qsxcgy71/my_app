@@ -246,7 +246,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get preview => '预览';
 
   @override
-  String get enroll => '立即报名';
+  String get enrollNow => 'Enroll Now';
 
   @override
   String get goodMorning => '早上好';
@@ -1013,9 +1013,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get preview => '預覽';
-
-  @override
-  String get enroll => '立即報名';
 
   @override
   String get goodMorning => '早安';

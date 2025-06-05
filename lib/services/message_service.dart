@@ -24,8 +24,7 @@ class MessageService {
           .map((snapshot) {
         final messages = snapshot.docs.map((doc) {
           final data = doc.data();
-          data['id'] = doc.id;
-          return Message.fromMap(data);
+          return Message.fromMap(data, doc.id);
         }).toList();
         
         // 在客户端按创建时间排序
@@ -258,5 +257,15 @@ class MessageService {
     } catch (e) {
       print('Error creating sample messages: $e');
     }
+  }
+
+  // 新增：添加消息方法
+  Future<void> addMessage(Message message) async {
+    if (_currentUserId == null) {
+      throw Exception('用户未登录');
+    }
+    final data = message.toMap();
+    data['userId'] = _currentUserId;
+    await _firestore.collection('messages').add(data);
   }
 } 

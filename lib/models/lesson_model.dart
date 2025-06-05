@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Lesson {
   final String id;
   final String title; // 具体课节名称，如"动物时钟"
   final String? description;
+  final String courseId; // 新增：关联的课程ID
   final String courseName; // 课程名称，如"生活小侦探"
   final String? courseCategory; // 课程类别，如"生活小探"
   final DateTime date;
@@ -14,11 +16,15 @@ class Lesson {
   final String? imageUrl; // 课程图片
   final List<LessonPhoto> photos; // 课程照片列表
   List<LessonVideo> videos; // 课程视频列表 - 改为非final以便修改
+  final String? childId; // 新增：关联的孩子ID
+  final String? childName; // 新增：关联的孩子名称
+  final String? instructor; // 新增：讲师
 
   Lesson({
     required this.id,
     required this.title,
     this.description,
+    required this.courseId, // 构造函数添加
     required this.courseName,
     this.courseCategory,
     required this.date,
@@ -29,6 +35,9 @@ class Lesson {
     this.imageUrl,
     this.photos = const [],
     List<LessonVideo>? videos,
+    this.childId, // 构造函数添加
+    this.childName, // 构造函数添加
+    this.instructor, // 构造函数添加
   }) : videos = videos ?? []; // 提供默认空列表
 
   // Get full DateTime for start time
@@ -90,6 +99,7 @@ class Lesson {
     return {
       'title': title,
       'description': description,
+      'courseId': courseId, // toMap添加
       'courseName': courseName,
       'courseCategory': courseCategory,
       'date': DateTime(date.year, date.month, date.day).toIso8601String(),
@@ -100,11 +110,14 @@ class Lesson {
       'imageUrl': imageUrl,
       'photos': photos.map((photo) => photo.toMap()).toList(),
       'videos': videos.map((video) => video.toMap()).toList(),
+      'childId': childId,
+      'childName': childName,
+      'instructor': instructor, // toMap添加
       'userId': '', // This will be set when saving to Firestore
     };
   }
 
-  factory Lesson.fromMap(Map<String, dynamic> map) {
+  factory Lesson.fromMap(Map<String, dynamic> map, String id) {
     final dateTime = DateTime.parse(map['date'] as String);
     final startDateTime = DateTime.parse(map['startTime'] as String);
     final endDateTime = DateTime.parse(map['endTime'] as String);
@@ -115,9 +128,10 @@ class Lesson {
     final localEndTime = endDateTime.toLocal();
     
     return Lesson(
-      id: map['id'] as String? ?? '',
+      id: id, // 使用传入的id
       title: map['title'] as String,
       description: map['description'] as String?,
+      courseId: map['courseId'] as String? ?? '', // fromMap添加
       courseName: map['courseName'] as String,
       courseCategory: map['courseCategory'] as String?,
       date: DateTime(localDate.year, localDate.month, localDate.day),
@@ -130,6 +144,9 @@ class Lesson {
       imageUrl: map['imageUrl'] as String?,
       photos: (map['photos'] as List<dynamic>?)?.map((photo) => LessonPhoto.fromMap(photo)).toList() ?? [],
       videos: (map['videos'] as List<dynamic>?)?.map((video) => LessonVideo.fromMap(video)).toList() ?? [],
+      childId: map['childId'] as String?,
+      childName: map['childName'] as String?,
+      instructor: map['instructor'] as String?, // fromMap添加
     );
   }
 
@@ -138,6 +155,7 @@ class Lesson {
     String? id,
     String? title,
     String? description,
+    String? courseId,
     String? courseName,
     String? courseCategory,
     DateTime? date,
@@ -148,11 +166,15 @@ class Lesson {
     String? imageUrl,
     List<LessonPhoto>? photos,
     List<LessonVideo>? videos,
+    String? childId,
+    String? childName,
+    String? instructor,
   }) {
     return Lesson(
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      courseId: courseId ?? this.courseId,
       courseName: courseName ?? this.courseName,
       courseCategory: courseCategory ?? this.courseCategory,
       date: date ?? this.date,
@@ -163,6 +185,9 @@ class Lesson {
       imageUrl: imageUrl ?? this.imageUrl,
       photos: photos ?? this.photos,
       videos: videos ?? this.videos,
+      childId: childId ?? this.childId,
+      childName: childName ?? this.childName,
+      instructor: instructor ?? this.instructor,
     );
   }
 }

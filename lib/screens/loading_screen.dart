@@ -22,13 +22,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   Future<void> _initializeApp() async {
     try {
-      // 获取主题提供者并立即设置为甜声主题（未登录状态的默认主题）
-      if (!mounted) return;
-      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-      themeProvider.useDeviceTheme();
-      
       // 等待一小段时间以确保所有数据都已加载
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 2));
       
       if (!mounted) return;
       
@@ -36,8 +31,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final user = FirebaseAuth.instance.currentUser;
       
       if (user != null) {
-        // 如果用户已登录，使用账号主题
-        themeProvider.useAccountTheme();
+        // 如果用户已登录，确保使用账号主题
+        final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+        await themeProvider.useAccountTheme();
         
         // 导航到主屏幕
         if (mounted) {
@@ -48,7 +44,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           );
         }
       } else {
-        // 如果用户未登录，保持甜声主题并导航到AuthWrapper
+        // 如果用户未登录，导航到AuthWrapper
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(

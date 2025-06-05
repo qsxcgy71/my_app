@@ -13,13 +13,17 @@ class ThemeProvider extends ChangeNotifier {
   
   // 设备主题（用于未登录状态，固定为comfort主题）
   AppThemeType _deviceTheme = AppThemeType.comfort;
-  // 账号主题（用于登录状态）
-  AppThemeType _accountTheme = AppThemeType.comfort;
+  // 账号主题（用于登录状态，新用户默认为dreams主题）
+  AppThemeType _accountTheme = AppThemeType.dreams;
   // 是否使用账号主题
   bool _useAccountTheme = false;
 
   // 获取当前应该使用的主题
-  AppThemeType get currentTheme => _useAccountTheme ? _accountTheme : AppThemeType.comfort;
+  AppThemeType get currentTheme {
+    final theme = _useAccountTheme ? _accountTheme : AppThemeType.comfort;
+    // print('Current theme: $theme (useAccountTheme: $_useAccountTheme)');
+    return theme;
+  }
   AppThemeData get currentThemeData => AppThemeData.themeData[currentTheme]!;
 
   // 初始化提供者并加载保存的主题
@@ -31,16 +35,34 @@ class ThemeProvider extends ChangeNotifier {
     _useAccountTheme = user != null;
     
     if (_useAccountTheme) {
+      // 首先尝试从本地缓存加载账号主题
+      final savedAccountTheme = _prefs.getString(_accountThemeKey);
+      if (savedAccountTheme != null) {
+        _accountTheme = AppThemeType.values.firstWhere(
+          (type) => type.toString() == savedAccountTheme,
+          orElse: () => AppThemeType.dreams,
+        );
+        print('Loaded account theme from cache: $_accountTheme');
+      }
+      
+      // 然后异步从Firebase加载（这会覆盖本地缓存如果Firebase有更新的数据）
       await _loadAccountTheme();
     }
     
     // 监听用户登录状态变化
     _auth.authStateChanges().listen((User? user) async {
+      final wasUsingAccountTheme = _useAccountTheme;
       _useAccountTheme = user != null;
-      if (user != null) {
+      
+      if (user != null && !wasUsingAccountTheme) {
+        // 用户刚登录，加载账号主题
+        print('User logged in, loading account theme...');
         await _loadAccountTheme();
+      } else if (user == null && wasUsingAccountTheme) {
+        // 用户退出登录，切换到设备主题
+        print('User logged out, switching to device theme');
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 
@@ -50,31 +72,51 @@ class ThemeProvider extends ChangeNotifier {
       final user = _auth.currentUser;
       if (user == null) return;
 
+      print('Loading account theme for user: ${user.uid}');
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists && doc.data()!.containsKey('theme')) {
         final savedTheme = doc.data()!['theme'] as String;
-        _accountTheme = AppThemeType.values.firstWhere(
+        final newTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedTheme,
-          orElse: () => AppThemeType.comfort,
+          orElse: () => AppThemeType.dreams,
         );
+        
+        if (_accountTheme != newTheme) {
+          _accountTheme = newTheme;
+          print('Updated account theme from Firebase: $_accountTheme');
+        }
+        
         // 保存到本地缓存
         await _prefs.setString(_accountThemeKey, _accountTheme.toString());
         notifyListeners();
       } else {
-        // 如果用户文档不存在或没有主题设置，使用comfort主题作为初始账号主题
-        _accountTheme = AppThemeType.comfort;
+        // 如果用户文档不存在或没有主题设置，使用dreams主题作为初始账号主题
+        print('No theme found in Firebase, using default dreams theme');
+        _accountTheme = AppThemeType.dreams;
         await _saveAccountTheme(_accountTheme);
+        notifyListeners();
       }
     } catch (e) {
       print('Error loading theme from Firebase: $e');
       // 发生错误时，尝试使用本地缓存的账号主题
       final savedAccountTheme = _prefs.getString(_accountThemeKey);
       if (savedAccountTheme != null) {
-        _accountTheme = AppThemeType.values.firstWhere(
+        final cachedTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedAccountTheme,
-          orElse: () => AppThemeType.comfort,
+          orElse: () => AppThemeType.dreams,
         );
-        notifyListeners();
+        if (_accountTheme != cachedTheme) {
+          _accountTheme = cachedTheme;
+          print('Fallback to cached account theme: $_accountTheme');
+          notifyListeners();
+        }
+      } else {
+        // 如果连本地缓存也没有，使用默认的dreams主题
+        if (_accountTheme != AppThemeType.dreams) {
+          _accountTheme = AppThemeType.dreams;
+          print('Fallback to default dreams theme');
+          notifyListeners();
+        }
       }
     }
   }
@@ -176,10 +218,13 @@ class ThemeProvider extends ChangeNotifier {
     if (_useAccountTheme) {
       // 如果是登录状态，更新账号主题
       if (_accountTheme != theme) {
+        print('Setting account theme to: $theme');
         _accountTheme = theme;
         notifyListeners();
         await _saveAccountTheme(theme);
       }
+    } else {
+      print('Cannot set theme: not using account theme');
     }
     // 未登录状态不允许更改主题
   }
@@ -187,17 +232,24 @@ class ThemeProvider extends ChangeNotifier {
   // 强制使用设备主题（用于登录页面等）
   void useDeviceTheme() {
     if (_useAccountTheme) {
+      print('Switching to device theme (comfort)...');
       _useAccountTheme = false;
       notifyListeners();
     }
   }
 
   // 强制使用账号主题（用于主页面等）
-  void useAccountTheme() {
+  Future<void> useAccountTheme() async {
     final user = _auth.currentUser;
-    if (user != null && !_useAccountTheme) {
-      _useAccountTheme = true;
-      notifyListeners();
+    if (user != null) {
+      if (!_useAccountTheme) {
+        print('Switching to account theme...');
+        _useAccountTheme = true;
+        // 确保加载了最新的账号主题
+        await _loadAccountTheme();
+      }
+    } else {
+      print('Cannot use account theme: user not logged in');
     }
   }
 
@@ -205,5 +257,24 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> saveCurrentThemeAsDeviceTheme() async {
     // 未登录状态不允许更改主题，所以这个方法不再需要
     return;
+  }
+
+  // 强制刷新当前用户的主题设置
+  Future<void> refreshCurrentTheme() async {
+    final user = _auth.currentUser;
+    if (user != null && _useAccountTheme) {
+      print('Refreshing current theme...');
+      await _loadAccountTheme();
+    }
+  }
+
+  // 获取调试信息
+  String getDebugInfo() {
+    return 'ThemeProvider Debug:\n'
+        '- useAccountTheme: $_useAccountTheme\n'
+        '- accountTheme: $_accountTheme\n'
+        '- deviceTheme: $_deviceTheme\n'
+        '- currentTheme: $currentTheme\n'
+        '- currentUser: ${_auth.currentUser?.uid ?? "null"}';
   }
 } 

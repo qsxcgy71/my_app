@@ -1013,7 +1013,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     // 如果在搜索模式但没有搜索条件和筛选条件，显示空状态提示
     if (_isSearchMode && _searchQuery.isEmpty && !_currentFilter.hasFilters) {
       return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1048,7 +1048,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     // 如果没有课程，显示空状态
     if (lessons.isEmpty) {
       return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1074,7 +1074,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
     return ListView.builder(
       controller: tabIndex == 0 ? _enrolledScrollController : _completedScrollController,
       padding: ResponsiveHelper.getResponsivePadding(context).copyWith(
-        bottom: MediaQuery.of(context).padding.bottom + 80, // 添加底部内边距，确保内容不被遮挡
+        bottom: MediaQuery.of(context).padding.bottom + 60, // 添加底部内边距，确保内容不被遮挡
       ),
       itemCount: _getPaginatedLessons().length,
       itemBuilder: (context, index) {

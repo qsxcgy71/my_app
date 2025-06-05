@@ -172,7 +172,7 @@ class _MessageScreenState extends State<MessageScreen> {
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
         child: StreamBuilder<List<Message>>(
           stream: _messageService.getMessages(),
           builder: (context, snapshot) {
@@ -225,7 +225,7 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Widget _buildEmptyState(AppLocalizations l10n, dynamic currentTheme) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

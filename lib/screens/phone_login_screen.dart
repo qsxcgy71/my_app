@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../models/app_theme.dart';
 import '../providers/theme_provider.dart';
+import '../l10n/app_localizations.dart';
 import 'main_screen.dart';
 import 'loading_screen.dart';
 
@@ -32,11 +33,12 @@ class CountryCode {
     return regex.hasMatch(number);
   }
 
-  String get lengthDescription {
+  String getLengthDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (minLength == maxLength) {
-      return '$minLength位';
+      return l10n.digits(minLength);
     }
-    return '$minLength-$maxLength位';
+    return l10n.digitsRange(minLength, maxLength);
   }
 }
 
@@ -111,6 +113,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     final colorScheme = theme.colorScheme;
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final currentThemeData = themeProvider.currentThemeData;
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
@@ -140,7 +143,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
               child: Row(
                 children: [
                   Text(
-                    '选择国家/地区',
+                    l10n.selectCountryRegion,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -210,6 +213,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                         ),
                       ],
                     ),
+
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -282,6 +286,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                             ],
                           ),
                         ),
+
+
                       ),
                     ),
                   );
@@ -310,18 +316,22 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   }
 
   Future<void> _verifyPhone() async {
+    final l10n = AppLocalizations.of(context)!;
     final phoneNumber = _phoneController.text.trim();
     
     if (phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入手机号码')),
+        SnackBar(content: Text(l10n.pleaseEnterPhoneNumber)),
       );
       return;
     }
     
     if (!_selectedCountry.isValidPhoneNumber(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请输入正确的${_selectedCountry.name}手机号码（${_selectedCountry.lengthDescription}）')),
+        SnackBar(content: Text(l10n.pleaseEnterValidPhoneNumber(
+          _selectedCountry.name,
+          _selectedCountry.getLengthDescription(context),
+        ))),
       );
       return;
     }
@@ -337,9 +347,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           await _signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
-          String message = '验证失败';
+          String message = l10n.verificationFailed;
           if (e.code == 'invalid-phone-number') {
-            message = '无效的手机号码';
+            message = l10n.invalidPhoneNumber;
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
@@ -354,7 +364,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           });
           _startCountdown();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('验证码已发送')),
+            SnackBar(content: Text(l10n.verificationCodeSent)),
           );
         },
         codeAutoRetrievalTimeout: (String verificationId) {
@@ -362,29 +372,26 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             _verificationId = verificationId;
             _isVerifyingPhone = false;
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.verificationCodeExpired)),
+          );
         },
+        timeout: const Duration(seconds: 60),
       );
     } catch (e) {
       setState(() => _isVerifyingPhone = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('发送验证码失败: ${e.toString()}')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.verificationFailed)),
+      );
     }
   }
 
   Future<void> _verifySmsCode() async {
-    if (!_smsController.text.trim().isNotEmpty) {
+    final l10n = AppLocalizations.of(context)!;
+    final smsCode = _smsController.text.trim();
+    if (smsCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入验证码')),
-      );
-      return;
-    }
-
-    if (_smsController.text.trim().length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入6位验证码')),
+        SnackBar(content: Text(l10n.pleaseEnterVerificationCode)),
       );
       return;
     }
@@ -394,40 +401,30 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     try {
       final credential = PhoneAuthProvider.credential(
         verificationId: _verificationId,
-        smsCode: _smsController.text.trim(),
+        smsCode: smsCode,
       );
       await _signInWithCredential(credential);
-    } catch (e) {
-      setState(() => _isVerifyingSms = false);
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('验证码错误: ${e.toString()}')),
-        );
+        setState(() => _isVerifyingSms = false);
       }
     }
   }
 
   Future<void> _signInWithCredential(PhoneAuthCredential credential) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
-      final userCredential = 
-          await FirebaseAuth.instance.signInWithCredential(credential);
-      
-      if (userCredential.user != null && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoadingScreen()),
-          (route) => false,
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       }
     } catch (e) {
-      setState(() {
-        _isVerifyingPhone = false;
-        _isVerifyingSms = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('登录失败: ${e.toString()}')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.verificationFailed)),
+      );
     }
   }
 
@@ -445,6 +442,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     final colorScheme = theme.colorScheme;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final currentThemeData = themeProvider.currentThemeData;
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -457,7 +455,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         ),
         centerTitle: true,
         title: Text(
-          '手机登录',
+          l10n.phoneLogin,
           style: TextStyle(
             color: colorScheme.primary,
             fontSize: 20,
@@ -505,7 +503,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      '欢迎回来',
+                                      l10n.welcomeBack,
                                       style: TextStyle(
                                         fontSize: 40,
                                         fontWeight: FontWeight.bold,
@@ -530,8 +528,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                       fontFamily: 'GenSenRounded',
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: '手机号码',
-                                      helperText: '请输入${_selectedCountry.lengthDescription}手机号码',
+                                      labelText: l10n.phoneNumber,
+                                      helperText: l10n.pleaseEnterPhoneNumberWithLength(
+                                        _selectedCountry.getLengthDescription(context)
+                                      ),
                                       helperStyle: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontFamily: 'GenSenRounded',
@@ -642,8 +642,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                                   )
                                                 : Text(
                                                     _countdownSeconds > 0 
-                                                        ? '重新发送(${_countdownSeconds}s)'
-                                                        : '获取验证码',
+                                                        ? l10n.resendCode(_countdownSeconds)
+                                                        : l10n.getVerificationCode,
                                                     style: const TextStyle(
                                                       fontSize: 16,
                                                       fontWeight: FontWeight.w500,
@@ -665,7 +665,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                       fontFamily: 'GenSenRounded',
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: '验证码',
+                                      labelText: l10n.verificationCode,
                                       labelStyle: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontFamily: 'GenSenRounded',
@@ -740,9 +740,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                   ),
                                                 )
-                                              : const Text(
-                                                  '登录',
-                                                  style: TextStyle(
+                                              : Text(
+                                                  l10n.login,
+                                                  style: const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
                                                     color: Colors.white,

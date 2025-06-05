@@ -95,7 +95,8 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('zh')
+    Locale('zh'),
+    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')
   ];
 
   /// No description provided for @appTitle.
@@ -107,7 +108,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeBack.
   ///
   /// In en, this message translates to:
-  /// **'Welcome back'**
+  /// **'Welcome Back'**
   String get welcomeBack;
 
   /// No description provided for @signInToContinue.
@@ -323,7 +324,7 @@ abstract class AppLocalizations {
   /// No description provided for @noSearchResults.
   ///
   /// In en, this message translates to:
-  /// **'No courses found'**
+  /// **'No matching courses found'**
   String get noSearchResults;
 
   /// No description provided for @tryOtherKeywords.
@@ -473,8 +474,14 @@ abstract class AppLocalizations {
   /// No description provided for @welcome.
   ///
   /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// No description provided for @welcomeWithName.
+  ///
+  /// In en, this message translates to:
   /// **'Welcome, {name}'**
-  String welcome(String name);
+  String welcomeWithName(Object name);
 
   /// No description provided for @comingSoon.
   ///
@@ -839,7 +846,7 @@ abstract class AppLocalizations {
   /// No description provided for @onlineCoursesOnly.
   ///
   /// In en, this message translates to:
-  /// **'Online courses only'**
+  /// **'Online Courses Only'**
   String get onlineCoursesOnly;
 
   /// No description provided for @search.
@@ -863,7 +870,7 @@ abstract class AppLocalizations {
   /// No description provided for @filtersApplied.
   ///
   /// In en, this message translates to:
-  /// **'{count} filters'**
+  /// **'{count} filters applied'**
   String filtersApplied(int count);
 
   /// No description provided for @noMessages.
@@ -1055,7 +1062,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetPasswordFailed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send reset email'**
+  /// **'Failed to reset password'**
   String get resetPasswordFailed;
 
   /// No description provided for @backToLogin.
@@ -1073,7 +1080,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailLogin.
   ///
   /// In en, this message translates to:
-  /// **'Login with Email'**
+  /// **'Email Login'**
   String get emailLogin;
 
   /// No description provided for @googleLogin.
@@ -1085,7 +1092,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneLogin.
   ///
   /// In en, this message translates to:
-  /// **'Login with Phone'**
+  /// **'Phone Login'**
   String get phoneLogin;
 
   /// No description provided for @noAccount.
@@ -1093,6 +1100,468 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Don\'t have an account? Sign up'**
   String get noAccount;
+
+  /// No description provided for @createProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Profile'**
+  String get createProfile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Name'**
+  String get yourName;
+
+  /// No description provided for @children.
+  ///
+  /// In en, this message translates to:
+  /// **'Children ({count} total)'**
+  String children(Object count);
+
+  /// No description provided for @showingXofY.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {shown} of {total}'**
+  String showingXofY(Object shown, Object total);
+
+  /// No description provided for @scrollDownForMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll down for more'**
+  String get scrollDownForMore;
+
+  /// No description provided for @addChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Child'**
+  String get addChild;
+
+  /// No description provided for @editChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Child'**
+  String get editChild;
+
+  /// No description provided for @childName.
+  ///
+  /// In en, this message translates to:
+  /// **'Child Name'**
+  String get childName;
+
+  /// No description provided for @selectBirthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Birth Date'**
+  String get selectBirthDate;
+
+  /// No description provided for @birthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth Date: {date}'**
+  String birthDate(Object date);
+
+  /// No description provided for @selectPhotoSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Photo Source'**
+  String get selectPhotoSource;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @photoUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo updated successfully'**
+  String get photoUpdateSuccess;
+
+  /// No description provided for @photoUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update photo'**
+  String get photoUpdateFailed;
+
+  /// No description provided for @childAddSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Child added successfully'**
+  String get childAddSuccess;
+
+  /// No description provided for @childUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Child updated successfully'**
+  String get childUpdateSuccess;
+
+  /// No description provided for @childDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Child deleted successfully'**
+  String get childDeleteSuccess;
+
+  /// No description provided for @confirmDeleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Profile'**
+  String get confirmDeleteProfile;
+
+  /// No description provided for @confirmDeleteProfileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this profile? This action cannot be undone.'**
+  String get confirmDeleteProfileMessage;
+
+  /// No description provided for @pullToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ Pull up to load more children'**
+  String get pullToRefresh;
+
+  /// No description provided for @releaseToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ Release to load more'**
+  String get releaseToLoad;
+
+  /// No description provided for @loadingMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading more children...'**
+  String get loadingMore;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Failed! Tap to retry'**
+  String get loadFailed;
+
+  /// No description provided for @allChildrenLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'All children loaded'**
+  String get allChildrenLoaded;
+
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Updated!'**
+  String get profileUpdated;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter keywords or select filters to search'**
+  String get searchHint;
+
+  /// No description provided for @searchTip.
+  ///
+  /// In en, this message translates to:
+  /// **'You can search course names, content or categories'**
+  String get searchTip;
+
+  /// No description provided for @noOngoingCourses.
+  ///
+  /// In en, this message translates to:
+  /// **'No ongoing courses'**
+  String get noOngoingCourses;
+
+  /// No description provided for @noCompletedCoursesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed courses yet'**
+  String get noCompletedCoursesYet;
+
+  /// No description provided for @timeSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Slot'**
+  String get timeSlot;
+
+  /// No description provided for @artCreation.
+  ///
+  /// In en, this message translates to:
+  /// **'Art Creation'**
+  String get artCreation;
+
+  /// No description provided for @scientificExploration.
+  ///
+  /// In en, this message translates to:
+  /// **'Scientific Exploration'**
+  String get scientificExploration;
+
+  /// No description provided for @morningSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning Session'**
+  String get morningSession;
+
+  /// No description provided for @collapseFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse Filter'**
+  String get collapseFilter;
+
+  /// No description provided for @moreFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'More Filters'**
+  String get moreFilters;
+
+  /// No description provided for @addTestData.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Test Data'**
+  String get addTestData;
+
+  /// No description provided for @sampleCoursesCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample courses created'**
+  String get sampleCoursesCreated;
+
+  /// No description provided for @createSampleCourseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create sample courses: {error}'**
+  String createSampleCourseFailed(Object error);
+
+  /// No description provided for @updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated!'**
+  String get updated;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Failed'**
+  String get updateFailed;
+
+  /// No description provided for @pullUpToLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ Pull up to load more'**
+  String get pullUpToLoadMore;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @releaseToLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ Release to load more'**
+  String get releaseToLoadMore;
+
+  /// No description provided for @allLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'All loaded'**
+  String get allLoaded;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @pleaseEnterValidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get pleaseEnterValidEmail;
+
+  /// No description provided for @pleaseEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password'**
+  String get pleaseEnterPassword;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get userNotFound;
+
+  /// No description provided for @wrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password'**
+  String get wrongPassword;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get invalidEmail;
+
+  /// No description provided for @selectCountryRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Country/Region'**
+  String get selectCountryRegion;
+
+  /// No description provided for @pleaseEnterValidPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid {country} phone number ({length})'**
+  String pleaseEnterValidPhoneNumber(Object country, Object length);
+
+  /// No description provided for @verificationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification failed'**
+  String get verificationFailed;
+
+  /// No description provided for @invalidPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number'**
+  String get invalidPhoneNumber;
+
+  /// No description provided for @verificationCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent'**
+  String get verificationCodeSent;
+
+  /// No description provided for @verificationCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code expired'**
+  String get verificationCodeExpired;
+
+  /// No description provided for @verifyingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying code...'**
+  String get verifyingCode;
+
+  /// No description provided for @getVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Code'**
+  String get getVerificationCode;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend ({seconds}s)'**
+  String resendCode(Object seconds);
+
+  /// No description provided for @digits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} digits'**
+  String digits(Object count);
+
+  /// No description provided for @digitsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{min}-{max} digits'**
+  String digitsRange(Object min, Object max);
+
+  /// No description provided for @pleaseConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get pleaseConfirmPassword;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get haveAccount;
+
+  /// No description provided for @weakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak'**
+  String get weakPassword;
+
+  /// No description provided for @emailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is already in use'**
+  String get emailAlreadyInUse;
+
+  /// No description provided for @invalidEmailFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get invalidEmailFormat;
+
+  /// No description provided for @resetPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address and we will send you a password reset link'**
+  String get resetPasswordDescription;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get sendResetLink;
+
+  /// No description provided for @resetPasswordEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Reset Email Sent'**
+  String get resetPasswordEmailSent;
+
+  /// No description provided for @resetPasswordEmailDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your email and follow the instructions to reset your password'**
+  String get resetPasswordEmailDescription;
+
+  /// No description provided for @iKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'I Know'**
+  String get iKnow;
+
+  /// No description provided for @pleaseEnterPhoneNumberWithLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a {length} phone number'**
+  String pleaseEnterPhoneNumberWithLength(Object length);
+
+  /// No description provided for @verificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Code'**
+  String get verificationCode;
 }
 
 class _AppLocalizationsDelegate
@@ -1113,6 +1582,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+script codes are specified.
+  switch (locale.languageCode) {
+    case 'zh':
+      {
+        switch (locale.scriptCode) {
+          case 'Hant':
+            return AppLocalizationsZhHant();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':

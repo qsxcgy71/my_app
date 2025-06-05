@@ -160,6 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showEditProfileDialog([UserProfile? profile]) async {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController(text: profile?.name ?? '');
     final phoneController = TextEditingController(text: profile?.phone ?? '');
     final emailController = TextEditingController(
@@ -170,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          profile == null ? 'Create Profile' : 'Edit Profile',
+          profile == null ? l10n.createProfile : l10n.editProfile,
           style: AppTextStyles.titleLarge,
         ),
         content: SingleChildScrollView(
@@ -180,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'Your Name',
+                  labelText: l10n.yourName,
                   labelStyle: AppTextStyles.bodyMedium,
                 ),
                 style: AppTextStyles.bodyMedium,
@@ -189,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: phoneController,
                 decoration: InputDecoration(
-                  labelText: 'Phone Number',
+                  labelText: l10n.phone,
                   labelStyle: AppTextStyles.bodyMedium,
                 ),
                 keyboardType: TextInputType.phone,
@@ -199,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: l10n.email,
                   labelStyle: AppTextStyles.bodyMedium,
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -211,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMedium),
+            child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
           ),
           TextButton(
             onPressed: () async {
@@ -248,6 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showAddChildDialog([ChildInfo? child]) async {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController(text: child?.name ?? '');
     DateTime? selectedDate = child?.birthDate;
 
@@ -255,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          child == null ? 'Add Child' : 'Edit Child',
+          child == null ? l10n.addChild : l10n.editChild,
           style: AppTextStyles.titleLarge,
         ),
         content: SingleChildScrollView(
@@ -265,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'Child Name',
+                  labelText: l10n.childName,
                   labelStyle: AppTextStyles.bodyMedium,
                 ),
                 style: AppTextStyles.bodyMedium,
@@ -274,8 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 title: Text(
                   selectedDate == null
-                      ? 'Select Birth Date'
-                      : 'Birth Date: ${selectedDate.toString().split(' ')[0]}',
+                      ? l10n.selectBirthDate
+                      : l10n.birthDate(selectedDate.toString().split(' ')[0]),
                   style: AppTextStyles.bodyMedium,
                 ),
                 trailing: const Icon(Icons.calendar_today),
@@ -298,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMedium),
+            child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
           ),
           TextButton(
             onPressed: () async {
@@ -355,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(child == null ? 'Child added successfully' : 'Child updated successfully'),
+                      content: Text(child == null ? l10n.childAddSuccess : l10n.childUpdateSuccess),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
                     ),
@@ -377,24 +379,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _deleteChild(String childId) async {
+    final l10n = AppLocalizations.of(context)!;
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Profile', style: AppTextStyles.titleLarge),
+          title: Text(l10n.confirmDeleteProfile, style: AppTextStyles.titleLarge),
           content: Text(
-            'Are you sure you want to delete this profile? This action cannot be undone.',
+            l10n.confirmDeleteProfileMessage,
             style: AppTextStyles.bodyMedium,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel', style: AppTextStyles.bodyMedium),
+              child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text('Delete', style: AppTextStyles.bodyMedium),
+              child: Text(l10n.delete, style: AppTextStyles.bodyMedium),
             ),
           ],
         );
@@ -444,11 +447,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await _updateUserProfileLocally(updatedProfile);
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Child deleted successfully'),
+          SnackBar(
+            content: Text(l10n.childDeleteSuccess),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -470,29 +473,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     
+    final l10n = AppLocalizations.of(context)!;
     _saveScrollPosition();
     _shouldPreserveScroll = true;
     
     try {
       _isImagePickerActive = true;
       
-      // 显示选择照片来源的对话框
       final ImageSource? source = await showDialog<ImageSource>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('选择照片来源'),
+            title: Text(l10n.selectPhotoSource),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
                   leading: const Icon(Icons.camera_alt),
-                  title: const Text('拍照'),
+                  title: Text(l10n.takePhoto),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('从相册选择'),
+                  title: Text(l10n.chooseFromGallery),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                 ),
               ],
@@ -565,10 +568,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             await _updateUserProfileLocally(updatedProfile);
             
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('头像更新成功'),
+              SnackBar(
+                content: Text(l10n.photoUpdateSuccess),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -581,7 +584,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _shouldPreserveScroll = false; // Reset on error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('头像更新失败: $e')),
+          SnackBar(content: Text(l10n.photoUpdateFailed)),
         );
       }
     } finally {
@@ -640,36 +643,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SafeArea(
-      bottom: false, // 不在底部添加SafeArea，我们手动处理
-      child: SmartRefresher(
-        enablePullDown: true,
-        enablePullUp: _hasMoreChildren,
-        header: WaterDropHeader(
-          complete: Text(
-            'Profile Updated!',
-            style: AppTextStyles.bodyMedium,
-          ),
-          failed: Text(
-            'Update Failed',
-            style: AppTextStyles.bodyMedium,
-          ),
+
+    return SmartRefresher(
+      enablePullDown: true,
+      enablePullUp: _hasMoreChildren,
+      header: WaterDropHeader(
+        complete: Text(
+          l10n.profileUpdated,
+          style: AppTextStyles.bodyMedium,
         ),
-        footer: CustomFooter(
-          builder: (BuildContext context, LoadStatus? mode) {
-            Widget body;
-            if (mode == null) {
-              body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
-            } else if (mode == LoadStatus.idle) {
-              body = Text("↑ Pull up to load more children", style: AppTextStyles.bodyMedium);
-            } else if (mode == LoadStatus.loading) {
-              body = Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+        failed: Text(
+          'Update Failed',
+          style: AppTextStyles.bodyMedium,
+        ),
+      ),
+      footer: CustomFooter(
+        builder: (BuildContext context, LoadStatus? mode) {
+          Widget body;
+          if (mode == null) {
+            body = Text(l10n.pullToRefresh, style: AppTextStyles.bodyMedium);
+          } else if (mode == LoadStatus.idle) {
+            body = Text(l10n.pullToRefresh, style: AppTextStyles.bodyMedium);
+          } else if (mode == LoadStatus.loading) {
+            body = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Text(l10n.loadingMore, style: AppTextStyles.bodyMedium),
+              ],
+            );
+          } else if (mode == LoadStatus.failed) {
+            body = Text(l10n.loadFailed, style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+          } else if (mode == LoadStatus.canLoading) {
+            body = Text(l10n.releaseToLoad, style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).primaryColor));
+          } else {
+            body = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green),
+                const SizedBox(width: 4),
+                Text(l10n.allChildrenLoaded, style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+              ],
+            );
+          }
+          return Container(
+            height: 55.0,
+            child: Center(child: body),
+          );
+        },
+      ),
+      controller: _refreshController,
+      onRefresh: _onRefresh,
+      onLoading: _onLoadingMoreChildren,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        controller: _scrollController,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 标题和登出按钮区域
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.profile,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _showLogoutConfirmation(context, l10n),
+                    icon: const Icon(Icons.logout),
+                    tooltip: l10n.logout,
+                    color: Colors.red,
+                    iconSize: 24,
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (_userProfile == null)
+              Center(
+                child: ElevatedButton(
+                  onPressed: _showEditProfileDialog,
+                  child: Text(l10n.createProfile, style: AppTextStyles.button),
+                ),
+              )
+            else ...[
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.person),
+                  title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
+                      Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _showEditProfileDialog(_userProfile),
+
                   ),
                   const SizedBox(width: 8),
                   Text("Loading more children...", style: AppTextStyles.bodyMedium),
@@ -717,13 +812,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      l10n.profile,
-                      style: AppTextStyles.titleLarge.copyWith(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
+
+                  Text(
+                    l10n.children(_userProfile!.children.length.toString()),
+                    style: AppTextStyles.titleLarge.copyWith(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      // Test button - remove in production
+                      IconButton(
+                        icon: const Icon(Icons.science, color: Colors.orange),
+                        tooltip: 'Add Test Data',
+                        onPressed: _addTestChildren,
+
                       ),
                     ),
                   ),
@@ -747,47 +851,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              if (_userProfile == null)
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _showEditProfileDialog,
-                    child: Text('Create Profile', style: AppTextStyles.button),
-                  ),
-                )
-              else ...[
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(_userProfile!.name, style: AppTextStyles.bodyLarge),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_userProfile!.phone, style: AppTextStyles.bodyMedium),
-                        Text(_userProfile!.email, style: AppTextStyles.bodyMedium),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _showEditProfileDialog(_userProfile),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Children (${_userProfile!.children.length} total)',
-                      style: AppTextStyles.titleLarge.copyWith(fontSize: 20),
-                    ),
-                    Row(
-                      children: [
-                        // Test button - remove in production
-                        IconButton(
-                          icon: const Icon(Icons.science, color: Colors.orange),
-                          tooltip: 'Add Test Data',
-                          onPressed: _addTestChildren,
+
+              if (_userProfile!.children.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n.showingXofY(
+                          _getPaginatedChildren().length.toString(),
+                          _userProfile!.children.length.toString(),
+                        ),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+
                         ),
                         IconButton(
                           icon: const Icon(Icons.add),
@@ -804,7 +883,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
+
                           'Showing ${_getPaginatedChildren().length} of ${_userProfile!.children.length}',
+
+                          l10n.scrollDownForMore,
+
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -882,9 +965,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  )
-                                : const Icon(Icons.add_a_photo),
+
+                                    )
+                                  : const Icon(Icons.add_a_photo),
+                            ),
+                          ),
+                          title: Text(child.name, style: AppTextStyles.bodyLarge),
+                          subtitle: Text(
+                            child.birthDate != null 
+                              ? l10n.birthDate(child.birthDate.toString().split(' ')[0])
+                              : l10n.birthDate(l10n.unknown),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _showAddChildDialog(child),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _deleteChild(child.id),
+                              ),
+                            ],
+
                           ),
                         ),
                         title: Text(child.name, style: AppTextStyles.bodyLarge),

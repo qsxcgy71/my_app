@@ -48,13 +48,13 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      String message = '登录失败';
+      String message = AppLocalizations.of(context)!.loginFailed;
       if (e.code == 'user-not-found') {
-        message = '未找到该用户';
+        message = AppLocalizations.of(context)!.userNotFound;
       } else if (e.code == 'wrong-password') {
-        message = '密码错误';
+        message = AppLocalizations.of(context)!.wrongPassword;
       } else if (e.code == 'invalid-email') {
-        message = '邮箱格式不正确';
+        message = AppLocalizations.of(context)!.invalidEmail;
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,7 +64,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('登录失败: ${e.toString()}')),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.loginFailed}: ${e.toString()}')),
         );
       }
     } finally {
@@ -93,7 +93,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
         ),
         centerTitle: true,
         title: Text(
-          '邮箱登录',
+          l10n.emailLogin,
           style: TextStyle(
             color: colorScheme.primary,
             fontSize: 20,
@@ -134,7 +134,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    '欢迎回来',
+                                    l10n.welcomeBack,
                                     style: AppTextStyles.titleLarge.copyWith(
                                       fontSize: 40,
                                       fontWeight: FontWeight.bold,
@@ -158,7 +158,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                     fontFamily: 'GenSenRounded',
                                   ),
                                   decoration: InputDecoration(
-                                    labelText: '电子邮箱',
+                                    labelText: l10n.email,
                                     labelStyle: TextStyle(
                                       color: colorScheme.secondary.withOpacity(0.7),
                                       fontFamily: 'GenSenRounded',
@@ -200,10 +200,10 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return '请输入电子邮箱';
+                                      return l10n.pleaseEnterEmail;
                                     }
                                     if (!value.contains('@')) {
-                                      return '请输入有效的电子邮箱';
+                                      return l10n.pleaseEnterValidEmail;
                                     }
                                     return null;
                                   },
@@ -217,7 +217,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                     fontFamily: 'GenSenRounded',
                                   ),
                                   decoration: InputDecoration(
-                                    labelText: '密码',
+                                    labelText: l10n.password,
                                     labelStyle: TextStyle(
                                       color: colorScheme.secondary.withOpacity(0.7),
                                       fontFamily: 'GenSenRounded',
@@ -266,10 +266,10 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return '请输入密码';
+                                      return l10n.pleaseEnterPassword;
                                     }
                                     if (value.length < 6) {
-                                      return '密码长度至少为6位';
+                                      return l10n.passwordMinLength;
                                     }
                                     return null;
                                   },
@@ -292,7 +292,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                       padding: MaterialStateProperty.all(EdgeInsets.zero),
                                     ),
                                     child: Text(
-                                      '忘记密码？',
+                                      l10n.forgotPassword,
                                       style: TextStyle(
                                         color: colorScheme.secondary,
                                         fontSize: 14,
@@ -347,8 +347,10 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                 ),
                                               )
-                                            : const Text(
-                                                '登录',
+
+                                            : Text(
+                                                l10n.login,
+
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w500,

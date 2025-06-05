@@ -551,7 +551,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       minimumSize: const Size(65, 34),
                     ),
                     child: Text(
-                      l10n.search, 
+                      l10n.search,
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)
                     ),
                   ),
@@ -659,7 +659,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   minHeight: 36,
                 ),
                 padding: const EdgeInsets.all(8),
-                tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+                tooltip: _showFilterPanel ? l10n.collapseFilter : l10n.moreFilters,
                 style: IconButton.styleFrom(
                   backgroundColor: _showFilterPanel 
                       ? currentTheme.primaryColor.withOpacity(0.1)

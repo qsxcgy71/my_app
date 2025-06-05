@@ -38,27 +38,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 创建用户
       final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
       if (userCredential.user != null && mounted) {
-        // 注册成功后直接进入应用
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoadingScreen()),
           (route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
-      String message = '注册失败';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.registrationFailed;
       if (e.code == 'weak-password') {
-        message = '密码强度太弱';
+        message = l10n.weakPassword;
       } else if (e.code == 'email-already-in-use') {
-        message = '该邮箱已被注册';
+        message = l10n.emailAlreadyInUse;
       } else if (e.code == 'invalid-email') {
-        message = '邮箱格式不正确';
+        message = l10n.invalidEmailFormat;
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -67,8 +66,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('注册失败: ${e.toString()}')),
+          SnackBar(content: Text(l10n.registrationFailed)),
         );
       }
     } finally {
@@ -84,6 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final colorScheme = theme.colorScheme;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final currentThemeData = themeProvider.currentThemeData;
+    final l10n = AppLocalizations.of(context)!;
 
     return KeyboardDismissibleScaffold(
       extendBodyBehindAppBar: true,
@@ -96,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         centerTitle: true,
         title: Text(
-          '创建账户',
+          l10n.createAccount,
           style: TextStyle(
             color: colorScheme.primary,
             fontSize: 20,
@@ -107,7 +108,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: Stack(
         children: [
-          // 背景层
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -120,7 +120,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-          // 内容层
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -144,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      '欢迎加入',
+                                      l10n.welcome,
                                       style: TextStyle(
                                         fontSize: 40,
                                         fontWeight: FontWeight.bold,
@@ -168,7 +167,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       fontFamily: 'GenSenRounded',
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: '电子邮箱',
+                                      labelText: l10n.email,
                                       labelStyle: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontFamily: 'GenSenRounded',
@@ -198,10 +197,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return '请输入电子邮箱';
+                                        return l10n.pleaseEnterEmail;
                                       }
                                       if (!value.contains('@')) {
-                                        return '请输入有效的电子邮箱';
+                                        return l10n.pleaseEnterValidEmail;
                                       }
                                       return null;
                                     },
@@ -215,7 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       fontFamily: 'GenSenRounded',
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: '密码',
+                                      labelText: l10n.password,
                                       labelStyle: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontFamily: 'GenSenRounded',
@@ -252,10 +251,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return '请输入密码';
+                                        return l10n.pleaseEnterPassword;
                                       }
                                       if (value.length < 6) {
-                                        return '密码长度至少为6位';
+                                        return l10n.passwordTooShort;
                                       }
                                       return null;
                                     },
@@ -269,7 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       fontFamily: 'GenSenRounded',
                                     ),
                                     decoration: InputDecoration(
-                                      labelText: '确认密码',
+                                      labelText: l10n.confirmPassword,
                                       labelStyle: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontFamily: 'GenSenRounded',
@@ -306,10 +305,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return '请再次输入密码';
+                                        return l10n.pleaseConfirmPassword;
                                       }
                                       if (value != _passwordController.text) {
-                                        return '两次输入的密码不一致';
+                                        return l10n.passwordsDoNotMatch;
                                       }
                                       return null;
                                     },
@@ -360,9 +359,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                   ),
                                                 )
-                                              : const Text(
-                                                  '注册',
-                                                  style: TextStyle(
+                                              : Text(
+                                                  l10n.register,
+                                                  style: const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
                                                     color: Colors.white,
@@ -381,7 +380,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       splashFactory: NoSplash.splashFactory,
                                     ),
                                     child: Text(
-                                      '已有账户？返回登录',
+                                      l10n.haveAccount,
                                       style: TextStyle(
                                         color: colorScheme.secondary.withOpacity(0.7),
                                         fontSize: 14,

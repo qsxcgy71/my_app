@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "appTitle": "Kids Profile",
-  "welcomeBack": "Welcome back",
+  "welcomeBack": "Welcome Back",
   "signInToContinue": "Sign in to your account to continue",
   "email": "Email",
   "password": "Password",
@@ -39,7 +39,7 @@
   "searchCoursePlaceholder": "Search course name, category or description...",
   "cancel": "Cancel",
   "searchResults": "Search Results",
-  "noSearchResults": "No courses found",
+  "noSearchResults": "No matching courses found",
   "tryOtherKeywords": "Try using other keywords",
   "enterSearchKeywords": "Please enter search keywords",
   "canSearchCourses": "You can search course names, categories or descriptions",
@@ -75,12 +75,11 @@
   "hello": "Hello",
   "emailOrPhone": "Email or Phone",
   "signInWithGoogle": "Sign in with Google",
-  "welcome": "Welcome, {name}",
-  "@welcome": {
+  "welcome": "Welcome",
+  "welcomeWithName": "Welcome, {name}",
+  "@welcomeWithName": {
     "placeholders": {
-      "name": {
-        "type": "String"
-      }
+      "name": {}
     }
   },
   "comingSoon": "Coming Soon",
@@ -154,11 +153,11 @@
   "primaryLevel": "Primary",
   "intermediateLevel": "Intermediate",
   "advancedLevel": "Advanced",
-  "onlineCoursesOnly": "Online courses only",
+  "onlineCoursesOnly": "Online Courses Only",
   "search": "Search",
   "searchAndCollapse": "Search & Close",
   "clearFilters": "Clear Filters",
-  "filtersApplied": "{count} filters",
+  "filtersApplied": "{count} filters applied",
   "@filtersApplied": {
     "placeholders": {
       "count": {
@@ -223,8 +222,115 @@
   "resetPasswordFailed": "Failed to send reset email",
   "backToLogin": "Back to Login",
   "pleaseEnterEmail": "Please enter your email address",
-  "emailLogin": "Login with Email",
+  "emailLogin": "Email Login",
   "googleLogin": "Login with Google",
-  "phoneLogin": "Login with Phone",
-  "noAccount": "Don't have an account? Sign up"
+  "phoneLogin": "Phone Login",
+  "noAccount": "Don't have an account? Sign up",
+
+  "createProfile": "Create Profile",
+  "editProfile": "Edit Profile",
+  "yourName": "Your Name",
+  "children": "Children ({count} total)",
+  "showingXofY": "Showing {shown} of {total}",
+  "scrollDownForMore": "Scroll down for more",
+  "addChild": "Add Child",
+  "editChild": "Edit Child",
+  "childName": "Child Name",
+  "selectBirthDate": "Select Birth Date",
+  "birthDate": "Birth Date: {date}",
+  "selectPhotoSource": "Select Photo Source",
+  "takePhoto": "Take Photo",
+  "chooseFromGallery": "Choose from Gallery",
+  "photoUpdateSuccess": "Photo updated successfully",
+  "photoUpdateFailed": "Failed to update photo",
+  "childAddSuccess": "Child added successfully",
+  "childUpdateSuccess": "Child updated successfully",
+  "childDeleteSuccess": "Child deleted successfully",
+  "confirmDeleteProfile": "Delete Profile",
+  "confirmDeleteProfileMessage": "Are you sure you want to delete this profile? This action cannot be undone.",
+  "pullToRefresh": "↑ Pull up to load more children",
+  "releaseToLoad": "↑ Release to load more",
+  "loadingMore": "Loading more children...",
+  "loadFailed": "Load Failed! Tap to retry",
+  "allChildrenLoaded": "All children loaded",
+  "profileUpdated": "Profile Updated!",
+
+  "searchHint": "Enter keywords or select filters to search",
+  "searchTip": "You can search course names, content or categories",
+  "noOngoingCourses": "No ongoing courses",
+  "noCompletedCoursesYet": "No completed courses yet",
+  "timeSlot": "Time Slot",
+  "artCreation": "Art Creation",
+  "scientificExploration": "Scientific Exploration",
+  "morningSession": "Morning Session",
+  "collapseFilter": "Collapse Filter",
+  "moreFilters": "More Filters",
+  "addTestData": "Add Test Data",
+  "sampleCoursesCreated": "Sample courses created",
+  "createSampleCourseFailed": "Failed to create sample courses: {error}",
+  "updated": "Updated!",
+  "updateFailed": "Update Failed",
+  "pullUpToLoadMore": "↑ Pull up to load more",
+  "loading": "Loading...",
+  "releaseToLoadMore": "↑ Release to load more",
+  "allLoaded": "All loaded",
+  "unknown": "Unknown",
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "pleaseEnterPassword": "Please enter your password",
+  "passwordMinLength": "Password must be at least 6 characters",
+  "userNotFound": "User not found",
+  "wrongPassword": "Wrong password",
+  "invalidEmail": "Invalid email format",
+  "selectCountryRegion": "Select Country/Region",
+  "pleaseEnterValidPhoneNumber": "Please enter a valid {country} phone number ({length})",
+  "@pleaseEnterValidPhoneNumber": {
+    "placeholders": {
+      "country": {},
+      "length": {}
+    }
+  },
+  "verificationFailed": "Verification failed",
+  "invalidPhoneNumber": "Invalid phone number",
+  "verificationCodeSent": "Verification code sent",
+  "verificationCodeExpired": "Verification code expired",
+  "verifyingCode": "Verifying code...",
+  "getVerificationCode": "Get Code",
+  "resendCode": "Resend ({seconds}s)",
+  "@resendCode": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "digits": "{count} digits",
+  "@digits": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "digitsRange": "{min}-{max} digits",
+  "@digitsRange": {
+    "placeholders": {
+      "min": {},
+      "max": {}
+    }
+  },
+  "pleaseConfirmPassword": "Please confirm your password",
+  "register": "Register",
+  "haveAccount": "Already have an account? Sign in",
+  "weakPassword": "Password is too weak",
+  "emailAlreadyInUse": "Email is already in use",
+  "invalidEmailFormat": "Invalid email format",
+  "resetPasswordDescription": "Please enter your email address and we will send you a password reset link",
+  "sendResetLink": "Send Reset Link",
+  "resetPasswordEmailSent": "Password Reset Email Sent",
+  "resetPasswordEmailDescription": "Please check your email and follow the instructions to reset your password",
+  "iKnow": "I Know",
+  "resetPasswordFailed": "Failed to reset password",
+  "pleaseEnterPhoneNumberWithLength": "Please enter a {length} phone number",
+  "@pleaseEnterPhoneNumberWithLength": {
+    "placeholders": {
+      "length": {}
+    }
+  },
+  "verificationCode": "Verification Code"
 } 

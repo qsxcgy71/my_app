@@ -39,7 +39,7 @@
   "searchCoursePlaceholder": "搜索课程名称、类别或描述...",
   "cancel": "取消",
   "searchResults": "搜索结果",
-  "noSearchResults": "暂无相关课程",
+  "noSearchResults": "未找到匹配的课程",
   "tryOtherKeywords": "试试其他关键词",
   "enterSearchKeywords": "请输入搜索关键词",
   "canSearchCourses": "可以搜索课程名称、类别或描述",
@@ -75,12 +75,11 @@
   "hello": "你好",
   "emailOrPhone": "邮箱或手机号",
   "signInWithGoogle": "使用Google登录",
-  "welcome": "欢迎，{name}",
-  "@welcome": {
+  "welcome": "欢迎加入",
+  "welcomeWithName": "欢迎，{name}",
+  "@welcomeWithName": {
     "placeholders": {
-      "name": {
-        "type": "String"
-      }
+      "name": {}
     }
   },
   "comingSoon": "即将推出",
@@ -157,8 +156,8 @@
   "onlineCoursesOnly": "仅显示在线课程",
   "search": "搜索",
   "searchAndCollapse": "搜索并收起",
-  "clearFilters": "清除筛选条件",
-  "filtersApplied": "{count}个筛选",
+  "clearFilters": "清除筛选",
+  "filtersApplied": "已应用 {count} 个筛选条件",
   "@filtersApplied": {
     "placeholders": {
       "count": {
@@ -207,7 +206,7 @@
     }
   },
 
-  "createAccount": "创建账号",
+  "createAccount": "创建账户",
   "signUpTitle": "注册",
   "confirmPassword": "确认密码",
   "alreadyHaveAccount": "已有账号？",
@@ -223,9 +222,114 @@
   "resetPasswordSuccess": "重置密码邮件已发送",
   "resetPasswordFailed": "重置密码失败",
   "backToLogin": "返回登录",
-  "pleaseEnterEmail": "请输入邮箱地址",
-  "emailLogin": "使用电邮登入",
+  "pleaseEnterEmail": "请输入电子邮箱",
+  "pleaseEnterValidEmail": "请输入有效的电子邮箱",
+  "pleaseEnterPassword": "请输入密码",
+  "passwordMinLength": "密码长度至少为6位",
+  "userNotFound": "未找到该用户",
+  "wrongPassword": "密码错误",
+  "invalidEmail": "邮箱格式不正确",
+  "emailLogin": "邮箱登录",
   "googleLogin": "使用Google登入",
-  "phoneLogin": "使用电话登入",
-  "noAccount": "还没有帐户？注册"
+  "phoneLogin": "手机登录",
+  "noAccount": "还没有帐户？注册",
+
+  "createProfile": "创建个人资料",
+  "editProfile": "编辑个人资料",
+  "yourName": "您的姓名",
+  "children": "孩子 (共{count}个)",
+  "showingXofY": "显示{shown}个，共{total}个",
+  "scrollDownForMore": "向下滚动加载更多",
+  "addChild": "添加孩子",
+  "editChild": "编辑孩子资料",
+  "childName": "孩子姓名",
+  "selectBirthDate": "选择出生日期",
+  "birthDate": "出生日期：{date}",
+  "selectPhotoSource": "选择照片来源",
+  "takePhoto": "拍照",
+  "chooseFromGallery": "从相册选择",
+  "photoUpdateSuccess": "头像更新成功",
+  "photoUpdateFailed": "头像更新失败",
+  "childAddSuccess": "成功添加孩子",
+  "childUpdateSuccess": "成功更新孩子资料",
+  "childDeleteSuccess": "成功删除孩子资料",
+  "confirmDeleteProfile": "删除资料",
+  "confirmDeleteProfileMessage": "确定要删除这个资料吗？此操作无法撤销。",
+  "pullToRefresh": "↑ 上拉加载更多孩子",
+  "releaseToLoad": "↑ 释放加载更多",
+  "loadingMore": "正在加载更多孩子...",
+  "loadFailed": "加载失败！点击重试",
+  "allChildrenLoaded": "已加载全部孩子",
+  "profileUpdated": "个人资料已更新！",
+  "searchHint": "输入关键词或选择筛选条件开始搜索",
+  "searchTip": "可以搜索课程名称、内容或类别",
+  "noOngoingCourses": "暂无进行中的课程",
+  "noCompletedCoursesYet": "暂无已完成的课程",
+  "timeSlot": "时间段",
+  "artCreation": "艺术创作",
+  "scientificExploration": "科学探索",
+  "morningSession": "上午时段",
+  "collapseFilter": "收起筛选",
+  "moreFilters": "更多筛选",
+  "addTestData": "添加测试数据",
+  "sampleCoursesCreated": "示例课程已创建",
+  "createSampleCourseFailed": "创建示例课程失败：{error}",
+  "updated": "已更新！",
+  "updateFailed": "更新失败",
+  "pullUpToLoadMore": "↑ 上拉加载更多",
+  "loading": "正在加载...",
+  "releaseToLoadMore": "↑ 释放加载更多",
+  "allLoaded": "已加载全部",
+  "unknown": "未知",
+  "selectCountryRegion": "选择国家/地区",
+  "pleaseEnterValidPhoneNumber": "请输入正确的{country}手机号码（{length}）",
+  "@pleaseEnterValidPhoneNumber": {
+    "placeholders": {
+      "country": {},
+      "length": {}
+    }
+  },
+  "verificationFailed": "验证失败",
+  "invalidPhoneNumber": "无效的手机号码",
+  "verificationCodeSent": "验证码已发送",
+  "verificationCodeExpired": "验证码已过期",
+  "verifyingCode": "正在验证...",
+  "getVerificationCode": "获取验证码",
+  "resendCode": "重新发送({seconds}s)",
+  "@resendCode": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "digits": "{count}位",
+  "@digits": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "digitsRange": "{min}-{max}位",
+  "@digitsRange": {
+    "placeholders": {
+      "min": {},
+      "max": {}
+    }
+  },
+  "pleaseConfirmPassword": "请再次输入密码",
+  "register": "注册",
+  "haveAccount": "已有账户？返回登录",
+  "weakPassword": "密码强度太弱",
+  "emailAlreadyInUse": "该邮箱已被注册",
+  "invalidEmailFormat": "邮箱格式不正确",
+  "resetPasswordDescription": "请输入您的邮箱地址，我们将向您发送重置密码的链接",
+  "sendResetLink": "发送重置链接",
+  "resetPasswordEmailSent": "重置密码邮件已发送",
+  "resetPasswordEmailDescription": "请查看您的邮箱，按照邮件中的指引完成密码重置",
+  "iKnow": "我知道了",
+  "pleaseEnterPhoneNumberWithLength": "请输入{length}手机号码",
+  "@pleaseEnterPhoneNumberWithLength": {
+    "placeholders": {
+      "length": {}
+    }
+  },
+  "verificationCode": "验证码"
 } 

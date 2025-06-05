@@ -11,6 +11,8 @@ import '../screens/course_detail_screen.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../widgets/anti_spam_button.dart';
+import '../models/app_theme.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'dart:async';
 import 'dart:math';
@@ -59,6 +61,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _performSearch(_searchController.text);
     });
     _setupAutoScroll();
+    _checkAssetExists();
   }
 
   @override
@@ -294,11 +297,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return user?.email?.split('@')[0] ?? 'Melody';
   }
 
+  String _getHeroImagePath(AppThemeType theme) {
+    if (theme == AppThemeType.default_theme) {
+      return 'assets/theme_wellcome/theme_siufa_hero.png';
+    }
+    final themeName = theme.toString().split('.').last.toLowerCase();
+    return 'assets/theme_wellcome/theme_${themeName}_hero.png';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final currentTheme = themeProvider.currentThemeData;
+    final heroImagePath = _getHeroImagePath(themeProvider.currentTheme);
     
     if (_isLoading) {
       return const Scaffold(
@@ -399,10 +411,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         width: 200,
                         height: 200,
                         child: Transform.rotate(
-                          angle: 0.05, // 约-5.7度
+                          angle: 0.05,
                           child: Image.asset(
-                            'assets/theme_wellcome/theme_${themeProvider.currentTheme.toString().split('.').last.toLowerCase()}_hero.png',
+                            heroImagePath,
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error loading hero image: $error');
+                              print('Stack trace: $stackTrace');
+                              return Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.red),
+                                  color: Colors.grey[200],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.error_outline, size: 40, color: Colors.red),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Error: $error',
+                                      style: const TextStyle(color: Colors.red),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -1488,5 +1522,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _checkAssetExists() async {
+    try {
+      final byteData = await rootBundle.load('assets/theme_wellcome/theme_siufa_hero.png');
+      print('Successfully loaded theme_siufa_hero.png, size: ${byteData.lengthInBytes} bytes');
+    } catch (e, stackTrace) {
+      print('Error checking asset: $e');
+      print('Stack trace: $stackTrace');
+    }
   }
 } 

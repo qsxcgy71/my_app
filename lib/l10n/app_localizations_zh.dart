@@ -120,7 +120,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchResults => '搜索结果';
 
   @override
-  String get noSearchResults => '暂无相关课程';
+  String get noSearchResults => '未找到匹配的课程';
 
   @override
   String get tryOtherKeywords => '试试其他关键词';
@@ -197,7 +197,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get signInWithGoogle => '使用Google登录';
 
   @override
-  String welcome(String name) {
+  String get welcome => '欢迎加入';
+
+  @override
+  String welcomeWithName(Object name) {
     return '欢迎，$name';
   }
 
@@ -393,11 +396,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchAndCollapse => '搜索并收起';
 
   @override
-  String get clearFilters => '清除筛选条件';
+  String get clearFilters => '清除筛选';
 
   @override
   String filtersApplied(int count) {
-    return '$count个筛选';
+    return '已应用 $count 个筛选条件';
   }
 
   @override
@@ -461,7 +464,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get createAccount => '创建账号';
+  String get createAccount => '创建账户';
 
   @override
   String get signUpTitle => '注册';
@@ -506,19 +509,268 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backToLogin => '返回登录';
 
   @override
-  String get pleaseEnterEmail => '请输入邮箱地址';
+  String get pleaseEnterEmail => '请输入电子邮箱';
 
   @override
-  String get emailLogin => '使用电邮登入';
+  String get emailLogin => '邮箱登录';
 
   @override
   String get googleLogin => '使用Google登入';
 
   @override
-  String get phoneLogin => '使用电话登入';
+  String get phoneLogin => '手机登录';
 
   @override
   String get noAccount => '还没有帐户？注册';
+
+  @override
+  String get createProfile => '创建个人资料';
+
+  @override
+  String get editProfile => '编辑个人资料';
+
+  @override
+  String get yourName => '您的姓名';
+
+  @override
+  String children(Object count) {
+    return '孩子 (共$count个)';
+  }
+
+  @override
+  String showingXofY(Object shown, Object total) {
+    return '显示$shown个，共$total个';
+  }
+
+  @override
+  String get scrollDownForMore => '向下滚动加载更多';
+
+  @override
+  String get addChild => '添加孩子';
+
+  @override
+  String get editChild => '编辑孩子资料';
+
+  @override
+  String get childName => '孩子姓名';
+
+  @override
+  String get selectBirthDate => '选择出生日期';
+
+  @override
+  String birthDate(Object date) {
+    return '出生日期：$date';
+  }
+
+  @override
+  String get selectPhotoSource => '选择照片来源';
+
+  @override
+  String get takePhoto => '拍照';
+
+  @override
+  String get chooseFromGallery => '从相册选择';
+
+  @override
+  String get photoUpdateSuccess => '头像更新成功';
+
+  @override
+  String get photoUpdateFailed => '头像更新失败';
+
+  @override
+  String get childAddSuccess => '成功添加孩子';
+
+  @override
+  String get childUpdateSuccess => '成功更新孩子资料';
+
+  @override
+  String get childDeleteSuccess => '成功删除孩子资料';
+
+  @override
+  String get confirmDeleteProfile => '删除资料';
+
+  @override
+  String get confirmDeleteProfileMessage => '确定要删除这个资料吗？此操作无法撤销。';
+
+  @override
+  String get pullToRefresh => '↑ 上拉加载更多孩子';
+
+  @override
+  String get releaseToLoad => '↑ 释放加载更多';
+
+  @override
+  String get loadingMore => '正在加载更多孩子...';
+
+  @override
+  String get loadFailed => '加载失败！点击重试';
+
+  @override
+  String get allChildrenLoaded => '已加载全部孩子';
+
+  @override
+  String get profileUpdated => '个人资料已更新！';
+
+  @override
+  String get searchHint => '输入关键词或选择筛选条件开始搜索';
+
+  @override
+  String get searchTip => '可以搜索课程名称、内容或类别';
+
+  @override
+  String get noOngoingCourses => '暂无进行中的课程';
+
+  @override
+  String get noCompletedCoursesYet => '暂无已完成的课程';
+
+  @override
+  String get timeSlot => '时间段';
+
+  @override
+  String get artCreation => '艺术创作';
+
+  @override
+  String get scientificExploration => '科学探索';
+
+  @override
+  String get morningSession => '上午时段';
+
+  @override
+  String get collapseFilter => '收起筛选';
+
+  @override
+  String get moreFilters => '更多筛选';
+
+  @override
+  String get addTestData => '添加测试数据';
+
+  @override
+  String get sampleCoursesCreated => '示例课程已创建';
+
+  @override
+  String createSampleCourseFailed(Object error) {
+    return '创建示例课程失败：$error';
+  }
+
+  @override
+  String get updated => '已更新！';
+
+  @override
+  String get updateFailed => '更新失败';
+
+  @override
+  String get pullUpToLoadMore => '↑ 上拉加载更多';
+
+  @override
+  String get loading => '正在加载...';
+
+  @override
+  String get releaseToLoadMore => '↑ 释放加载更多';
+
+  @override
+  String get allLoaded => '已加载全部';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get pleaseEnterValidEmail => '请输入有效的电子邮箱';
+
+  @override
+  String get pleaseEnterPassword => '请输入密码';
+
+  @override
+  String get passwordMinLength => '密码长度至少为6位';
+
+  @override
+  String get userNotFound => '未找到该用户';
+
+  @override
+  String get wrongPassword => '密码错误';
+
+  @override
+  String get invalidEmail => '邮箱格式不正确';
+
+  @override
+  String get selectCountryRegion => '选择国家/地区';
+
+  @override
+  String pleaseEnterValidPhoneNumber(Object country, Object length) {
+    return '请输入正确的$country手机号码（$length）';
+  }
+
+  @override
+  String get verificationFailed => '验证失败';
+
+  @override
+  String get invalidPhoneNumber => '无效的手机号码';
+
+  @override
+  String get verificationCodeSent => '验证码已发送';
+
+  @override
+  String get verificationCodeExpired => '验证码已过期';
+
+  @override
+  String get verifyingCode => '正在验证...';
+
+  @override
+  String get getVerificationCode => '获取验证码';
+
+  @override
+  String resendCode(Object seconds) {
+    return '重新发送(${seconds}s)';
+  }
+
+  @override
+  String digits(Object count) {
+    return '$count位';
+  }
+
+  @override
+  String digitsRange(Object min, Object max) {
+    return '$min-$max位';
+  }
+
+  @override
+  String get pleaseConfirmPassword => '请再次输入密码';
+
+  @override
+  String get register => '注册';
+
+  @override
+  String get haveAccount => '已有账户？返回登录';
+
+  @override
+  String get weakPassword => '密码强度太弱';
+
+  @override
+  String get emailAlreadyInUse => '该邮箱已被注册';
+
+  @override
+  String get invalidEmailFormat => '邮箱格式不正确';
+
+  @override
+  String get resetPasswordDescription => '请输入您的邮箱地址，我们将向您发送重置密码的链接';
+
+  @override
+  String get sendResetLink => '发送重置链接';
+
+  @override
+  String get resetPasswordEmailSent => '重置密码邮件已发送';
+
+  @override
+  String get resetPasswordEmailDescription => '请查看您的邮箱，按照邮件中的指引完成密码重置';
+
+  @override
+  String get iKnow => '我知道了';
+
+  @override
+  String pleaseEnterPhoneNumberWithLength(Object length) {
+    return '请输入$length手机号码';
+  }
+
+  @override
+  String get verificationCode => '验证码';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -714,7 +966,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get signInWithGoogle => '使用Google登入';
 
   @override
-  String welcome(String name) {
+  String get welcome => '歡迎加入';
+
+  @override
+  String welcomeWithName(Object name) {
     return '歡迎，$name';
   }
 
@@ -722,7 +977,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get comingSoon => '即將推出';
 
   @override
-  String get searchAllCourses => '搜索所有課程';
+  String get searchAllCourses => '搜尋全部課程';
 
   @override
   String get popularCourses => '熱門課程';
@@ -731,7 +986,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get featuredCourses => '精選課程';
 
   @override
-  String get allCourses => '所有課程';
+  String get allCourses => '全部課程';
 
   @override
   String get courseDetails => '課程詳情';
@@ -826,6 +1081,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get themeDefence => '防禦';
 
   @override
+  String get filterConditions => '篩選條件';
+
+  @override
+  String get clearAll => '清除全部';
+
+  @override
+  String get suitableAge => '適合年齡';
+
+  @override
+  String get noAgeLimit => '不限年齡';
+
+  @override
+  String get courseType => '課程類型';
+
+  @override
+  String get classTime => '上課時間';
+
+  @override
+  String get noTimeLimit => '不限時間';
+
+  @override
+  String get difficultyLevel => '難度等級';
+
+  @override
+  String get onlineCoursesOnly => '僅顯示線上課程';
+
+  @override
+  String get search => '搜尋';
+
+  @override
+  String get clearFilters => '清除篩選';
+
+  @override
+  String filtersApplied(int count) {
+    return '已套用 $count 個篩選條件';
+  }
+
+  @override
   String daysAgo(int days) {
     return '$days 天前';
   }
@@ -849,10 +1142,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pleaseEnterAllFields => '請填寫所有欄位';
 
   @override
-  String get passwordsDoNotMatch => '密碼不匹配';
+  String get passwordsDoNotMatch => '兩次輸入的密碼不一致';
 
   @override
-  String get passwordTooShort => '密碼至少需要6個字符';
+  String get passwordTooShort => '密碼長度至少為6位';
 
   @override
   String get registrationFailed => '註冊失敗';
@@ -870,23 +1163,272 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get resetPasswordSuccess => '重置密碼郵件已發送';
 
   @override
-  String get resetPasswordFailed => '發送重置郵件失敗';
+  String get resetPasswordFailed => '重設密碼失敗';
 
   @override
   String get backToLogin => '返回登入';
 
   @override
-  String get pleaseEnterEmail => '請輸入您的電子郵箱';
+  String get pleaseEnterEmail => '請輸入電子郵箱';
 
   @override
-  String get emailLogin => '使用郵箱登入';
+  String get emailLogin => '電郵登入';
 
   @override
   String get googleLogin => '使用Google登入';
 
   @override
-  String get phoneLogin => '使用手機登入';
+  String get phoneLogin => '手機登入';
 
   @override
   String get noAccount => '還沒有賬戶？註冊';
+
+  @override
+  String get createProfile => '建立個人資料';
+
+  @override
+  String get editProfile => '編輯個人資料';
+
+  @override
+  String get yourName => '您的姓名';
+
+  @override
+  String children(Object count) {
+    return '孩子 (共$count個)';
+  }
+
+  @override
+  String showingXofY(Object shown, Object total) {
+    return '顯示$shown個，共$total個';
+  }
+
+  @override
+  String get scrollDownForMore => '向下滾動載入更多';
+
+  @override
+  String get addChild => '新增孩子';
+
+  @override
+  String get editChild => '編輯孩子資料';
+
+  @override
+  String get childName => '孩子姓名';
+
+  @override
+  String get selectBirthDate => '選擇出生日期';
+
+  @override
+  String birthDate(Object date) {
+    return '出生日期：$date';
+  }
+
+  @override
+  String get selectPhotoSource => '選擇照片來源';
+
+  @override
+  String get takePhoto => '拍照';
+
+  @override
+  String get chooseFromGallery => '從相簿選擇';
+
+  @override
+  String get photoUpdateSuccess => '頭像更新成功';
+
+  @override
+  String get photoUpdateFailed => '頭像更新失敗';
+
+  @override
+  String get childAddSuccess => '成功新增孩子';
+
+  @override
+  String get childUpdateSuccess => '成功更新孩子資料';
+
+  @override
+  String get childDeleteSuccess => '成功刪除孩子資料';
+
+  @override
+  String get confirmDeleteProfile => '刪除資料';
+
+  @override
+  String get confirmDeleteProfileMessage => '確定要刪除這個資料嗎？此操作無法復原。';
+
+  @override
+  String get pullToRefresh => '↑ 上拉載入更多孩子';
+
+  @override
+  String get releaseToLoad => '↑ 釋放載入更多';
+
+  @override
+  String get loadingMore => '正在載入更多孩子...';
+
+  @override
+  String get loadFailed => '載入失敗！點擊重試';
+
+  @override
+  String get allChildrenLoaded => '已載入全部孩子';
+
+  @override
+  String get profileUpdated => '個人資料已更新！';
+
+  @override
+  String get searchHint => '輸入關鍵詞或選擇篩選條件開始搜尋';
+
+  @override
+  String get searchTip => '可以搜尋課程名稱、內容或類別';
+
+  @override
+  String get noOngoingCourses => '暫無進行中的課程';
+
+  @override
+  String get noCompletedCoursesYet => '暫無已完成的課程';
+
+  @override
+  String get timeSlot => '時間段';
+
+  @override
+  String get artCreation => '藝術創作';
+
+  @override
+  String get scientificExploration => '科學探索';
+
+  @override
+  String get morningSession => '上午時段';
+
+  @override
+  String get collapseFilter => '收起篩選';
+
+  @override
+  String get moreFilters => '更多篩選';
+
+  @override
+  String get addTestData => '新增測試資料';
+
+  @override
+  String get sampleCoursesCreated => '範例課程已建立';
+
+  @override
+  String createSampleCourseFailed(Object error) {
+    return '建立範例課程失敗：$error';
+  }
+
+  @override
+  String get updated => '已更新！';
+
+  @override
+  String get updateFailed => '更新失敗';
+
+  @override
+  String get pullUpToLoadMore => '↑ 上拉載入更多';
+
+  @override
+  String get loading => '正在載入...';
+
+  @override
+  String get releaseToLoadMore => '↑ 釋放載入更多';
+
+  @override
+  String get allLoaded => '已載入全部';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get pleaseEnterValidEmail => '請輸入有效的電子郵箱';
+
+  @override
+  String get pleaseEnterPassword => '請輸入密碼';
+
+  @override
+  String get passwordMinLength => '密碼長度至少為6位';
+
+  @override
+  String get userNotFound => '未找到該用戶';
+
+  @override
+  String get wrongPassword => '密碼錯誤';
+
+  @override
+  String get invalidEmail => '郵箱格式不正確';
+
+  @override
+  String get selectCountryRegion => '選擇國家/地區';
+
+  @override
+  String pleaseEnterValidPhoneNumber(Object country, Object length) {
+    return '請輸入正確的$country手機號碼（$length）';
+  }
+
+  @override
+  String get verificationFailed => '驗證失敗';
+
+  @override
+  String get invalidPhoneNumber => '無效的手機號碼';
+
+  @override
+  String get verificationCodeSent => '驗證碼已發送';
+
+  @override
+  String get verificationCodeExpired => '驗證碼已過期';
+
+  @override
+  String get verifyingCode => '正在驗證...';
+
+  @override
+  String get getVerificationCode => '獲取驗證碼';
+
+  @override
+  String resendCode(Object seconds) {
+    return '重新發送(${seconds}s)';
+  }
+
+  @override
+  String digits(Object count) {
+    return '$count位';
+  }
+
+  @override
+  String digitsRange(Object min, Object max) {
+    return '$min-$max位';
+  }
+
+  @override
+  String get pleaseConfirmPassword => '請再次輸入密碼';
+
+  @override
+  String get register => '註冊';
+
+  @override
+  String get haveAccount => '已有賬戶？返回登入';
+
+  @override
+  String get weakPassword => '密碼強度太弱';
+
+  @override
+  String get emailAlreadyInUse => '該郵箱已被註冊';
+
+  @override
+  String get invalidEmailFormat => '郵箱格式不正確';
+
+  @override
+  String get resetPasswordDescription => '請輸入您的郵箱地址，我們將向您發送重設密碼的連結';
+
+  @override
+  String get sendResetLink => '發送重設連結';
+
+  @override
+  String get resetPasswordEmailSent => '重設密碼郵件已發送';
+
+  @override
+  String get resetPasswordEmailDescription => '請查看您的郵箱，按照郵件中的指引完成密碼重設';
+
+  @override
+  String get iKnow => '我知道了';
+
+  @override
+  String pleaseEnterPhoneNumberWithLength(Object length) {
+    return '請輸入$length手機號碼';
+  }
+
+  @override
+  String get verificationCode => '驗證碼';
 }

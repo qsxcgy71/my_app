@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Kids Profile';
 
   @override
-  String get welcomeBack => 'Welcome back';
+  String get welcomeBack => 'Welcome Back';
 
   @override
   String get signInToContinue => 'Sign in to your account to continue';
@@ -121,7 +121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchResults => 'Search Results';
 
   @override
-  String get noSearchResults => 'No courses found';
+  String get noSearchResults => 'No matching courses found';
 
   @override
   String get tryOtherKeywords => 'Try using other keywords';
@@ -199,7 +199,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithGoogle => 'Sign in with Google';
 
   @override
-  String welcome(String name) {
+  String get welcome => 'Welcome';
+
+  @override
+  String welcomeWithName(Object name) {
     return 'Welcome, $name';
   }
 
@@ -386,7 +389,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedLevel => 'Advanced';
 
   @override
-  String get onlineCoursesOnly => 'Online courses only';
+  String get onlineCoursesOnly => 'Online Courses Only';
 
   @override
   String get search => 'Search';
@@ -399,7 +402,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String filtersApplied(int count) {
-    return '$count filters';
+    return '$count filters applied';
   }
 
   @override
@@ -504,7 +507,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetPasswordSuccess => 'Password reset email has been sent';
 
   @override
-  String get resetPasswordFailed => 'Failed to send reset email';
+  String get resetPasswordFailed => 'Failed to reset password';
 
   @override
   String get backToLogin => 'Back to Login';
@@ -513,14 +516,266 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseEnterEmail => 'Please enter your email address';
 
   @override
-  String get emailLogin => 'Login with Email';
+  String get emailLogin => 'Email Login';
 
   @override
   String get googleLogin => 'Login with Google';
 
   @override
-  String get phoneLogin => 'Login with Phone';
+  String get phoneLogin => 'Phone Login';
 
   @override
   String get noAccount => 'Don\'t have an account? Sign up';
+
+  @override
+  String get createProfile => 'Create Profile';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get yourName => 'Your Name';
+
+  @override
+  String children(Object count) {
+    return 'Children ($count total)';
+  }
+
+  @override
+  String showingXofY(Object shown, Object total) {
+    return 'Showing $shown of $total';
+  }
+
+  @override
+  String get scrollDownForMore => 'Scroll down for more';
+
+  @override
+  String get addChild => 'Add Child';
+
+  @override
+  String get editChild => 'Edit Child';
+
+  @override
+  String get childName => 'Child Name';
+
+  @override
+  String get selectBirthDate => 'Select Birth Date';
+
+  @override
+  String birthDate(Object date) {
+    return 'Birth Date: $date';
+  }
+
+  @override
+  String get selectPhotoSource => 'Select Photo Source';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
+
+  @override
+  String get photoUpdateSuccess => 'Photo updated successfully';
+
+  @override
+  String get photoUpdateFailed => 'Failed to update photo';
+
+  @override
+  String get childAddSuccess => 'Child added successfully';
+
+  @override
+  String get childUpdateSuccess => 'Child updated successfully';
+
+  @override
+  String get childDeleteSuccess => 'Child deleted successfully';
+
+  @override
+  String get confirmDeleteProfile => 'Delete Profile';
+
+  @override
+  String get confirmDeleteProfileMessage =>
+      'Are you sure you want to delete this profile? This action cannot be undone.';
+
+  @override
+  String get pullToRefresh => '↑ Pull up to load more children';
+
+  @override
+  String get releaseToLoad => '↑ Release to load more';
+
+  @override
+  String get loadingMore => 'Loading more children...';
+
+  @override
+  String get loadFailed => 'Load Failed! Tap to retry';
+
+  @override
+  String get allChildrenLoaded => 'All children loaded';
+
+  @override
+  String get profileUpdated => 'Profile Updated!';
+
+  @override
+  String get searchHint => 'Enter keywords or select filters to search';
+
+  @override
+  String get searchTip => 'You can search course names, content or categories';
+
+  @override
+  String get noOngoingCourses => 'No ongoing courses';
+
+  @override
+  String get noCompletedCoursesYet => 'No completed courses yet';
+
+  @override
+  String get timeSlot => 'Time Slot';
+
+  @override
+  String get artCreation => 'Art Creation';
+
+  @override
+  String get scientificExploration => 'Scientific Exploration';
+
+  @override
+  String get morningSession => 'Morning Session';
+
+  @override
+  String get collapseFilter => 'Collapse Filter';
+
+  @override
+  String get moreFilters => 'More Filters';
+
+  @override
+  String get addTestData => 'Add Test Data';
+
+  @override
+  String get sampleCoursesCreated => 'Sample courses created';
+
+  @override
+  String createSampleCourseFailed(Object error) {
+    return 'Failed to create sample courses: $error';
+  }
+
+  @override
+  String get updated => 'Updated!';
+
+  @override
+  String get updateFailed => 'Update Failed';
+
+  @override
+  String get pullUpToLoadMore => '↑ Pull up to load more';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get releaseToLoadMore => '↑ Release to load more';
+
+  @override
+  String get allLoaded => 'All loaded';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get pleaseEnterValidEmail => 'Please enter a valid email';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter your password';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get userNotFound => 'User not found';
+
+  @override
+  String get wrongPassword => 'Wrong password';
+
+  @override
+  String get invalidEmail => 'Invalid email format';
+
+  @override
+  String get selectCountryRegion => 'Select Country/Region';
+
+  @override
+  String pleaseEnterValidPhoneNumber(Object country, Object length) {
+    return 'Please enter a valid $country phone number ($length)';
+  }
+
+  @override
+  String get verificationFailed => 'Verification failed';
+
+  @override
+  String get invalidPhoneNumber => 'Invalid phone number';
+
+  @override
+  String get verificationCodeSent => 'Verification code sent';
+
+  @override
+  String get verificationCodeExpired => 'Verification code expired';
+
+  @override
+  String get verifyingCode => 'Verifying code...';
+
+  @override
+  String get getVerificationCode => 'Get Code';
+
+  @override
+  String resendCode(Object seconds) {
+    return 'Resend (${seconds}s)';
+  }
+
+  @override
+  String digits(Object count) {
+    return '$count digits';
+  }
+
+  @override
+  String digitsRange(Object min, Object max) {
+    return '$min-$max digits';
+  }
+
+  @override
+  String get pleaseConfirmPassword => 'Please confirm your password';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get haveAccount => 'Already have an account? Sign in';
+
+  @override
+  String get weakPassword => 'Password is too weak';
+
+  @override
+  String get emailAlreadyInUse => 'Email is already in use';
+
+  @override
+  String get invalidEmailFormat => 'Invalid email format';
+
+  @override
+  String get resetPasswordDescription =>
+      'Please enter your email address and we will send you a password reset link';
+
+  @override
+  String get sendResetLink => 'Send Reset Link';
+
+  @override
+  String get resetPasswordEmailSent => 'Password Reset Email Sent';
+
+  @override
+  String get resetPasswordEmailDescription =>
+      'Please check your email and follow the instructions to reset your password';
+
+  @override
+  String get iKnow => 'I Know';
+
+  @override
+  String pleaseEnterPhoneNumberWithLength(Object length) {
+    return 'Please enter a $length phone number';
+  }
+
+  @override
+  String get verificationCode => 'Verification Code';
 }

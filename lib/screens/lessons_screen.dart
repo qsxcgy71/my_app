@@ -441,7 +441,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
             TextButton(
               onPressed: _toggleSearchMode,
               child: Text(
-                '取消',
+                l10n.cancel,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: currentTheme.primaryColor,
                 ),
@@ -464,6 +464,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   Icons.add_circle,
                   color: currentTheme.primaryColor,
                 ),
+                tooltip: l10n.addTestData,
                 onPressed: null, // 由 AntiSpamWrapper 处理
               ),
             ),
@@ -523,38 +524,38 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
       onRefresh: _onRefresh,
       onLoading: _onLoading,
       header: WaterDropHeader(
-        complete: Text('Updated!', style: AppTextStyles.bodyMedium),
-        failed: Text('Update Failed', style: AppTextStyles.bodyMedium),
+        complete: Text(l10n.updated, style: AppTextStyles.bodyMedium),
+        failed: Text(l10n.updateFailed, style: AppTextStyles.bodyMedium),
       ),
       footer: CustomFooter(
         builder: (BuildContext context, LoadStatus? mode) {
           Widget body;
           if (mode == null || mode == LoadStatus.idle) {
-            body = Text("↑ Pull up to load more", style: AppTextStyles.bodyMedium);
+            body = Text(l10n.pullUpToLoadMore, style: AppTextStyles.bodyMedium);
           } else if (mode == LoadStatus.loading) {
             body = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                 const SizedBox(width: 8),
-                Text("Loading...", style: AppTextStyles.bodyMedium),
+                Text(l10n.loading, style: AppTextStyles.bodyMedium),
               ],
             );
           } else if (mode == LoadStatus.failed) {
-            body = Text("Load Failed! Tap to retry", style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
+            body = Text(l10n.loadFailed, style: AppTextStyles.bodyMedium.copyWith(color: Colors.red));
           } else if (mode == LoadStatus.canLoading) {
-            body = Text("↑ Release to load more", style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
+            body = Text(l10n.releaseToLoadMore, style: AppTextStyles.bodyMedium.copyWith(color: currentTheme.primaryColor));
           } else {
             body = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.check_circle, size: 16, color: Colors.green),
                 const SizedBox(width: 4),
-                Text("All loaded", style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
+                Text(l10n.allLoaded, style: AppTextStyles.bodyMedium.copyWith(color: Colors.green)),
               ],
             );
           }
-          return SizedBox(
+          return Container(
             height: 55.0,
             child: Center(child: body),
           );
@@ -682,7 +683,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                   minHeight: 32,
                 ),
                 padding: const EdgeInsets.all(6),
-                tooltip: _showFilterPanel ? '收起筛选' : '更多筛选',
+                tooltip: _showFilterPanel ? l10n.collapseFilter : l10n.moreFilters,
                 style: IconButton.styleFrom(
                   backgroundColor: _showFilterPanel 
                       ? currentTheme.primaryColor.withOpacity(0.1)
@@ -750,7 +751,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               Row(
                 children: [
                   Text(
-                    '筛选条件',
+                    l10n.filterConditions,
                     style: AppTextStyles.titleMedium.copyWith(
                       color: currentTheme.primaryColor,
                       fontWeight: FontWeight.bold,
@@ -766,7 +767,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
                         minimumSize: const Size(0, 24),
                       ),
                       child: Text(
-                        '清除全部',
+                        l10n.clearAll,
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 11,
@@ -780,7 +781,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               
               // 课程类型筛选
               Text(
-                '课程类型',
+                l10n.courseType,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
@@ -814,7 +815,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               
               // 时间段筛选
               Text(
-                '时间段',
+                l10n.timeSlot,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
@@ -1024,14 +1025,14 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               ),
               const SizedBox(height: 16),
               Text(
-                '输入关键词或选择筛选条件开始搜索',
+                l10n.searchHint,
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[600],
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '可以搜索课程名称、内容或类别',
+                l10n.searchTip,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: Colors.grey[500],
                 ),
@@ -1059,7 +1060,7 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               ),
               const SizedBox(height: 16),
               Text(
-                tabIndex == 0 ? '暂无进行中的课程' : '暂无已完成的课程',
+                tabIndex == 0 ? l10n.noOngoingCourses : l10n.noCompletedCoursesYet,
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[600],
                 ),

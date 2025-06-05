@@ -4,72 +4,72 @@ import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
-/// The translations for English (`en`).
-class AppLocalizationsEn extends AppLocalizations {
-  AppLocalizationsEn([String locale = 'en']) : super(locale);
+/// The translations for Yue Chinese Cantonese (`yue`).
+class AppLocalizationsYue extends AppLocalizations {
+  AppLocalizationsYue([String locale = 'yue']) : super(locale);
 
   @override
-  String get appTitle => 'Kids Profile';
+  String get appTitle => '細佬細妹檔案';
 
   @override
-  String get welcomeBack => 'Welcome Back';
+  String get welcomeBack => '歡迎番嚟';
 
   @override
-  String get signInToContinue => 'Sign in to your account to continue';
+  String get signInToContinue => '請登入你嘅賬戶繼續';
 
   @override
-  String get email => 'Email';
+  String get email => '電郵';
 
   @override
-  String get password => 'Password';
+  String get password => '密碼';
 
   @override
-  String get login => 'Login';
+  String get login => '登入';
 
   @override
-  String get phone => 'Phone';
+  String get phone => '電話';
 
   @override
-  String get phoneNumber => 'Phone Number';
+  String get phoneNumber => '電話號碼';
 
   @override
-  String get enterPhoneNumber => 'Enter phone number';
+  String get enterPhoneNumber => '請輸入電話號碼';
 
   @override
-  String get sendCode => 'Send Code';
+  String get sendCode => '發送驗證碼';
 
   @override
-  String get smsCode => 'SMS Code';
+  String get smsCode => '短訊驗證碼';
 
   @override
-  String get verifyAndLogin => 'Verify & Login';
+  String get verifyAndLogin => '驗證同登入';
 
   @override
-  String get continueWithGoogle => 'Continue with Google';
+  String get continueWithGoogle => '用Google賬戶繼續';
 
   @override
-  String get dontHaveAccount => 'Don\'t have an account?';
+  String get dontHaveAccount => '未有賬戶？';
 
   @override
-  String get signUp => 'Sign up';
+  String get signUp => '註冊';
 
   @override
-  String get forgotPassword => 'Forgot password?';
+  String get forgotPassword => '唔記得密碼？';
 
   @override
-  String get pleaseEnterEmailAndPassword => 'Please enter email and password';
+  String get pleaseEnterEmailAndPassword => '請輸入電郵同密碼';
 
   @override
-  String get pleaseEnterPhoneNumber => 'Please enter phone number';
+  String get pleaseEnterPhoneNumber => '請輸入電話號碼';
 
   @override
-  String get pleaseEnterVerificationCode => 'Please enter verification code';
+  String get pleaseEnterVerificationCode => '請輸入驗證碼';
 
   @override
-  String get loginFailed => 'Login failed';
+  String get loginFailed => '登入失敗';
 
   @override
-  String get language => 'Language';
+  String get language => '語言';
 
   @override
   String get chinese => '中文';
@@ -78,192 +78,190 @@ class AppLocalizationsEn extends AppLocalizations {
   String get english => 'English';
 
   @override
-  String get selectLanguage => 'Select Language';
+  String get selectLanguage => '揀語言';
 
   @override
-  String get explore => 'Explore';
+  String get explore => '探索';
 
   @override
-  String get lessons => 'Lessons';
+  String get lessons => '課程';
 
   @override
-  String get messages => 'Messages';
+  String get messages => '訊息';
 
   @override
-  String get profile => 'Profile';
+  String get profile => '會員';
 
   @override
-  String get myLessons => 'My Lessons';
+  String get myLessons => '我嘅課程';
 
   @override
-  String get searchLessons => 'Search Lessons';
+  String get searchLessons => '搵課程';
 
   @override
-  String get enrolledLessons => 'Enrolled';
+  String get enrolledLessons => '已報名';
 
   @override
-  String get completedLessons => 'Completed';
+  String get completedLessons => '已完成';
 
   @override
-  String get noEnrolledLessons => 'No enrolled lessons';
+  String get noEnrolledLessons => '暫時無已報名課程';
 
   @override
-  String get noCompletedLessons => 'No completed lessons';
+  String get noCompletedLessons => '暫時無已完成課程';
 
   @override
-  String get searchCoursePlaceholder =>
-      'Search course name, category or description...';
+  String get searchCoursePlaceholder => '搵課程名稱、類別或者描述...';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => '取消';
 
   @override
-  String get searchResults => 'Search Results';
+  String get searchResults => '搜尋結果';
 
   @override
-  String get noSearchResults => 'No matching courses found';
+  String get noSearchResults => '搵唔到匹配嘅課程';
 
   @override
-  String get tryOtherKeywords => 'Try using other keywords';
+  String get tryOtherKeywords => '試下其他關鍵詞';
 
   @override
-  String get enterSearchKeywords => 'Please enter search keywords';
+  String get enterSearchKeywords => '請輸入搜尋關鍵詞';
 
   @override
-  String get canSearchCourses =>
-      'You can search course names, categories or descriptions';
+  String get canSearchCourses => '可以搵課程名稱、類別或者描述';
 
   @override
-  String get enrolled => 'Enrolled';
+  String get enrolled => '已報名';
 
   @override
-  String get completed => 'Completed';
+  String get completed => '已完成';
 
   @override
-  String get exploreComingSoon => 'Explore feature coming soon';
+  String get exploreComingSoon => '探索功能即將上線';
 
   @override
-  String get messagesComingSoon => 'Messages feature coming soon';
+  String get messagesComingSoon => '訊息功能即將上線';
 
   @override
-  String get lessonDetails => 'Lesson Details';
+  String get lessonDetails => '課程詳情';
 
   @override
-  String get courseInfo => 'Course Information';
+  String get courseInfo => '課程資訊';
 
   @override
-  String get courseIntroduction => 'Course Introduction';
+  String get courseIntroduction => '課程介紹';
 
   @override
-  String get startTime => 'Start Time';
+  String get startTime => '開始時間';
 
   @override
-  String get endTime => 'End Time';
+  String get endTime => '結束時間';
 
   @override
-  String get courseDate => 'Course Date';
+  String get courseDate => '課程日期';
 
   @override
-  String get courseStatus => 'Course Status';
+  String get courseStatus => '課程狀態';
 
   @override
-  String get courseCategory => 'Course Category';
+  String get courseCategory => '課程類別';
 
   @override
   String welcomeBackUser(String userName) {
-    return 'Welcome back, $userName!';
+    return '歡迎番嚟，$userName！';
   }
 
   @override
-  String get logout => 'Logout';
+  String get logout => '登出';
 
   @override
-  String get confirmLogout => 'Confirm Logout';
+  String get confirmLogout => '確認登出';
 
   @override
-  String get logoutMessage => 'Are you sure you want to logout?';
+  String get logoutMessage => '確定要登出嗎？';
 
   @override
-  String get logoutSuccess => 'Logged out successfully';
+  String get logoutSuccess => '登出成功';
 
   @override
-  String get logoutFailed => 'Logout failed';
+  String get logoutFailed => '登出失敗';
 
   @override
-  String get hello => 'Hello';
+  String get hello => '你好';
 
   @override
-  String get emailOrPhone => 'Email or Phone';
+  String get emailOrPhone => '電郵或電話';
 
   @override
-  String get signInWithGoogle => 'Sign in with Google';
+  String get signInWithGoogle => '用Google登入';
 
   @override
-  String get welcome => 'Welcome';
+  String get welcome => '歡迎加入';
 
   @override
   String welcomeWithName(Object name) {
-    return 'Welcome, $name';
+    return '歡迎，$name';
   }
 
   @override
-  String get comingSoon => 'Coming Soon';
+  String get comingSoon => '即將推出';
 
   @override
-  String get searchAllCourses => 'Search all courses';
+  String get searchAllCourses => '搵全部課程';
 
   @override
-  String get popularCourses => 'Popular Courses';
+  String get popularCourses => '熱門課程';
 
   @override
-  String get featuredCourses => 'Featured Courses';
+  String get featuredCourses => '精選課程';
 
   @override
-  String get allCourses => 'All Courses';
+  String get allCourses => '全部課程';
 
   @override
-  String get courseDetails => 'Course Details';
+  String get courseDetails => '課程詳情';
 
   @override
-  String get instructor => 'Instructor';
+  String get instructor => '導師';
 
   @override
   String totalLessons(int count) {
-    return '$count lessons';
+    return '$count節課';
   }
 
   @override
-  String get duration => 'Duration';
+  String get duration => '時長';
 
   @override
-  String get rating => 'Rating';
+  String get rating => '評分';
 
   @override
-  String get enrolledStudents => 'Enrolled Students';
+  String get enrolledStudents => '報名學員';
 
   @override
-  String get courseCatalog => 'Course Catalog';
+  String get courseCatalog => '課程目錄';
 
   @override
-  String get preview => 'Preview';
+  String get preview => '預覽';
 
   @override
-  String get enroll => 'Enroll Now';
+  String get enroll => '立即報名';
 
   @override
-  String get goodMorning => 'Morning';
+  String get goodMorning => '早晨';
 
   @override
-  String get goodAfternoon => 'Afternoon';
+  String get goodAfternoon => '下晝';
 
   @override
-  String get goodEvening => 'Evening';
+  String get goodEvening => '夜晚好';
 
   @override
-  String get profileLogoutSuccess => 'Logout successful';
+  String get profileLogoutSuccess => '登出成功';
 
   @override
-  String get profileLogoutFailed => 'Logout failed';
+  String get profileLogoutFailed => '登出失敗';
 
   @override
   String get selectTheme => 'Select Theme';
@@ -473,7 +471,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signUpTitle => 'Sign Up';
 
   @override
-  String get confirmPassword => 'Confirm Password';
+  String get confirmPassword => '確認密碼';
 
   @override
   String get alreadyHaveAccount => 'Already have an account?';
@@ -777,21 +775,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get verificationCode => 'Verification Code';
+  String get verificationCode => '驗證碼';
 
   @override
-  String get deleteAccount => 'Delete Account';
+  String get deleteAccount => '刪除賬戶';
 
   @override
-  String get confirmDeleteAccount => 'Confirm Delete Account';
+  String get confirmDeleteAccount => '確認刪除賬戶';
 
   @override
-  String get deleteAccountWarning =>
-      'This action cannot be undone. Are you sure you want to delete your account?';
+  String get deleteAccountWarning => '呢個操作無法撤銷，你確定要刪除賬戶嗎？';
 
   @override
-  String get passwordMismatch => 'Passwords do not match';
+  String get passwordMismatch => '密碼唔匹配';
 
   @override
-  String get cantonese => 'Cantonese';
+  String get cantonese => '粵語';
 }

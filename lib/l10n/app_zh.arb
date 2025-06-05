@@ -331,5 +331,11 @@
       "length": {}
     }
   },
-  "verificationCode": "验证码"
+  "verificationCode": "验证码",
+  "deleteAccount": "删除账户",
+  "confirmDeleteAccount": "确认删除账户",
+  "deleteAccountWarning": "此操作无法撤销，您确定要删除账户吗？",
+  "passwordMismatch": "密码不匹配",
+  
+  "cantonese": "粤语"
 } 

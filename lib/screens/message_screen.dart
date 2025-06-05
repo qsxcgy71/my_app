@@ -437,6 +437,8 @@ class _MessageScreenState extends State<MessageScreen> {
         return Colors.blue;
       case MessageType.system:
         return Colors.grey;
+      case MessageType.enrollment:
+        return Colors.pink;
     }
   }
 } 

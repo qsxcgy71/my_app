@@ -1152,89 +1152,94 @@ class _LessonsScreenState extends State<LessonsScreen> with TickerProviderStateM
               // 课程信息 - 横向布局
               Padding(
                 padding: EdgeInsets.all(ResponsiveHelper.isSmallScreen(context) ? 12 : 16),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 左侧：日期和时间
-                    Container(
-                      width: ResponsiveHelper.isSmallScreen(context) ? 75 : 85,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 日期
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: ResponsiveHelper.isSmallScreen(context) ? 4 : 6,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: lesson.isPastLesson 
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              lesson.dateString,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: lesson.isPastLesson ? Colors.green : Colors.orange,
-                                fontSize: ResponsiveHelper.isSmallScreen(context) ? 10 : 11,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 左侧：日期和时间
+                        Container(
+                          width: ResponsiveHelper.isSmallScreen(context) ? 75 : 85,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 日期
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveHelper.isSmallScreen(context) ? 4 : 6,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: lesson.isPastLesson 
+                                      ? Colors.green.withOpacity(0.1)
+                                      : Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  lesson.dateString,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: lesson.isPastLesson ? Colors.green : Colors.orange,
+                                    fontSize: ResponsiveHelper.isSmallScreen(context) ? 10 : 11,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(height: 6),
+                              // 时间
+                              Text(
+                                lesson.startTimeString,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: Colors.grey[600],
+                                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 11 : 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 6),
-                          // 时间
-                          Text(
-                            lesson.startTimeString,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.grey[600],
-                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 11 : 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        ),
+                        
+                        const SizedBox(width: 12),
+                        
+                        // 右侧：课程信息
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 课程名称（主标题）
+                              Text(
+                                lesson.courseName,
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 16 : 18,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              
+                              const SizedBox(height: 8),
+                              
+                              // 课节标题（内容）
+                              Text(
+                                lesson.title,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                  fontSize: ResponsiveHelper.isSmallScreen(context) ? 13 : 14,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(width: 12),
-                    
-                    // 右侧：课程信息
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 课程名称（主标题）
-                          Text(
-                            lesson.courseName,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 16 : 18,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          
-                          const SizedBox(height: 8),
-                          
-                          // 课节标题（内容）
-                          Text(
-                            lesson.title,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
-                              height: 1.4,
-                              fontSize: ResponsiveHelper.isSmallScreen(context) ? 13 : 14,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -771,6 +771,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get verificationCode => '验证码';
+
+  @override
+  String get deleteAccount => '删除账户';
+
+  @override
+  String get confirmDeleteAccount => '确认删除账户';
+
+  @override
+  String get deleteAccountWarning => '此操作无法撤销，您确定要删除账户吗？';
+
+  @override
+  String get passwordMismatch => '密码不匹配';
+
+  @override
+  String get cantonese => '粤语';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).

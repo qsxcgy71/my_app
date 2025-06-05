@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import '../models/course_model.dart';
+import '../models/profile_model.dart';
+import '../services/lesson_service.dart';
+import '../services/profile_service.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
 
@@ -20,10 +23,18 @@ class CourseDetailScreen extends StatefulWidget {
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Timer? _imageTimer;
   int _currentImageIndex = 0;
+  
+  // 新增状态变量
+  final LessonService _lessonService = LessonService();
+  final ProfileService _profileService = ProfileService();
+  UserProfile? _userProfile;
+  bool _isLoadingChildren = false;
+  List<String> _selectedChildIds = []; // 选中的孩子ID列表
 
   @override
   void initState() {
     super.initState();
+    _loadUserProfile();
     if (widget.course.imageUrls.length > 1) {
       _startImageCarousel();
     }
@@ -46,6 +57,449 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         }
       },
     );
+  }
+
+  // 加载用户资料
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await _profileService.getUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
+    }
+  }
+
+  // 显示选择孩子的弹窗
+  Future<void> _showEnrollChildrenDialog() async {
+    if (_userProfile == null || _userProfile!.children.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请先在个人资料中添加孩子信息'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // 获取已报名的孩子并筛选出未报名的孩子
+    final enrolledChildren = await _lessonService.getEnrolledChildrenForCourseWithFullInfo(
+      widget.course.id,
+      _userProfile!.children,
+    );
+    
+    final availableChildren = _userProfile!.children
+        .where((child) => !enrolledChildren.any((enrolled) => enrolled.id == child.id))
+        .toList();
+
+    if (availableChildren.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('所有孩子都已报名此课程'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _selectedChildIds.clear();
+    });
+
+    final l10n = AppLocalizations.of(context)!;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // 拖拽指示器
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              
+              // 标题栏
+              Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.school,
+                            color: Colors.blue.shade600,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '选择报名孩子',
+                                style: AppTextStyles.titleLarge.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '为《${widget.course.title}》课程报名',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: Colors.grey[600],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 分割线
+              Container(
+                height: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.grey[200]!,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // 提示文字
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+                    const SizedBox(width: 8),
+                    Text(
+                      '请选择要报名的孩子（可多选）',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.blue.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '已选择 ${_selectedChildIds.length} 人',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.orange.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // 孩子列表
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: availableChildren.length,
+                  itemBuilder: (context, index) {
+                    final child = availableChildren[index];
+                    final isSelected = _selectedChildIds.contains(child.id);
+                    final age = child.birthDate != null 
+                        ? DateTime.now().year - child.birthDate!.year 
+                        : 0;
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? Colors.blue.shade300 : Colors.grey[200]!,
+                          width: isSelected ? 2 : 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isSelected 
+                                ? Colors.blue.withOpacity(0.15)
+                                : Colors.black.withOpacity(0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            setModalState(() {
+                              if (isSelected) {
+                                _selectedChildIds.remove(child.id);
+                              } else {
+                                _selectedChildIds.add(child.id);
+                              }
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                // 选择状态指示器
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected ? Colors.blue.shade600 : Colors.transparent,
+                                    border: Border.all(
+                                      color: isSelected ? Colors.blue.shade600 : Colors.grey[400]!,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: isSelected 
+                                      ? Icon(Icons.check, color: Colors.white, size: 14)
+                                      : null,
+                                ),
+                                const SizedBox(width: 16),
+                                
+                                // 孩子头像
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.2),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 32,
+                                    backgroundColor: Colors.blue.shade100,
+                                    backgroundImage: child.photoUrl != null
+                                        ? NetworkImage(child.photoUrl!)
+                                        : null,
+                                    child: child.photoUrl == null
+                                        ? Text(
+                                            child.name.isNotEmpty ? child.name[0] : '?',
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue.shade700,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        child.name,
+                                        style: AppTextStyles.titleMedium.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          if (age > 0) ...[
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange.shade50,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                '${age}岁',
+                                                style: AppTextStyles.bodySmall.copyWith(
+                                                  color: Colors.orange.shade700,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                          ],
+                                          if (child.birthDate != null) ...[
+                                            Icon(
+                                              Icons.cake,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${child.birthDate!.month}月${child.birthDate!.day}日',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              
+              // 底部确认按钮
+              Container(
+                padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _selectedChildIds.isEmpty || _isLoadingChildren 
+                            ? null 
+                            : () => _enrollSelectedChildren(setModalState),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          disabledBackgroundColor: Colors.grey[300],
+                          foregroundColor: Colors.white,
+                          disabledForegroundColor: Colors.grey[500],
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isLoadingChildren) ...[
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ] else ...[
+                              Icon(Icons.check_circle, size: 20),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              _isLoadingChildren 
+                                  ? '报名中...' 
+                                  : '确认报名 (${_selectedChildIds.length}人)',
+                              style: AppTextStyles.button.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 执行批量报名
+  Future<void> _enrollSelectedChildren(StateSetter setModalState) async {
+    if (_selectedChildIds.isEmpty || _userProfile == null) return;
+
+    setModalState(() {
+      _isLoadingChildren = true;
+    });
+
+    try {
+      final selectedChildren = _userProfile!.children
+          .where((child) => _selectedChildIds.contains(child.id))
+          .toList();
+
+      await _lessonService.enrollCourse(widget.course, selectedChildren);
+      
+      if (mounted) {
+        Navigator.pop(context); // 关闭弹窗
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('成功为${selectedChildren.length}个孩子报名课程《${widget.course.title}》！'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('报名失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setModalState(() {
+        _isLoadingChildren = false;
+      });
+    }
   }
 
   @override
@@ -266,6 +720,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 
                 // Course description
                 Container(
+                  width: double.infinity,
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -289,11 +744,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        course.description,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          height: 1.6,
-                          color: Colors.grey[700],
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          course.description,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            height: 1.6,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ),
                     ],
@@ -340,12 +798,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${l10n.enroll} ${course.title}'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                      _showEnrollChildrenDialog();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,

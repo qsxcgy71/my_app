@@ -332,5 +332,12 @@
       "length": {}
     }
   },
-  "verificationCode": "Verification Code"
+  "verificationCode": "Verification Code",
+  
+  "deleteAccount": "Delete Account",
+  "confirmDeleteAccount": "Confirm Delete Account", 
+  "deleteAccountWarning": "This action cannot be undone. Are you sure you want to delete your account?",
+  "passwordMismatch": "Passwords do not match",
+  
+  "cantonese": "Cantonese"
 } 

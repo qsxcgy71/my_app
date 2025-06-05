@@ -5,6 +5,7 @@ enum MessageType {
   classEnd,      // 下课提醒
   general,       // 普通消息
   system,        // 系统消息
+  enrollment,    // 报名成功
 }
 
 class Message {
@@ -97,6 +98,8 @@ class Message {
         return '💬';
       case MessageType.system:
         return '⚙️';
+      case MessageType.enrollment:
+        return '🎉';
     }
   }
 
@@ -111,6 +114,8 @@ class Message {
         return '#2196F3'; // 蓝色
       case MessageType.system:
         return '#9E9E9E'; // 灰色
+      case MessageType.enrollment:
+        return '#E91E63'; // 粉色
     }
   }
 

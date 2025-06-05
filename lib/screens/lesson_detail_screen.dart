@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/lesson_model.dart';
+import '../models/profile_model.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/lesson_service.dart';
+import '../services/profile_service.dart';
 import 'photo_view_screen.dart';
 import '../widgets/keyboard_dismisser.dart';
 import '../services/media_compression_service.dart';
@@ -28,7 +30,52 @@ class LessonDetailScreen extends StatefulWidget {
 
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final LessonService _lessonService = LessonService();
+  final ProfileService _profileService = ProfileService();
   bool _isUploading = false;
+  List<ChildInfo> _enrolledChildren = []; // 已报名的学员
+  UserProfile? _userProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfileAndEnrolledChildren();
+  }
+
+  // 加载用户资料和已报名学员
+  Future<void> _loadUserProfileAndEnrolledChildren() async {
+    try {
+      final profile = await _profileService.getUserProfile();
+      if (mounted && profile != null) {
+        setState(() {
+          _userProfile = profile;
+        });
+        
+        // 加载已报名的学员
+        await _loadEnrolledChildren();
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
+    }
+  }
+
+  // 加载已报名的学员
+  Future<void> _loadEnrolledChildren() async {
+    if (_userProfile == null || widget.lesson.courseId.isEmpty) return;
+    
+    try {
+      final enrolledChildren = await _lessonService.getEnrolledChildrenForCourseWithFullInfo(
+        widget.lesson.courseId,
+        _userProfile!.children,
+      );
+      if (mounted) {
+        setState(() {
+          _enrolledChildren = enrolledChildren;
+        });
+      }
+    } catch (e) {
+      print('Error loading enrolled children: $e');
+    }
+  }
 
   // 请求存储权限
   Future<bool> _requestStoragePermission() async {
@@ -763,6 +810,151 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             // 照片展示板块（仅在课程完成时显示）
             if (widget.lesson.isPastLesson) ...[
                 _buildMediaGrid(context),
+              const SizedBox(height: 20),
+            ],
+
+            // 已报名学员显示
+            if (_enrolledChildren.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Colors.green.shade100,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.groups,
+                            color: Colors.green.shade600,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '已报名学员',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_enrolledChildren.length}人',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _enrolledChildren.map((child) {
+                        final age = child.birthDate != null 
+                            ? DateTime.now().year - child.birthDate!.year 
+                            : 0;
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.green.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.green.shade200,
+                                backgroundImage: child.photoUrl != null
+                                    ? NetworkImage(child.photoUrl!)
+                                    : null,
+                                child: child.photoUrl == null
+                                    ? Text(
+                                        child.name.isNotEmpty ? child.name[0] : '?',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade700,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    child.name,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.green.shade700,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  if (age > 0) ...[
+                                    const SizedBox(height: 2),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '${age}岁',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: Colors.orange.shade700,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
             ],
 

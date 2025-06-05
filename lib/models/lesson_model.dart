@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'profile_model.dart'; // 添加导入
 
 class Lesson {
   final String id;
   final String title; // 具体课节名称，如"动物时钟"
   final String? description;
+  final String courseId; // 新增：关联的课程ID
   final String courseName; // 课程名称，如"生活小侦探"
   final String? courseCategory; // 课程类别，如"生活小探"
   final DateTime date;
@@ -14,11 +16,14 @@ class Lesson {
   final String? imageUrl; // 课程图片
   final List<LessonPhoto> photos; // 课程照片列表
   List<LessonVideo> videos; // 课程视频列表 - 改为非final以便修改
+  List<EnrolledChild> enrolledChildren; // 修改：支持多个孩子
+  final String? instructor; // 新增：讲师
 
   Lesson({
     required this.id,
     required this.title,
     this.description,
+    required this.courseId,
     required this.courseName,
     this.courseCategory,
     required this.date,
@@ -29,7 +34,23 @@ class Lesson {
     this.imageUrl,
     this.photos = const [],
     List<LessonVideo>? videos,
-  }) : videos = videos ?? []; // 提供默认空列表
+    List<EnrolledChild>? enrolledChildren,
+    this.instructor,
+    // 保持向后兼容
+    String? childId,
+    String? childName,
+  }) : videos = videos ?? [],
+       enrolledChildren = enrolledChildren ?? [] {
+    // 如果提供了旧的单个孩子信息，转换为新格式
+    if (childId != null && childName != null && this.enrolledChildren.isEmpty) {
+      final child = EnrolledChild(id: childId, name: childName);
+      this.enrolledChildren.add(child);
+    }
+  }
+
+  // 向后兼容的getter
+  String? get childId => enrolledChildren.isNotEmpty ? enrolledChildren.first.id : null;
+  String? get childName => enrolledChildren.isNotEmpty ? enrolledChildren.first.name : null;
 
   // Get full DateTime for start time
   DateTime get startDateTime {
@@ -90,6 +111,7 @@ class Lesson {
     return {
       'title': title,
       'description': description,
+      'courseId': courseId,
       'courseName': courseName,
       'courseCategory': courseCategory,
       'date': DateTime(date.year, date.month, date.day).toIso8601String(),
@@ -100,11 +122,16 @@ class Lesson {
       'imageUrl': imageUrl,
       'photos': photos.map((photo) => photo.toMap()).toList(),
       'videos': videos.map((video) => video.toMap()).toList(),
+      'enrolledChildren': enrolledChildren.map((child) => child.toMap()).toList(),
+      'instructor': instructor,
       'userId': '', // This will be set when saving to Firestore
+      // 向后兼容
+      'childId': childId,
+      'childName': childName,
     };
   }
 
-  factory Lesson.fromMap(Map<String, dynamic> map) {
+  factory Lesson.fromMap(Map<String, dynamic> map, String id) {
     final dateTime = DateTime.parse(map['date'] as String);
     final startDateTime = DateTime.parse(map['startTime'] as String);
     final endDateTime = DateTime.parse(map['endTime'] as String);
@@ -114,10 +141,27 @@ class Lesson {
     final localStartTime = startDateTime.toLocal();
     final localEndTime = endDateTime.toLocal();
     
+    // 处理enrolledChildren
+    List<EnrolledChild> enrolledChildren = [];
+    if (map['enrolledChildren'] != null) {
+      enrolledChildren = (map['enrolledChildren'] as List<dynamic>)
+          .map((child) => EnrolledChild.fromMap(child))
+          .toList();
+    } else if (map['childId'] != null && map['childName'] != null) {
+      // 向后兼容：从旧格式转换
+      enrolledChildren = [
+        EnrolledChild(
+          id: map['childId'] as String,
+          name: map['childName'] as String,
+        )
+      ];
+    }
+    
     return Lesson(
-      id: map['id'] as String? ?? '',
+      id: id,
       title: map['title'] as String,
       description: map['description'] as String?,
+      courseId: map['courseId'] as String? ?? '',
       courseName: map['courseName'] as String,
       courseCategory: map['courseCategory'] as String?,
       date: DateTime(localDate.year, localDate.month, localDate.day),
@@ -130,6 +174,8 @@ class Lesson {
       imageUrl: map['imageUrl'] as String?,
       photos: (map['photos'] as List<dynamic>?)?.map((photo) => LessonPhoto.fromMap(photo)).toList() ?? [],
       videos: (map['videos'] as List<dynamic>?)?.map((video) => LessonVideo.fromMap(video)).toList() ?? [],
+      enrolledChildren: enrolledChildren,
+      instructor: map['instructor'] as String?,
     );
   }
 
@@ -138,6 +184,7 @@ class Lesson {
     String? id,
     String? title,
     String? description,
+    String? courseId,
     String? courseName,
     String? courseCategory,
     DateTime? date,
@@ -148,11 +195,14 @@ class Lesson {
     String? imageUrl,
     List<LessonPhoto>? photos,
     List<LessonVideo>? videos,
+    List<EnrolledChild>? enrolledChildren,
+    String? instructor,
   }) {
     return Lesson(
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      courseId: courseId ?? this.courseId,
       courseName: courseName ?? this.courseName,
       courseCategory: courseCategory ?? this.courseCategory,
       date: date ?? this.date,
@@ -163,6 +213,8 @@ class Lesson {
       imageUrl: imageUrl ?? this.imageUrl,
       photos: photos ?? this.photos,
       videos: videos ?? this.videos,
+      enrolledChildren: enrolledChildren ?? this.enrolledChildren,
+      instructor: instructor ?? this.instructor,
     );
   }
 }
@@ -243,6 +295,41 @@ class LessonVideo {
       description: map['description'] as String,
       duration: map['duration'] as int?,
       fileSize: map['fileSize'] as int?,
+    );
+  }
+}
+
+// 已报名孩子信息类
+class EnrolledChild {
+  final String id;
+  final String name;
+  final String? photoUrl;
+  final DateTime? enrolledAt;
+
+  EnrolledChild({
+    required this.id,
+    required this.name,
+    this.photoUrl,
+    this.enrolledAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'photoUrl': photoUrl,
+      'enrolledAt': enrolledAt?.toIso8601String(),
+    };
+  }
+
+  factory EnrolledChild.fromMap(Map<String, dynamic> map) {
+    return EnrolledChild(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      photoUrl: map['photoUrl'] as String?,
+      enrolledAt: map['enrolledAt'] != null 
+          ? DateTime.parse(map['enrolledAt'] as String)
+          : null,
     );
   }
 } 

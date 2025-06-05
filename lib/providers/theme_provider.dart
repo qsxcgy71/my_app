@@ -11,16 +11,16 @@ class ThemeProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   late SharedPreferences _prefs;
   
-  // 设备主题（用于未登录状态，固定为comfort主题）
-  AppThemeType _deviceTheme = AppThemeType.comfort;
-  // 账号主题（用于登录状态，新用户默认为dreams主题）
-  AppThemeType _accountTheme = AppThemeType.dreams;
+  // 设备主题（用于未登录状态，固定为default_theme主题）
+  AppThemeType _deviceTheme = AppThemeType.default_theme;
+  // 账号主题（用于登录状态，新用户默认为default_theme主题）
+  AppThemeType _accountTheme = AppThemeType.default_theme;
   // 是否使用账号主题
   bool _useAccountTheme = false;
 
   // 获取当前应该使用的主题
   AppThemeType get currentTheme {
-    final theme = _useAccountTheme ? _accountTheme : AppThemeType.comfort;
+    final theme = _useAccountTheme ? _accountTheme : AppThemeType.default_theme;
     // print('Current theme: $theme (useAccountTheme: $_useAccountTheme)');
     return theme;
   }
@@ -40,7 +40,7 @@ class ThemeProvider extends ChangeNotifier {
       if (savedAccountTheme != null) {
         _accountTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedAccountTheme,
-          orElse: () => AppThemeType.dreams,
+          orElse: () => AppThemeType.default_theme,
         );
         print('Loaded account theme from cache: $_accountTheme');
       }
@@ -78,7 +78,7 @@ class ThemeProvider extends ChangeNotifier {
         final savedTheme = doc.data()!['theme'] as String;
         final newTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedTheme,
-          orElse: () => AppThemeType.dreams,
+          orElse: () => AppThemeType.default_theme,
         );
         
         if (_accountTheme != newTheme) {
@@ -90,9 +90,9 @@ class ThemeProvider extends ChangeNotifier {
         await _prefs.setString(_accountThemeKey, _accountTheme.toString());
         notifyListeners();
       } else {
-        // 如果用户文档不存在或没有主题设置，使用dreams主题作为初始账号主题
-        print('No theme found in Firebase, using default dreams theme');
-        _accountTheme = AppThemeType.dreams;
+        // 如果用户文档不存在或没有主题设置，使用default_theme主题作为初始账号主题
+        print('No theme found in Firebase, using default default_theme theme');
+        _accountTheme = AppThemeType.default_theme;
         await _saveAccountTheme(_accountTheme);
         notifyListeners();
       }
@@ -103,7 +103,7 @@ class ThemeProvider extends ChangeNotifier {
       if (savedAccountTheme != null) {
         final cachedTheme = AppThemeType.values.firstWhere(
           (type) => type.toString() == savedAccountTheme,
-          orElse: () => AppThemeType.dreams,
+          orElse: () => AppThemeType.default_theme,
         );
         if (_accountTheme != cachedTheme) {
           _accountTheme = cachedTheme;
@@ -111,10 +111,10 @@ class ThemeProvider extends ChangeNotifier {
           notifyListeners();
         }
       } else {
-        // 如果连本地缓存也没有，使用默认的dreams主题
-        if (_accountTheme != AppThemeType.dreams) {
-          _accountTheme = AppThemeType.dreams;
-          print('Fallback to default dreams theme');
+        // 如果连本地缓存也没有，使用默认的default_theme主题
+        if (_accountTheme != AppThemeType.default_theme) {
+          _accountTheme = AppThemeType.default_theme;
+          print('Fallback to default default_theme theme');
           notifyListeners();
         }
       }
@@ -232,7 +232,7 @@ class ThemeProvider extends ChangeNotifier {
   // 强制使用设备主题（用于登录页面等）
   void useDeviceTheme() {
     if (_useAccountTheme) {
-      print('Switching to device theme (comfort)...');
+      print('Switching to device theme (default_theme)...');
       _useAccountTheme = false;
       notifyListeners();
     }

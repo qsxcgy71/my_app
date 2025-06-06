@@ -675,6 +675,12 @@ abstract class AppLocalizations {
   /// **'Golden Amber'**
   String get themeGoldenAmber;
 
+  /// No description provided for @themeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get themeDefault;
+
   /// No description provided for @themeReduce.
   ///
   /// In en, this message translates to:

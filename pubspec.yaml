@@ -110,6 +110,8 @@ flutter:
     - assets/messages/
     - assets/photos/default_avatar.png
     - assets/theme_wellcome/pattern.png
+    - assets/theme_wellcome/theme_default_theme_hero.png
+    - assets/theme_wellcome/theme_siufa_hero.png
     - assets/theme_wellcome/theme_reduce_hero.png
     - assets/theme_wellcome/theme_tepid_hero.png
     - assets/theme_wellcome/theme_defence_hero.png

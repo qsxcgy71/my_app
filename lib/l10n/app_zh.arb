@@ -337,5 +337,6 @@
   "deleteAccountWarning": "此操作无法撤销，您确定要删除账户吗？",
   "passwordMismatch": "密码不匹配",
   
-  "cantonese": "粤语"
+  "cantonese": "粤语",
+  "themeDefault": "默認主題"
 } 

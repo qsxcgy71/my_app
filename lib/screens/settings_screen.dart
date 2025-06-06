@@ -73,11 +73,13 @@ class SettingsScreen extends StatelessWidget {
                 final themeData = AppThemeData.themeData[themeType]!;
                 final isSelected = themeProvider.currentTheme == themeType;
                 
-                return Container(
+                return SizedBox(
                   width: (MediaQuery.of(context).size.width - 48) / 2,
                   child: ChoiceChip(
+                    labelPadding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     label: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.all(4),
@@ -92,13 +94,16 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            themeData.getLocalizedName(l10n),
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: isSelected ? Colors.white : themeData.primaryColor,
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              themeData.getLocalizedName(l10n),
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: isSelected ? Colors.white : themeData.primaryColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

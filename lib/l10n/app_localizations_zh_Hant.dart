@@ -298,7 +298,7 @@ class AppLocalizationsZhHant extends AppLocalizations {
   String get themeGoldenAmber => '金琥珀';
 
   @override
-  String get themeReduce => '冷卻';
+  String get themeReduce => '降溫主題';
 
   @override
   String get themeTepid => '暖和';
@@ -370,4 +370,7 @@ class AppLocalizationsZhHant extends AppLocalizations {
 
   @override
   String get noAccount => '還沒有賬戶？註冊';
+
+  @override
+  String get themeDefault => '默認主題';
 } 

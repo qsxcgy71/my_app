@@ -123,6 +123,7 @@
   "themeFreshCyan": "清新青",
   "themeGoldenAmber": "金琥珀",
 
+  "themeDefault": "默認主題",
   "themeReduce": "降溫主題",
   "themeTepid": "暖和主題",
   "themeDefence": "護衛主題",
@@ -283,6 +284,52 @@
     }
   },
   "verificationCode": "驗證碼",
-  
+
+  "themeDefault": "默認主題",
+  "morningSlot": "上午",
+  "afternoonSlot": "下午",
+  "eveningSlot": "晚上",
+  "allDay": "全天",
+  "beginnerLevel": "初級",
+  "primaryLevel": "基礎",
+  "intermediateLevel": "中級",
+  "advancedLevel": "高級",
+  "searchAndCollapse": "搜尋並收起",
+  "noMessages": "暫無訊息",
+  "yourMessagesWillAppearHere": "您的訊息將顯示在這裡",
+  "createSampleMessages": "建立範例訊息",
+  "markAllAsRead": "標記全部已讀",
+  "allMessagesMarkedAsRead": "已將所有訊息標記為已讀",
+  "operationFailed": "操作失敗",
+  "messageDeleted": "訊息已刪除",
+  "deleteFailed": "刪除失敗",
+  "sampleMessagesCreated": "範例訊息已建立",
+  "createFailed": "建立失敗",
+  "loadMessagesFailed": "載入訊息失敗",
+  "confirmDelete": "確認刪除",
+  "confirmDeleteMessage": "確定要刪除此訊息嗎？",
+  "delete": "刪除",
+  "justNow": "剛剛",
+  "minutesAgo": "{minutes} 分鐘前",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} 小時前",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAccount": "刪除賬戶",
+  "confirmDeleteAccount": "確認刪除賬戶",
+  "deleteAccountWarning": "此操作將永久刪除您的賬戶和所有相關資料，無法恢復。確定要繼續嗎？",
+  "passwordMismatch": "密碼不匹配",
+
   "cantonese": "粵語"
 } 

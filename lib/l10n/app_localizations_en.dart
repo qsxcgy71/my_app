@@ -305,6 +305,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeGoldenAmber => 'Golden Amber';
 
   @override
+  String get themeDefault => 'Default';
+
+  @override
   String get themeReduce => 'Cool Down';
 
   @override

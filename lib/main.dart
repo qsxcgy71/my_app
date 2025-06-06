@@ -13,6 +13,7 @@ import 'screens/loading_screen.dart';
 import 'providers/theme_provider.dart';
 import 'services/auth_service.dart';
 import 'services/language_service.dart';
+import 'services/payment_service.dart';
 import 'l10n/app_localizations.dart';
 import 'widgets/auth_wrapper.dart';
 
@@ -30,6 +31,9 @@ Future<void> main() async {
       androidProvider: AndroidProvider.debug,
       appleProvider: AppleProvider.appAttest,
     );
+
+    // Initialize Stripe
+    await PaymentService.initializeStripe();
 
     // Initialize LanguageService
     final languageService = LanguageService();

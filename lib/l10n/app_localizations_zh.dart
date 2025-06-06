@@ -246,7 +246,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get preview => '预览';
 
   @override
-  String get enroll => '立即报名';
+  String get enrollNow => 'Enroll Now';
 
   @override
   String get goodMorning => '早上好';
@@ -1033,9 +1033,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get preview => '預覽';
 
   @override
-  String get enroll => '立即報名';
-
-  @override
   String get goodMorning => '早安';
 
   @override
@@ -1563,6 +1560,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get verificationCode => '驗證碼';
 
   @override
+
   String get deleteAccount => '刪除賬戶';
 
   @override
@@ -1575,5 +1573,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get passwordMismatch => '密碼不匹配';
 
   @override
+
   String get cantonese => '粵語';
 }

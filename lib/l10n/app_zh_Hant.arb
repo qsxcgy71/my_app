@@ -284,6 +284,7 @@
     }
   },
   "verificationCode": "驗證碼",
+
   "themeDefault": "默認主題",
   "morningSlot": "上午",
   "afternoonSlot": "下午",
@@ -329,5 +330,6 @@
   "confirmDeleteAccount": "確認刪除賬戶",
   "deleteAccountWarning": "此操作將永久刪除您的賬戶和所有相關資料，無法恢復。確定要繼續嗎？",
   "passwordMismatch": "密碼不匹配",
+
   "cantonese": "粵語"
 } 

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 
 import '../models/course_model.dart';
 import '../models/profile_model.dart';
 import '../services/lesson_service.dart';
 import '../services/profile_service.dart';
+import '../services/payment_service.dart';
+import '../services/message_service.dart';
 import '../styles/app_text_styles.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/theme_provider.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final Course course;
@@ -30,6 +34,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   UserProfile? _userProfile;
   bool _isLoadingChildren = false;
   List<String> _selectedChildIds = []; // 选中的孩子ID列表
+
+  final LessonService _lessonService = LessonService();
+  final ProfileService _profileService = ProfileService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  UserProfile? _userProfile;
+  bool _isLoadingChildren = true;
 
   @override
   void initState() {
@@ -474,17 +485,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           .where((child) => _selectedChildIds.contains(child.id))
           .toList();
 
-      await _lessonService.enrollCourse(widget.course, selectedChildren);
-      
-      if (mounted) {
-        Navigator.pop(context); // 关闭弹窗
+      // 集成支付流程
+      final paymentService = PaymentService();
+      final paymentSuccess = await paymentService.processCoursePayment(
+        course: widget.course,
+        selectedChildren: selectedChildren,
+        context: context,
+      );
+
+      if (paymentSuccess) {
+        // 支付成功后进行实际的课程报名
+        await _lessonService.enrollCourse(widget.course, selectedChildren);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('成功为${selectedChildren.length}个孩子报名课程《${widget.course.title}》！'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // 发送课程报名成功消息
+        final messageService = MessageService();
+        await messageService.sendCourseEnrollmentMessage(widget.course, selectedChildren);
+        
+        if (mounted) {
+          Navigator.pop(context); // 关闭弹窗
+          
+          // 显示成功提示（支付对话框已经显示过，这里不再重复显示）
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -512,206 +533,143 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with course image
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: Colors.white,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 300,
+                pinned: true,
+                backgroundColor: Colors.white,
+                leading: IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+                  onPressed: () => Navigator.pop(context),
                 ),
-                child: const Icon(Icons.arrow_back, color: Colors.white),
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Course image
-                  Container(
-                    decoration: BoxDecoration(
-                      image: imageUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(imageUrl),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                      gradient: imageUrl == null
-                          ? LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Colors.blue.shade400, Colors.purple.shade400],
-                            )
-                          : null,
-                    ),
-                    child: imageUrl == null
-                        ? Center(
-                            child: Icon(Icons.school, size: 80, color: Colors.white),
-                          )
-                        : null,
-                  ),
-                  
-                  // Gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          image: imageUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(imageUrl),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                          gradient: imageUrl == null
+                              ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Colors.blue.shade400, Colors.purple.shade400],
+                                )
+                              : null,
+                        ),
+                        child: imageUrl == null
+                            ? Center(
+                                child: Icon(Icons.school, size: 80, color: Colors.white),
+                              )
+                            : null,
                       ),
-                    ),
-                  ),
-                  
-                  // Course info overlay
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            course.category,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
+                      
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          course.title,
-                          style: AppTextStyles.titleLarge.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
+                      ),
+                      
+                      Positioned(
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.star, color: Colors.orange, size: 20),
-                            const SizedBox(width: 4),
-                            Text(
-                              course.rating.toString(),
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                course.category,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Icon(Icons.people, color: Colors.white, size: 20),
-                            const SizedBox(width: 4),
+                            const SizedBox(height: 8),
                             Text(
-                              course.enrolledCountString,
-                              style: AppTextStyles.bodyMedium.copyWith(
+                              course.title,
+                              style: AppTextStyles.titleLarge.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
                               ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(Icons.star, color: Colors.orange, size: 20),
+                                const SizedBox(width: 4),
+                                Text(
+                                  course.rating.toString(),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Icon(Icons.people, color: Colors.white, size: 20),
+                                const SizedBox(width: 4),
+                                Text(
+                                  course.enrolledCountString,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Image indicators
-                  if (course.imageUrls.length > 1)
-                    Positioned(
-                      top: 100,
-                      right: 20,
-                      child: Column(
-                        children: course.imageUrls.asMap().entries.map((entry) {
-                          return Container(
-                            width: 8,
-                            height: 8,
-                            margin: const EdgeInsets.symmetric(vertical: 2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _currentImageIndex == entry.key
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.5),
-                            ),
-                          );
-                        }).toList(),
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Course content
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                
-                // Course stats
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatItem(
-                          Icons.play_circle_outline,
-                          l10n.totalLessons(course.totalLessons),
-                          Colors.blue,
+                      
+                      if (course.imageUrls.length > 1)
+                        Positioned(
+                          top: 100,
+                          right: 20,
+                          child: Column(
+                            children: course.imageUrls.asMap().entries.map((entry) {
+                              return Container(
+                                width: 8,
+                                height: 8,
+                                margin: const EdgeInsets.symmetric(vertical: 2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _currentImageIndex == entry.key
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.5),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.grey[300],
-                      ),
-                      Expanded(
-                        child: _buildStatItem(
-                          Icons.schedule,
-                          course.durationString,
-                          Colors.green,
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.grey[300],
-                      ),
-                      Expanded(
-                        child: _buildStatItem(
-                          Icons.person,
-                          course.instructor,
-                          Colors.purple,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -747,47 +705,35 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: Text(
-                          course.description,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            height: 1.6,
-                            color: Colors.grey[700],
+                        course.description,
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: Colors.grey[700],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      _buildInfoRow(Icons.person, '讲师', course.instructor),
+                      _buildInfoRow(Icons.category, '类别', course.category),
+                      _buildInfoRow(Icons.payments, '价格', '${course.price} 元'),
+                      _buildInfoRow(Icons.online_prediction, '线上课程', course.isOnline ? '是' : '否'),
+                      _buildInfoRow(Icons.calendar_today, '推荐年龄', '${course.recommendedAge} 岁'),
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
-                
-                const SizedBox(height: 24),
-                
-                // Course lessons
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.courseCatalog,
-                        style: AppTextStyles.titleMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ...course.lessons.map((lesson) => _buildLessonItem(lesson, l10n)),
-                    ],
-                  ),
+              ),
+            ],
+          ),
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: AntiSpamButton(
+              onPressed: _isLoadingChildren ? null : () => _showEnrollChildrenDialog(widget.course),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 
                 const SizedBox(height: 32),
@@ -796,25 +742,107 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _showEnrollChildrenDialog();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: [
+                      // 价格显示
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: course.price == 0 ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: course.price == 0 ? Colors.green : Colors.blue,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  course.price == 0 ? '免费课程' : '课程价格',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Text(
+                                      course.price == 0 ? '¥0' : '¥${course.price.toStringAsFixed(0)}',
+                                      style: AppTextStyles.titleLarge.copyWith(
+                                        color: course.price == 0 ? Colors.green : Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 24,
+                                      ),
+                                    ),
+                                    if (course.price == 0) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'FREE',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                            if (course.price == 0)
+                              Icon(Icons.school, color: Colors.green, size: 32)
+                            else
+                              Icon(Icons.payment, color: Colors.blue, size: 32),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      l10n.enroll,
-                      style: AppTextStyles.button.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 16),
+                      
+                      // 报名按钮
+                      ElevatedButton(
+                        onPressed: () {
+                          _showEnrollChildrenDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: course.price == 0 ? Colors.green : Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              course.price == 0 ? Icons.school : Icons.shopping_cart,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              course.price == 0 ? '立即报名（免费）' : '立即购买并报名',
+                              style: AppTextStyles.button.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 
@@ -827,105 +855,24 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String text, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 8),
-        Text(
-          text,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLessonItem(CourseLesson lesson, AppLocalizations l10n) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+  Widget _buildInfoRow(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: lesson.isPreview ? Colors.green : Colors.grey[300],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Icon(
-                lesson.isPreview ? Icons.play_arrow : Icons.lock,
-                color: lesson.isPreview ? Colors.white : Colors.grey[600],
-                size: 20,
-              ),
+          Icon(icon, color: Colors.grey[600], size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-          const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        lesson.title,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (lesson.isPreview)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          l10n.preview,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.green,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  lesson.description,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.grey[600],
-                    fontSize: 13,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  lesson.durationString,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.grey[500],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            child: Text(
+              value,
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[700]),
+              textAlign: TextAlign.right,
             ),
           ),
         ],

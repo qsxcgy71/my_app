@@ -1,9 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
+import '../models/profile_model.dart';
+import 'profile_service.dart';
+import 'message_service.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final GoogleSignIn _googleSignIn = GoogleSignIn();
+  static final ProfileService _profileService = ProfileService();
+  static final MessageService _messageService = MessageService();
 
   // 获取当前用户
   User? get currentUser => _auth.currentUser;
@@ -93,12 +99,27 @@ class AuthService {
   }
 
   // 注册新用户
-  Future<UserCredential> registerWithEmail(String email, String password) async {
+  static Future<UserCredential> registerWithEmail(String email, String password) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
+      
+      // 注册成功后发送欢迎消息
+      if (userCredential.user != null) {
+        try {
+          // 获取用户资料以获得姓名，如果没有则使用邮箱前缀
+          final profile = await _profileService.getUserProfile();
+          final userName = profile?.name ?? email.split('@').first;
+          await _messageService.sendWelcomeMessage(userName);
+        } catch (e) {
+          print('Error sending welcome message: $e');
+          // 即使发送消息失败，也不影响注册过程
+        }
+      }
+      
+      return userCredential;
     } catch (e) {
       print('Registration error: $e');
       rethrow;

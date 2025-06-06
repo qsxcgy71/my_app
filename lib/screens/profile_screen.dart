@@ -321,6 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
               
               final updatedChildren = List<ChildInfo>.from(_userProfile?.children ?? []);
+              final isNewChild = child == null;
               
               if (child != null) {
                 // Edit existing child
@@ -334,13 +335,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
               
               try {
-                await _profileService.updateProfile(UserProfile(
-                  userId: _userProfile!.userId,
-                  name: _userProfile!.name,
-                  phone: _userProfile!.phone,
-                  email: _userProfile!.email,
-                  children: updatedChildren,
-                ));
+                if (isNewChild) {
+                  // 使用ProfileService的updateChild方法，它会自动发送消息
+                  await _profileService.updateChild(
+                    userId, 
+                    updatedChildren, 
+                    newChild: newChild
+                  );
+                } else {
+                  // 确定更新类型
+                  String updateType = 'info';
+                  if (child!.name != newChild.name) {
+                    updateType = 'name';
+                  } else if (child.birthDate != newChild.birthDate) {
+                    updateType = 'birthDate';
+                  }
+                  
+                  await _profileService.updateChild(
+                    userId, 
+                    updatedChildren, 
+                    updatedChild: newChild,
+                    updateType: updateType
+                  );
+                }
                 
                 if (mounted) {
                   Navigator.pop(context);
@@ -416,36 +433,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final child = _userProfile?.children.firstWhere((c) => c.id == childId);
       
-      // Delete photo from storage if exists
-      if (child?.photoUrl != null) {
-        try {
-          await _profileService.deleteChildPhoto(child!.id);
-        } catch (e) {
-          print('Failed to delete photo: $e');
-        }
-      }
-      
-      final updatedChildren = _userProfile?.children.where((c) => c.id != childId).toList() ?? [];
-      
-      await _profileService.updateProfile(UserProfile(
-        userId: _userProfile!.userId,
-        name: _userProfile!.name,
-        phone: _userProfile!.phone,
-        email: _userProfile!.email,
-        children: updatedChildren,
-      ));
+      // 使用ProfileService的deleteChild方法，它会自动发送消息和删除照片
+      await _profileService.deleteChild(
+        userId, 
+        childId, 
+        child?.photoUrl,
+        childName: child?.name
+      );
       
       if (mounted) {
-        // Update locally instead of full refresh
-        final updatedProfile = UserProfile(
-          userId: _userProfile!.userId,
-          name: _userProfile!.name,
-          phone: _userProfile!.phone,
-          email: _userProfile!.email,
-          children: updatedChildren,
-        );
-        
-        await _updateUserProfileLocally(updatedProfile);
+        // 重新加载profile以获取最新数据
+        await _loadUserProfile();
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -546,13 +544,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             photoUrl: photoUrl,
           );
           
-          await _profileService.updateProfile(UserProfile(
-            userId: _userProfile!.userId,
-            name: _userProfile!.name,
-            phone: _userProfile!.phone,
-            email: _userProfile!.email,
-            children: updatedChildren,
-          ));
+          // 使用ProfileService的updateChild方法，它会自动发送照片更新消息
+          await _profileService.updateChild(
+            userId, 
+            updatedChildren, 
+            updatedChild: updatedChildren[index],
+            updateType: 'photo'
+          );
           
           print('Profile updated successfully');
           

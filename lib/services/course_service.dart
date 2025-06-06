@@ -17,38 +17,42 @@ class CourseService {
       Course(
         id: 'course_1',
         title: '儿童编程启蒙',
-        description: '通过有趣的游戏和动画，让孩子们学习编程的基本概念，培养逻辑思维能力。',
+        description: '通过Scratch图形化编程语言，让孩子轻松入门编程世界，培养逻辑思维能力。',
         category: '编程',
         imageUrls: [
           'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400',
-          'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400',
-          'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+          'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400',
+          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
         ],
         totalLessons: 12,
         totalDuration: const Duration(hours: 8),
         instructor: '张老师',
         rating: 4.8,
-        enrolledCount: 1250,
+        enrolledCount: 1200,
         isFeatured: true,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         lessons: [
           CourseLesson(
             id: 'lesson_1_1',
-            title: '什么是编程？',
-            description: '了解编程的基本概念',
-            duration: const Duration(minutes: 25),
+            title: 'Scratch入门',
+            description: '认识Scratch界面和基本概念',
+            duration: const Duration(minutes: 30),
             order: 1,
             isPreview: true,
           ),
           CourseLesson(
             id: 'lesson_1_2',
-            title: '我的第一个程序',
-            description: '创建简单的动画程序',
-            duration: const Duration(minutes: 30),
+            title: '制作第一个小游戏',
+            description: '使用基础模块创建简单的互动游戏',
+            duration: const Duration(minutes: 45),
             order: 2,
             isPreview: false,
           ),
         ],
+        price: 169.0, // 课程价格169元
+        isOnline: true,
+        recommendedAge: 8,
+        difficulty: '初级',
       ),
       Course(
         id: 'course_2',
@@ -77,6 +81,10 @@ class CourseService {
             isPreview: true,
           ),
         ],
+        price: 169.0, // 课程价格169元
+        isOnline: true,
+        recommendedAge: 6,
+        difficulty: '初级',
       ),
       Course(
         id: 'course_3',
@@ -105,6 +113,10 @@ class CourseService {
             isPreview: true,
           ),
         ],
+        price: 169.0, // 课程价格169元
+        isOnline: true,
+        recommendedAge: 5,
+        difficulty: '初级',
       ),
       Course(
         id: 'course_4',
@@ -133,6 +145,10 @@ class CourseService {
             isPreview: true,
           ),
         ],
+        price: 169.0, // 课程价格169元
+        isOnline: true,
+        recommendedAge: 7,
+        difficulty: '初级',
       ),
       Course(
         id: 'course_5',
@@ -161,6 +177,10 @@ class CourseService {
             isPreview: true,
           ),
         ],
+        price: 169.0, // 课程价格169元
+        isOnline: true,
+        recommendedAge: 9,
+        difficulty: '中级',
       ),
     ];
 

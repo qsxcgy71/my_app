@@ -561,11 +561,11 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get preview;
 
-  /// No description provided for @enroll.
+  /// No description provided for @enrollNow.
   ///
   /// In en, this message translates to:
   /// **'Enroll Now'**
-  String get enroll;
+  String get enrollNow;
 
   /// No description provided for @goodMorning.
   ///

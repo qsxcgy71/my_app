@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 
 enum AppThemeType {
+  default_theme, // 默认主题
   reduce,    // 降溫主題
   tepid,     // 暖和主題
   defence,   // 護衛主題
@@ -35,6 +36,8 @@ class AppThemeData {
 
   String getLocalizedName(AppLocalizations l10n) {
     switch (name) {
+      case '默認主題':
+        return l10n.themeDefault;
       case '降溫主題':
         return l10n.themeReduce;
       case '暖和主題':
@@ -73,6 +76,14 @@ class AppThemeData {
   }
 
   static final themeData = {
+    AppThemeType.default_theme: AppThemeData(
+      primaryColor: _parseColor('FF5B77'),
+      secondaryColor: _parseColor('FF94AF'),
+      searchBoxColor: _parseColor('FFC0D0'),
+      backgroundColor: _parseColor('FFE8EF'),
+      iconAsset: 'assets/theme_icon/theme_siufa.png',
+      name: '默認主題',
+    ),
     AppThemeType.reduce: AppThemeData(
       primaryColor: _parseColor('075590'),
       secondaryColor: _parseColor('74C7E6'),

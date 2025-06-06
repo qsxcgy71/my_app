@@ -303,6 +303,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeGoldenAmber => '金秋黄';
 
   @override
+  String get themeDefault => '默認主題';
+
+  @override
   String get themeReduce => '降温主題';
 
   @override
@@ -1087,6 +1090,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get themeGoldenAmber => '金琥珀';
 
   @override
+  String get themeDefault => '默認主題';
+
+  @override
   String get themeReduce => '降溫主題';
 
   @override
@@ -1144,7 +1150,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get noTimeLimit => '不限時間';
 
   @override
+  String get morningSlot => '上午';
+
+  @override
+  String get afternoonSlot => '下午';
+
+  @override
+  String get eveningSlot => '晚上';
+
+  @override
+  String get allDay => '全天';
+
+  @override
   String get difficultyLevel => '難度等級';
+
+  @override
+  String get beginnerLevel => '初級';
+
+  @override
+  String get primaryLevel => '基礎';
+
+  @override
+  String get intermediateLevel => '中級';
+
+  @override
+  String get advancedLevel => '高級';
 
   @override
   String get onlineCoursesOnly => '僅顯示線上課程';
@@ -1153,11 +1183,69 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get search => '搜尋';
 
   @override
+  String get searchAndCollapse => '搜尋並收起';
+
+  @override
   String get clearFilters => '清除篩選';
 
   @override
   String filtersApplied(int count) {
     return '已套用 $count 個篩選條件';
+  }
+
+  @override
+  String get noMessages => '暫無訊息';
+
+  @override
+  String get yourMessagesWillAppearHere => '您的訊息將顯示在這裡';
+
+  @override
+  String get createSampleMessages => '建立範例訊息';
+
+  @override
+  String get markAllAsRead => '標記全部已讀';
+
+  @override
+  String get allMessagesMarkedAsRead => '已將所有訊息標記為已讀';
+
+  @override
+  String get operationFailed => '操作失敗';
+
+  @override
+  String get messageDeleted => '訊息已刪除';
+
+  @override
+  String get deleteFailed => '刪除失敗';
+
+  @override
+  String get sampleMessagesCreated => '範例訊息已建立';
+
+  @override
+  String get createFailed => '建立失敗';
+
+  @override
+  String get loadMessagesFailed => '載入訊息失敗';
+
+  @override
+  String get confirmDelete => '確認刪除';
+
+  @override
+  String get confirmDeleteMessage => '確定要刪除此訊息嗎？';
+
+  @override
+  String get delete => '刪除';
+
+  @override
+  String get justNow => '剛剛';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '$minutes 分鐘前';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '$hours 小時前';
   }
 
   @override
@@ -1475,5 +1563,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get verificationCode => '驗證碼';
 
   @override
+
+  String get deleteAccount => '刪除賬戶';
+
+  @override
+  String get confirmDeleteAccount => '確認刪除賬戶';
+
+  @override
+  String get deleteAccountWarning => '此操作將永久刪除您的賬戶和所有相關資料，無法恢復。確定要繼續嗎？';
+
+  @override
+  String get passwordMismatch => '密碼不匹配';
+
+  @override
+
   String get cantonese => '粵語';
 }

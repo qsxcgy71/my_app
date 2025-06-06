@@ -30,10 +30,10 @@ class _MainScreenState extends State<MainScreen> {
 
   // 定义 tabbar 图标映射
   final Map<int, String> _tabIcons = {
-    0: 'assets/tabbar/explore.jpg',
-    1: 'assets/tabbar/course.jpg',
-    2: 'assets/tabbar/message.jpg',
-    3: 'assets/tabbar/profile.jpg',
+    0: 'assets/tabbar/explore.png',
+    1: 'assets/tabbar/course.png',
+    2: 'assets/tabbar/message.png',
+    3: 'assets/tabbar/profile.png',
   };
 
   @override
@@ -107,7 +107,7 @@ class _MainScreenState extends State<MainScreen> {
                 bottom: MediaQuery.of(context).padding.bottom + 8,
               ),
               decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
+                color: const Color(0xFFFCFCFC),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -162,14 +162,14 @@ class _MainScreenState extends State<MainScreen> {
     final isSelected = _currentIndex == index;
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final unselectedColor = theme.colorScheme.onSurface.withOpacity(0.6);
+    final unselectedColor = theme.colorScheme.onSurface;
     
     return GestureDetector(
       onTap: () => _onTabTapped(index),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -181,7 +181,6 @@ class _MainScreenState extends State<MainScreen> {
               child: Image.asset(
                 iconPath,
                 fit: BoxFit.contain,
-                opacity: AlwaysStoppedAnimation(isSelected ? 1.0 : 0.6),
               ),
             ),
             const SizedBox(height: 4),
@@ -191,6 +190,15 @@ class _MainScreenState extends State<MainScreen> {
                 color: isSelected ? primaryColor : unselectedColor,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? primaryColor : Colors.grey[400],
               ),
             ),
           ],
@@ -207,7 +215,7 @@ class _MainScreenState extends State<MainScreen> {
     final isSelected = _currentIndex == index;
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final unselectedColor = theme.colorScheme.onSurface.withOpacity(0.6);
+    final unselectedColor = theme.colorScheme.onSurface;
     final errorColor = theme.colorScheme.error;
     
     return GestureDetector(
@@ -215,7 +223,7 @@ class _MainScreenState extends State<MainScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -230,9 +238,9 @@ class _MainScreenState extends State<MainScreen> {
                   child: Image.asset(
                     iconPath,
                     fit: BoxFit.contain,
-                    opacity: AlwaysStoppedAnimation(isSelected ? 1.0 : 0.6),
                   ),
                 ),
+                const SizedBox(height: 4),
                 StreamBuilder<int>(
                   stream: _messageService.getUnreadCount(),
                   builder: (context, snapshot) {
@@ -271,6 +279,15 @@ class _MainScreenState extends State<MainScreen> {
                 color: isSelected ? primaryColor : unselectedColor,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? primaryColor : Colors.grey[400],
               ),
             ),
           ],

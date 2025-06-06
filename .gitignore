@@ -46,3 +46,5 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+# Added to ignore Stripe configuration
+stripe_config.dart

@@ -248,7 +248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preview => 'Preview';
 
   @override
-  String get enrollNow => 'Enroll Now';
+  String get enroll => 'Enroll Now';
 
   @override
   String get goodMorning => 'Morning';
